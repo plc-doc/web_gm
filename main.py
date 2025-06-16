@@ -7,7 +7,7 @@ grey = "#565759"
 white = "#EAEAEA"
 orange = "#F7941E"
 
-DEFAULT_FLET_PORT = 1000
+DEFAULT_FLET_PORT = 1040
 # flet_path = 'app'
 flet_port = int(os.getenv("FLET_PORT", DEFAULT_FLET_PORT))
 
@@ -147,4 +147,4 @@ class App(AppLayout):
         self.page.update()
 
 
-flet.app(target=AuthorizationPage, view=flet.WEB_BROWSER,host= "192.168.1.58",port=flet_port, assets_dir="assets")
+flet.app(target=AuthorizationPage, view=flet.WEB_BROWSER,host= "0.0.0.0",port=flet_port, assets_dir="assets")

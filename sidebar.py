@@ -1,5 +1,4 @@
 import flet
-from reportlab.lib.pdfencrypt import padding
 
 grey = "#565759"
 white = "#EAEAEA"
