@@ -1,3 +1,5 @@
+import re
+
 import flet
 import subprocess
 
@@ -22,9 +24,22 @@ class Interface:
         self.ip_6_field = flet.Text(value=self.ip_6, color="black")
 
     def get_ip4(self):
-        result = subprocess.run([f"ifconfig {self.name.lower()}| grep 'inet'", "| cut -d: -f2 | awk '{print $2}'"], shell=True,
-                                capture_output=True, text=True, check=True)
-        return result.stdout
+        # result = subprocess.run(["ifconfig {self.name.lower()}| grep 'inet' | cut -d: -f2 | awk '{print $2}'"], shell=True,
+        #                         capture_output=True, text=True, check=True)
+
+        request = subprocess.run(["ip", "addr", "show", self.name.lower()], capture_output=True, text=True, check=True)
+
+        output = request.stdout
+
+        match = re.search(r"inet\s+(\d+\.\d+\.\d+\.\d+)", output)
+        if match:
+            ip = match.group(1)
+
+            return ip
+        else:
+            print("Not found")
+
+        
 
     def set_static_ip4(self):
         # subprocess.run(["sudo", 'ifconfig', 'eth0', '192.168.1.15', 'netmask', '255.255.255.0'])
