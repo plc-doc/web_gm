@@ -87,11 +87,14 @@ class Interface:
 
         eth_block = match.group(1)
 
-        new_eth_block = re.sub(r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)", r"\1" + self.ip_4, eth_block, flags=re.MULTILINE)
+        new_eth_block = re.sub(r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)", rf"\g<1>{self.ip_4}" + self.ip_4, eth_block, flags=re.MULTILINE)
         
         new_content = content.replace(eth_block, new_eth_block)
 
-        subprocess.run(["sudo", "cp", new_content, "/etc/network/interfaces"], check=True)
+        with open("/tmp/interfaces", "w") as f:
+            f.write(new_content)
+
+        subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
 
         # subprocess.run(['sudo', 'tee', "/etc/network/interfaces"], input=new_config, text=True)
 
