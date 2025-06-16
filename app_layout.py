@@ -21,10 +21,10 @@ class AppLayout(flet.Row):
         self.page: flet.Page = page
         self.sidebar = Sidebar(self) # creating sidebar
 
-        self.eth0 = Interface("Eth0","192.168.1.0", "abcd.abcd.abcd.abcd", "255.255.255.0", self, self.page)
-        self.eth1 = Interface("Eth1","192.168.1.1", "abcd.abcd.abcd.abcd", "255.255.255.1", self, self.page)
-        self.eth2 = Interface("Eth2", self.get_ip4(), "abcd.abcd.abcd.abcd", "255.255.255.2", self, self.page)
-        self.eth3 = Interface("Eth3","192.168.1.3", "abcd.abcd.abcd.abcd", "255.255.255.3", self, self.page)
+        self.eth0 = Interface("Eth0", "abcd.abcd.abcd.abcd", "255.255.255.0", self, self.page)
+        self.eth1 = Interface("Eth1", "abcd.abcd.abcd.abcd", "255.255.255.1", self, self.page)
+        self.eth2 = Interface("Eth2", "abcd.abcd.abcd.abcd", "255.255.255.2", self, self.page)
+        self.eth3 = Interface("Eth3", "abcd.abcd.abcd.abcd", "255.255.255.3", self, self.page)
 
         paint = flet.Paint(stroke_width= 4, color= orange)
 
@@ -150,10 +150,10 @@ class AppLayout(flet.Row):
 
         self.controls = [self.sidebar, flet.VerticalDivider(width=0, color= "#CACACA"), self.active_view]
 
-    def get_ip4(self):
-        result = subprocess.run(["ifconfig eth2| grep 'inet' | cut -d: -f2 | awk '{print $2}'"], shell=True,
-                                capture_output=True, text=True, check=True)
-        return result.stdout
+    # def get_ip4(self):
+    #     result = subprocess.run(["ifconfig eth2| grep 'inet' | cut -d: -f2 | awk '{print $2}'"], shell=True,
+    #                             capture_output=True, text=True, check=True)
+    #     return result.stdout
 
     @property
     def active_view(self):  # change active view

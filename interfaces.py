@@ -9,9 +9,9 @@ current_eth0_ip = "ifconfig eth0| grep 'inet' | cut -d: -f2 | awk '{print $2}'"
 
 
 class Interface:
-    def __init__(self, name, ip_4, ip_6, mask, app, page):
+    def __init__(self, name, ip_6, mask, app, page):
         self.name = name
-        self.ip_4 = ip_4
+        self.ip_4 = self.get_ip4()
         self.ip_6 = ip_6
         self.mask = mask
         self.mac_address = "00:1A:2B:3C"
@@ -23,11 +23,12 @@ class Interface:
         self.ip_6_field = flet.Text(value=self.ip_6, color="black")
 
     def get_ip4(self):
-        result = subprocess.run(["ifconfig eth2| grep 'inet' | cut -d: -f2 | awk '{print $2}'"], shell=True,
+        result = subprocess.run([f"ifconfig {self.name.lower()}| grep 'inet'", "| cut -d: -f2 | awk '{print $2}'"],
+                                shell=True,
                                 capture_output=True, text=True, check=True)
         return result.stdout
 
-    def set_ip4(self):
+    def set_static_ip4(self):
         # subprocess.run(["sudo", 'ifconfig', 'eth0', '192.168.1.15', 'netmask', '255.255.255.0'])
 
         new_config = f"""
@@ -36,7 +37,7 @@ class Interface:
         iface lo inet loopback
 
         iface eth0 inet static
-            address 192.168.1.142
+            address {self.ip_4}
             netmask 255.255.255.0
             gateway 192.168.1.254
             dns-nameservers 192.168.1.28 8.8.4.4
@@ -55,8 +56,14 @@ class Interface:
         subprocess.run(['sudo', 'tee', "/etc/network/interfaces"], input=new_config, text=True)
 
         # reload
-        subprocess.run(['sudo', 'ifdown', self.name], check=True)
-        subprocess.run(['sudo', 'ifup', self.name], check=True)
+        try:
+            subprocess.run(['sudo', 'ifdown', self.name.lower()], check=True)
+        except Exception:
+            print("error")
+        try:
+            subprocess.run(['sudo', 'ifup', self.name.lower()], check=True)
+        except Exception:
+            print("error2")
 
     def info_structure(self):
         return flet.Column(
@@ -126,7 +133,7 @@ class Interface:
             self.mac_address_field.value = self.mac_address
             self.mask = mask_field.value
 
-            self.set_ip4()
+            self.set_static_ip4()
 
             self.page.close(dialog)
             self.page.update()
