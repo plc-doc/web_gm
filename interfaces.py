@@ -70,19 +70,22 @@ class Interface:
         with open("/etc/network/interfaces", "r") as f:
             content = f.read()
 
-        if self.name == "Eth0":
-            eth_block_match = re.search(r"(auto\s+eth0.*?)(?=auto|\Z)", content, re.DOTALL)
-        if self.name == "Eth1":
-            eth_block_match = re.search(r"(auto\s+eth1.*?)(?=auto|\Z)", content, re.DOTALL)
-        if self.name == "Eth2":
-            eth_block_match = re.search(r"(auto\s+eth2.*?)(?=auto|\Z)", content, re.DOTALL)
-        if self.name == "Eth3":
-            eth_block_match = re.search(r"(auto\s+eth3.*?)(?=auto|\Z)", content, re.DOTALL)
+        # if self.name == "Eth0":
+        #     eth_block_match = re.search(r"(auto\s+eth0.*?)(?=auto|\Z)", content, re.DOTALL)
+        # if self.name == "Eth1":
+        #     eth_block_match = re.search(r"(auto\s+eth1.*?)(?=auto|\Z)", content, re.DOTALL)
+        # if self.name == "Eth2":
+        #     eth_block_match = re.search(r"(auto\s+eth2.*?)(?=auto|\Z)", content, re.DOTALL)
+        # if self.name == "Eth3":
+        #     eth_block_match = re.search(r"(auto\s+eth3.*?)(?=auto|\Z)", content, re.DOTALL)
 
-        if not eth_block_match:
+        pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+static.*?)(?=(?:iface\s|\Z))"
+        match = re.search(pattern, content, re.DOTALL)
+
+        if not match:
             print("Block not found")
 
-        eth_block = eth_block_match.group(1)
+        eth_block = match.group(1)
 
         new_eth_block = re.sub(r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)", r"\1" + self.ip_4, eth_block, flags=re.MULTILINE)
         
