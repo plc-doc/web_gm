@@ -7,9 +7,6 @@ orange = "#F7941E"
 
 current_eth0_ip = "ifconfig eth0| grep 'inet' | cut -d: -f2 | awk '{print $2}'"
 
-new_ip = "192.168.42.43"
-
-
 
 class Interface:
     def __init__(self, name, ip_4, ip_6, mask, app, page):
@@ -37,27 +34,27 @@ class Interface:
         auto lo eth0 eth1 eth2
 
         iface lo inet loopback
-        
+
         iface eth0 inet static
             address 192.168.1.142
             netmask 255.255.255.0
             gateway 192.168.1.254
             dns-nameservers 192.168.1.28 8.8.4.4
             hwaddress ether 02:8A:8D:37:C2:B7
-        
+
         iface eth1 inet dhcp
             hwaddress ether 02:19:56:1B:00:EA
-        
+
         iface eth2 inet static
-            address {new_ip}
+            address {self.ip_4}
             netmask 255.255.255.0
             network 192.168.42.0
             hwaddress ether 02:26:50:FB:16:ED
-        
+
         """
         subprocess.run(['sudo', 'tee', "/etc/network/interfaces"], input=new_config, text=True)
 
-        #reload
+        # reload
         subprocess.run(['sudo', 'ifdown', self.name], check=True)
         subprocess.run(['sudo', 'ifup', self.name], check=True)
 
@@ -70,13 +67,13 @@ class Interface:
                                   controls=[
                                       flet.Row(
                                           controls=
-                                              [flet.Column(
-                                                  controls=[
-                                                      flet.Text(value="IP-адрес(IPv4)", color="black"),
-                                                      flet.Text(value="mac адрес", color="black"),
-                                                      flet.Text(value="IP-адрес(IPv6)", color="black")],
-                                                  horizontal_alignment=flet.CrossAxisAlignment.START
-                                              ),
+                                          [flet.Column(
+                                              controls=[
+                                                  flet.Text(value="IP-адрес(IPv4)", color="black"),
+                                                  flet.Text(value="mac адрес", color="black"),
+                                                  flet.Text(value="IP-адрес(IPv6)", color="black")],
+                                              horizontal_alignment=flet.CrossAxisAlignment.START
+                                          ),
                                               flet.Column(
                                                   controls=[
                                                       self.ip_4_field,
@@ -84,7 +81,7 @@ class Interface:
                                                       self.ip_6_field],
                                                   alignment=flet.MainAxisAlignment.START,
                                               )
-                                              ],
+                                          ],
                                           alignment=flet.MainAxisAlignment.CENTER,
                                           spacing=40,
                                       ),
@@ -146,11 +143,14 @@ class Interface:
             dropdown6.value = "Использовать DHCP"
             self.page.update()
 
-
-        ip_address_field = flet.TextField(value = self.ip_4,bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
-                                          cursor_color= orange, height=40, width=250, fill_color=white, text_size=14, disabled = True)
-        mask_field = flet.TextField(value = self.mask,bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
-                                    cursor_color=orange, height=40, width=250, fill_color=white, text_size=14, disabled = True)
+        ip_address_field = flet.TextField(value=self.ip_4, bgcolor=white, border_radius=14, focused_border_color=orange,
+                                          selection_color=orange, color="black",
+                                          cursor_color=orange, height=40, width=250, fill_color=white, text_size=14,
+                                          disabled=True)
+        mask_field = flet.TextField(value=self.mask, bgcolor=white, border_radius=14, focused_border_color=orange,
+                                    selection_color=orange, color="black",
+                                    cursor_color=orange, height=40, width=250, fill_color=white, text_size=14,
+                                    disabled=True)
 
         def ipv6_changed(e):
             selected = e.control.value
@@ -165,12 +165,14 @@ class Interface:
                                 flet.Text(value="Маска подсети", color="black")
                             ]),
                             flet.Column([
-                                flet.TextField(value= "0.0.0.0", bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
-                                    cursor_color=orange,
+                                flet.TextField(value="0.0.0.0", bgcolor=white, border_radius=14,
+                                               focused_border_color=orange, selection_color=orange, color="black",
+                                               cursor_color=orange,
                                                height=40,
                                                width=250, fill_color=white, text_size=14),
-                                flet.TextField(value= "0.0.0.0", bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
-                                    cursor_color=orange,
+                                flet.TextField(value="0.0.0.0", bgcolor=white, border_radius=14,
+                                               focused_border_color=orange, selection_color=orange, color="black",
+                                               cursor_color=orange,
                                                height=40,
                                                width=250, fill_color=white, text_size=14)
                             ])
@@ -201,92 +203,94 @@ class Interface:
 
         container = flet.Container()
         container_4 = flet.Container(
-                            flet.Column([
-                                flet.Row([
-                                    flet.Column([
-                                        flet.Text(value="IP-адрес", color="black"),
-                                        flet.Text(value="Маска подсети", color="black")
-                                    ]),
-                                    flet.Column([
-                                        ip_address_field,
-                                        mask_field
-                                    ])
-                                ], spacing = 55)
-                            ])
+            flet.Column([
+                flet.Row([
+                    flet.Column([
+                        flet.Text(value="IP-адрес", color="black"),
+                        flet.Text(value="Маска подсети", color="black")
+                    ]),
+                    flet.Column([
+                        ip_address_field,
+                        mask_field
+                    ])
+                ], spacing=55)
+            ])
         )
 
-        mac_address = flet.TextField(value=self.mac_address, bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
-                                    cursor_color=orange, height=40, width=250, fill_color=white, text_size=14)
+        mac_address = flet.TextField(value=self.mac_address, bgcolor=white, border_radius=14,
+                                     focused_border_color=orange, selection_color=orange, color="black",
+                                     cursor_color=orange, height=40, width=250, fill_color=white, text_size=14)
         button_cancel = flet.ElevatedButton(text="Отменить изменения", color=orange, bgcolor="white", width=209,
                                             height=28, on_click=handle_button_cancel, )
         button_save = flet.ElevatedButton(text="Применить", color="black", bgcolor=orange, width=137, height=28,
-                                          on_click=handle_button_save, disabled = False)
+                                          on_click=handle_button_save, disabled=False)
 
         dropdown4 = flet.Dropdown(
-                        value = "Использовать DHCP",
-                        width=240,
-                        options=[
-                            flet.dropdown.Option("Использовать DHCP"),
-                            flet.dropdown.Option("Использовать BOOTP"),
-                            flet.dropdown.Option("Вручную")
-                        ],
-                        border_radius=10,
-                        color="black",
-                        text_size=14,
-                        bgcolor=orange,
-                        border_color="black",
-                        focused_border_color=orange,
-                        on_change=ipv4_changed,
+            value="Использовать DHCP",
+            width=240,
+            options=[
+                flet.dropdown.Option("Использовать DHCP"),
+                flet.dropdown.Option("Использовать BOOTP"),
+                flet.dropdown.Option("Вручную")
+            ],
+            border_radius=10,
+            color="black",
+            text_size=14,
+            bgcolor=orange,
+            border_color="black",
+            focused_border_color=orange,
+            on_change=ipv4_changed,
         )
 
         dropdown6 = flet.Dropdown(
-                        value="Использовать DHCP",
-                        width=240,
-                        options=[
-                            flet.dropdown.Option("Использовать DHCP"),
-                            flet.dropdown.Option("Использовать BOOTP"),
-                            flet.dropdown.Option("Вручную"),
-                        ],
-                        border_radius=10,
-                        color="black",
-                        text_size=14,
-                        bgcolor=orange,
-                        border_color="black",
-                        focused_border_color=orange,
-                        on_change=ipv6_changed
+            value="Использовать DHCP",
+            width=240,
+            options=[
+                flet.dropdown.Option("Использовать DHCP"),
+                flet.dropdown.Option("Использовать BOOTP"),
+                flet.dropdown.Option("Вручную"),
+            ],
+            border_radius=10,
+            color="black",
+            text_size=14,
+            bgcolor=orange,
+            border_color="black",
+            focused_border_color=orange,
+            on_change=ipv6_changed
         )
 
         fields = flet.Column([
-                        flet.Text(value= self.name, color="black"),
-                        flet.Row([
-                            flet.Row([
-                                flet.Text(value= "Конфигурация IPv4", color= "black"),
-                                dropdown4,
-                                ],spacing= 30,),
-                            flet.Row([
-                                flet.Text(value= "Конфигурация IPv6", color= "black"),
-                                dropdown6,
-                            ],spacing= 30,),
-                        ],alignment=flet.MainAxisAlignment.CENTER,spacing= 100),
-                        flet.Row([container_4, container], alignment= flet.MainAxisAlignment.SPACE_BETWEEN, spacing= 85), #Появляющееся окно ручной настройки
-                        flet.Row([
-                            flet.Text(value= "mac адрес", color= "black"),
-                            mac_address
-                        ], alignment=flet.MainAxisAlignment.START, spacing = 85),
-                        # flet.Row([
-                        #     button_cancel,
-                        #     button_save
-                        # ], alignment=flet.MainAxisAlignment.END, spacing=30)
+            flet.Text(value=self.name, color="black"),
+            flet.Row([
+                flet.Row([
+                    flet.Text(value="Конфигурация IPv4", color="black"),
+                    dropdown4,
+                ], spacing=30, ),
+                flet.Row([
+                    flet.Text(value="Конфигурация IPv6", color="black"),
+                    dropdown6,
+                ], spacing=30, ),
+            ], alignment=flet.MainAxisAlignment.CENTER, spacing=100),
+            flet.Row([container_4, container], alignment=flet.MainAxisAlignment.SPACE_BETWEEN, spacing=85),
+            # Появляющееся окно ручной настройки
+            flet.Row([
+                flet.Text(value="mac адрес", color="black"),
+                mac_address
+            ], alignment=flet.MainAxisAlignment.START, spacing=85),
+            # flet.Row([
+            #     button_cancel,
+            #     button_save
+            # ], alignment=flet.MainAxisAlignment.END, spacing=30)
 
         ],
-        horizontal_alignment=flet.CrossAxisAlignment.CENTER,
-        # alignment= flet.MainAxisAlignment.START,
-        spacing = 30,
-        # width=100,
-        height=270,
+            horizontal_alignment=flet.CrossAxisAlignment.CENTER,
+            # alignment= flet.MainAxisAlignment.START,
+            spacing=30,
+            # width=100,
+            height=270,
         )
 
-        dialog_field =(
+        dialog_field = (
             flet.Column(controls=[
                 fields,
                 flet.Row([
@@ -294,8 +298,8 @@ class Interface:
                     button_save
                 ], alignment=flet.MainAxisAlignment.END, spacing=30)
             ],
-            alignment=flet.MainAxisAlignment.SPACE_BETWEEN,
-            spacing= 40
+                alignment=flet.MainAxisAlignment.SPACE_BETWEEN,
+                spacing=40
             )
         )
 
