@@ -44,29 +44,6 @@ class Interface:
     def set_static_ip4(self):
         # subprocess.run(["sudo", 'ifconfig', 'eth0', '192.168.1.15', 'netmask', '255.255.255.0'])
 
-        new_config = f"""
-        auto lo eth0 eth1 eth2
-
-        iface lo inet loopback
-        
-        iface eth0 inet static
-            address {self.ip_4}
-            netmask 255.255.255.0
-            gateway 192.168.1.254
-            dns-nameservers 192.168.1.28 8.8.4.4
-            hwaddress ether 02:8A:8D:37:C2:B7
-        
-        iface eth1 inet dhcp
-            hwaddress ether 02:19:56:1B:00:EA
-        
-        iface eth2 inet static
-            address {self.ip_4}
-            netmask 255.255.255.0
-            network 192.168.42.0
-            hwaddress ether 02:26:50:FB:16:ED
-        
-        """
-
         with open("/etc/network/interfaces", "r") as f:
             content = f.read()
 
@@ -79,7 +56,11 @@ class Interface:
         # if self.name == "Eth3":
         #     eth_block_match = re.search(r"(auto\s+eth3.*?)(?=auto|\Z)", content, re.DOTALL)
 
-        pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+static.*?)(?=(?:iface\s|\Z))"
+        try:
+            pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+static.*?)(?=(?:iface\s|\Z))"
+        except AttributeError:
+            pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+dhcp.*?)(?=(?:iface\s|\Z)"
+
         match = re.search(pattern, content, re.DOTALL)
 
         if not match:
@@ -87,7 +68,7 @@ class Interface:
 
         eth_block = match.group(1)
 
-        new_eth_block = re.sub(r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)", rf"\g<1>{self.ip_4}" + self.ip_4, eth_block, flags=re.MULTILINE)
+        new_eth_block = re.sub(r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)", rf"\g<1>{self.ip_4}", eth_block, flags=re.MULTILINE, count=1)
         
         new_content = content.replace(eth_block, new_eth_block)
 
