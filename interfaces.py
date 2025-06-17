@@ -12,13 +12,13 @@ current_eth0_ip = "ifconfig eth0| grep 'inet' | cut -d: -f2 | awk '{print $2}'"
 class Interface:
     def __init__(self, name, ip_6, mask, app, page):
         self.name = name
-        self.ip_4 = self.get_ip4()
+        self.ip_4 = self.get_ip4() #active ip from ifconfig
         self.ip_6 = ip_6
         self.mask = mask
         self.mac_address = "00:1A:2B:3C"
         self.app = app
         self.page = page
-        self.dynamic = False
+        self.dynamic = False #from configration file
 
         self.ip_4_field = flet.Text(value=self.ip_4, color="black")
         self.mac_address_field = flet.Text(value=self.mask, color="black")
@@ -218,12 +218,6 @@ class Interface:
             dropdown6.value = "Использовать DHCP"
             self.page.update()
 
-
-        ip_address_field = flet.TextField(value = self.ip_4,bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
-                                          cursor_color= orange, height=40, width=250, fill_color=white, text_size=14, disabled = True)
-        mask_field = flet.TextField(value = self.mask,bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
-                                    cursor_color=orange, height=40, width=250, fill_color=white, text_size=14, disabled = True)
-
         def ipv6_changed(e):
             selected = e.control.value
             print(selected)
@@ -271,6 +265,93 @@ class Interface:
                 mask_field.value = "255.255.255.0"
             self.page.update()
 
+        dropdown4 = flet.Dropdown(
+            # TODO get static or dhcp from etc file and set dropdown start value
+            value="Использовать DHCP" if self.get_static_or_dynamic() == "dhcp" else "Вручную",
+            width=240,
+            options=[
+                flet.dropdown.Option("Использовать DHCP"),
+                flet.dropdown.Option("Использовать BOOTP"),
+                flet.dropdown.Option("Вручную")
+            ],
+            border_radius=10,
+            color="black",
+            text_size=14,
+            bgcolor=orange,
+            border_color="black",
+            focused_border_color=orange,
+            on_change=ipv4_changed,
+        )
+
+        dropdown6 = flet.Dropdown(
+            value="Использовать DHCP",
+            width=240,
+            options=[
+                flet.dropdown.Option("Использовать DHCP"),
+                flet.dropdown.Option("Использовать BOOTP"),
+                flet.dropdown.Option("Вручную"),
+            ],
+            border_radius=10,
+            color="black",
+            text_size=14,
+            bgcolor=orange,
+            border_color="black",
+            focused_border_color=orange,
+            on_change=ipv6_changed
+        )
+
+        ip_address_field = flet.TextField(value = self.ip_4,bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
+                                          cursor_color= orange, height=40, width=250, fill_color=white, text_size=14, disabled = False if dropdown4.value == "Вручную" else True)
+        mask_field = flet.TextField(value = self.mask,bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
+                                    cursor_color=orange, height=40, width=250, fill_color=white, text_size=14, disabled = False if dropdown4.value == "Вручную" else True)
+
+        # def ipv6_changed(e):
+        #     selected = e.control.value
+        #     print(selected)
+        #
+        #     if selected == "Вручную":
+        #         container.content = (
+        #             flet.Column([
+        #                 flet.Row([
+        #                     flet.Column([
+        #                         flet.Text(value="IP-адрес", color="black"),
+        #                         flet.Text(value="Маска подсети", color="black")
+        #                     ]),
+        #                     flet.Column([
+        #                         flet.TextField(value= "0.0.0.0", bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
+        #                             cursor_color=orange,
+        #                                        height=40,
+        #                                        width=250, fill_color=white, text_size=14),
+        #                         flet.TextField(value= "0.0.0.0", bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
+        #                             cursor_color=orange,
+        #                                        height=40,
+        #                                        width=250, fill_color=white, text_size=14)
+        #                     ])
+        #                 ])
+        #             ])
+        #         )
+        #
+        #     elif container.content is not None:
+        #         container.content.clean()
+        #     self.page.update()
+        #
+        # def ipv4_changed(e):
+        #     selected = e.control.value
+        #     print(selected)
+        #
+        #     if selected == "Вручную":
+        #         ip_address_field.disabled = False
+        #         ip_address_field.value = self.ip_4
+        #         mask_field.disabled = False
+        #         mask_field.value = "0.0.0.0"
+        #
+        #     else:
+        #         ip_address_field.disabled = True
+        #         ip_address_field.value = self.ip_4
+        #         mask_field.disabled = True
+        #         mask_field.value = "255.255.255.0"
+        #     self.page.update()
+
         container = flet.Container()
         container_4 = flet.Container(
                             flet.Column([
@@ -294,40 +375,40 @@ class Interface:
         button_save = flet.ElevatedButton(text="Применить", color="black", bgcolor=orange, width=137, height=28,
                                           on_click=handle_button_save, disabled = False)
 
-        dropdown4 = flet.Dropdown(
-                        #TODO get static or dhcp from etc file and set dropdown start value
-                        value = "Использовать DHCP" if self.get_static_or_dynamic() == "dhcp" else "Вручную",
-                        width=240,
-                        options=[
-                            flet.dropdown.Option("Использовать DHCP"),
-                            flet.dropdown.Option("Использовать BOOTP"),
-                            flet.dropdown.Option("Вручную")
-                        ],
-                        border_radius=10,
-                        color="black",
-                        text_size=14,
-                        bgcolor=orange,
-                        border_color="black",
-                        focused_border_color=orange,
-                        on_change=ipv4_changed,
-        )
-
-        dropdown6 = flet.Dropdown(
-                        value="Использовать DHCP",
-                        width=240,
-                        options=[
-                            flet.dropdown.Option("Использовать DHCP"),
-                            flet.dropdown.Option("Использовать BOOTP"),
-                            flet.dropdown.Option("Вручную"),
-                        ],
-                        border_radius=10,
-                        color="black",
-                        text_size=14,
-                        bgcolor=orange,
-                        border_color="black",
-                        focused_border_color=orange,
-                        on_change=ipv6_changed
-        )
+        # dropdown4 = flet.Dropdown(
+        #                 #TODO get static or dhcp from etc file and set dropdown start value
+        #                 value = "Использовать DHCP" if self.get_static_or_dynamic() == "dhcp" else "Вручную",
+        #                 width=240,
+        #                 options=[
+        #                     flet.dropdown.Option("Использовать DHCP"),
+        #                     flet.dropdown.Option("Использовать BOOTP"),
+        #                     flet.dropdown.Option("Вручную")
+        #                 ],
+        #                 border_radius=10,
+        #                 color="black",
+        #                 text_size=14,
+        #                 bgcolor=orange,
+        #                 border_color="black",
+        #                 focused_border_color=orange,
+        #                 on_change=ipv4_changed,
+        # )
+        #
+        # dropdown6 = flet.Dropdown(
+        #                 value="Использовать DHCP",
+        #                 width=240,
+        #                 options=[
+        #                     flet.dropdown.Option("Использовать DHCP"),
+        #                     flet.dropdown.Option("Использовать BOOTP"),
+        #                     flet.dropdown.Option("Вручную"),
+        #                 ],
+        #                 border_radius=10,
+        #                 color="black",
+        #                 text_size=14,
+        #                 bgcolor=orange,
+        #                 border_color="black",
+        #                 focused_border_color=orange,
+        #                 on_change=ipv6_changed
+        # )
 
         fields = flet.Column([
                         flet.Text(value= self.name, color="black"),
