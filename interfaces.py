@@ -18,6 +18,7 @@ class Interface:
         self.mac_address = "00:1A:2B:3C"
         self.app = app
         self.page = page
+        self.dynamic = False
 
         self.ip_4_field = flet.Text(value=self.ip_4, color="black")
         self.mac_address_field = flet.Text(value=self.mask, color="black")
@@ -39,9 +40,6 @@ class Interface:
         else:
             print("Not found")
 
-        self.get_static_or_dynamic()
-
-        
 
     def set_static_ip4(self):
         # subprocess.run(["sudo", 'ifconfig', 'eth0', '192.168.1.15', 'netmask', '255.255.255.0'])
@@ -124,6 +122,9 @@ class Interface:
             return None, None
         mode = m.group(2)
 
+        if mode == "dhcp":
+            self.dynamic = True
+
         print(f"{self.name} : {mode}")
 
     def info_structure(self):
@@ -186,6 +187,8 @@ class Interface:
 
     def open_ip_settings(self, e):
         global number
+
+        self.get_static_or_dynamic()
 
         def handle_button_save(e):
             #TODO: setting dynamic ip
