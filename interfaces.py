@@ -39,6 +39,8 @@ class Interface:
         else:
             print("Not found")
 
+        self.get_static_or_dynamic()
+
         
 
     def set_static_ip4(self):
@@ -88,6 +90,41 @@ class Interface:
             subprocess.run(['sudo', 'ifup', self.name.lower()], check=True)
         except Exception:
             print("error2")
+
+    def set_dynamic_ip4(self):
+        lines = []
+        with open("/etc/network/interfaces", "r") as f:
+            for line in f:
+                if line.strip().startswith(f"iface {self.name.lower()} inet"):
+                    lines.append(f"iface {self.name.lower()} inet dhcp\n")
+                elif not line.strip().startswith(("address", "netmask", "gateway", "hwaddress", "dns-nameservers")):
+                    lines.append(line)
+
+        try:
+            subprocess.run(['sudo', 'ifdown', self.name.lower()], check=True)
+        except Exception:
+            print("error")
+        try:
+            subprocess.run(['sudo', 'ifup', self.name.lower()], check=True)
+        except Exception:
+            print("error2")
+
+        with open("/tmp/interfaces", "w") as f:
+            f.writelines(lines)
+
+        subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
+
+    def get_static_or_dynamic(self):
+        with open("/etc/network/interfaces", "r") as f:
+            content = f.read()
+
+        pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+(static|dhcp))([\s\S]*?)(?=\niface|\Z)"
+        m = re.search(pattern, content, flags= re.MULTILINE)
+        if not m:
+            return None, None
+        mode = m.group(2)
+
+        print(f"{self.name} : {mode}")
 
     def info_structure(self):
         return flet.Column(
@@ -151,6 +188,8 @@ class Interface:
         global number
 
         def handle_button_save(e):
+            #TODO: setting dynamic ip
+
             self.ip_4 = ip_address_field.value
             self.ip_4_field.value = self.ip_4
             self.mac_address = mac_address.value
@@ -163,6 +202,7 @@ class Interface:
             self.page.update()
 
         def handle_button_cancel(e):
+            #TODO ↓ ♥
             dropdown4.value = "Использовать DHCP"
 
             ip_address_field.value = self.ip_4
@@ -251,6 +291,7 @@ class Interface:
                                           on_click=handle_button_save, disabled = False)
 
         dropdown4 = flet.Dropdown(
+                        #TODO get static or dhcp from etc file and set dropdown start value
                         value = "Использовать DHCP",
                         width=240,
                         options=[
