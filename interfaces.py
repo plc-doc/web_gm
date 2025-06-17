@@ -107,11 +107,11 @@ class Interface:
         def update_block(match: re.Match) -> str:
             header = match.group(1)
             body = match.group(1)
-            header = f"iface {self.name.lower()} inet dhcp\n"
+            header = f"iface {self.name.lower()} inet dhcp"
             body = re.sub(r"\n\s*(address|netmask|gateway|hwaddress|dns-nameservers)\s\S+", "", body)
             return header + body
 
-        pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+(?:static|dhcp))([\s\S]*?)(?=\niface|\Z)"
+        pattern = rf"(iface\s+{self.name.lower()}\s+inet\s+(?:static|dhcp))([\s\S]*?)(?=\niface|\Z)"
 
         new_content, count = re.subn(pattern, update_block, content, count=1, flags=re.MULTILINE)
         if count == 1:
