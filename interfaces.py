@@ -112,6 +112,7 @@ class Interface:
 
         subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
 
+
     def get_static_or_dynamic(self):
         with open("/etc/network/interfaces", "r") as f:
             content = f.read()
@@ -197,7 +198,10 @@ class Interface:
             self.mac_address_field.value = self.mac_address
             self.mask = mask_field.value
 
-            self.set_static_ip4()
+            if dropdown4.value == "Вручную":
+                self.set_static_ip4()
+            elif dropdown4.value == "Использовать DHCP":
+                self.set_dynamic_ip4()
 
             self.page.close(dialog)
             self.page.update()
