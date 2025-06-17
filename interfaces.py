@@ -90,13 +90,37 @@ class Interface:
             print("error2")
 
     def set_dynamic_ip4(self):
-        lines = []
-        with open("/etc/network/interfaces", "r") as f:
-            for line in f:
-                if line.strip().startswith(f"iface {self.name.lower()} inet"):
-                    lines.append(f"iface {self.name.lower()} inet dhcp\n")
-                elif not line.strip().startswith(("address", "netmask", "gateway", "hwaddress", "dns-nameservers")):
-                    lines.append(line)
+        # lines = []
+        # changeable = False
+        # with open("/etc/network/interfaces", "r") as f:
+        #     for line in f:
+        #         if line.strip().startswith(f"iface {self.name.lower()} inet"):
+        #             lines.append(f"iface {self.name.lower()} inet dhcp\n")
+        #             changeable = True
+        #         elif not line.strip().startswith(("address", "netmask", "gateway", "hwaddress", "dns-nameservers")) and changeable == False:
+        #             lines.append(line)
+
+
+        with open("etc/network/interfaces", "w") as f:
+            content = f.read()
+
+        def update_block(match: re.Match) -> str:
+            header = match.group(1)
+            body = match.group(1)
+            header = f"iface {self.name.lower()} inet dhcp"
+            body = re.sub(r"\n\s*(address|netmask|gateway|hwaddress|dns-nameservers)\s\S+", "", body)
+            return header + body
+
+        pattern = rf"(iface\s+{self.name.lower()}\s+inet\s+(?:static|dhcp))([\s\S]*?)(?=\niface|\Z)"
+
+        new_content, count = re.subn(pattern, update_block, content, count=1, flags=re.MULTILINE)
+        if count == 1:
+            raise Exception(f"BLOCK NOT FOUND")
+
+        with open("/tmp/interfaces", "w") as f:
+            f.write(new_content)
+
+        subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
 
         try:
             subprocess.run(['sudo', 'ifdown', self.name.lower()], check=True)
@@ -107,10 +131,14 @@ class Interface:
         except Exception:
             print("error2")
 
-        with open("/tmp/interfaces", "w") as f:
-            f.writelines(lines)
+        # with open("/tmp/interfaces", "w") as f:
+        #     f.writelines(lines)
+        #
+        # # old file copy
+        # with open("tmp/interfaces2", "w") as f:
+        #     f.writelines(lines)
 
-        subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
+        # subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
 
 
     def get_static_or_dynamic(self):
