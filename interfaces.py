@@ -125,7 +125,7 @@ class Interface:
         if mode == "dhcp":
             self.dynamic = True
 
-        print(f"{self.name} : {mode}")
+        return mode
 
     def info_structure(self):
         return flet.Column(
@@ -188,8 +188,6 @@ class Interface:
     def open_ip_settings(self, e):
         global number
 
-        self.get_static_or_dynamic()
-
         def handle_button_save(e):
             #TODO: setting dynamic ip
 
@@ -206,7 +204,10 @@ class Interface:
 
         def handle_button_cancel(e):
             #TODO ↓ ♥
-            dropdown4.value = "Использовать DHCP"
+            if self.dynamic:
+                dropdown4.value = "Использовать DHCP"
+            else:
+                dropdown4.value = "Вручную"
 
             ip_address_field.value = self.ip_4
             ip_address_field.disabled = True
@@ -259,13 +260,13 @@ class Interface:
 
             if selected == "Вручную":
                 ip_address_field.disabled = False
-                ip_address_field.value = "0.0.0.0"
+                ip_address_field.value = self.ip_4
                 mask_field.disabled = False
                 mask_field.value = "0.0.0.0"
 
             else:
                 ip_address_field.disabled = True
-                ip_address_field.value = "192.168.0.0"
+                ip_address_field.value = self.ip_4
                 mask_field.disabled = True
                 mask_field.value = "255.255.255.0"
             self.page.update()
@@ -295,7 +296,7 @@ class Interface:
 
         dropdown4 = flet.Dropdown(
                         #TODO get static or dhcp from etc file and set dropdown start value
-                        value = "Использовать DHCP",
+                        value = "Использовать DHCP" if self.get_static_or_dynamic() == "dhcp" else "Вручную",
                         width=240,
                         options=[
                             flet.dropdown.Option("Использовать DHCP"),
