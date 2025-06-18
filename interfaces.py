@@ -18,7 +18,7 @@ class Interface:
         self.ip_4 = self.get_ip4() #active ip from ifconfig
         self.ip_6 = ip_6
         self.mask = self.get_mask()
-        self.mac_address = "00:1A:2B:3C"
+        self.mac_address = self.get_mac_address()
         self.app = app
         self.page = page
         self.dynamic = False #from configration file
@@ -42,6 +42,19 @@ class Interface:
             return ip
         else:
             print("Not found")
+
+    def get_mac_address(self):
+        try:
+            result = subprocess.run(['ip', 'link', 'show', self.name.lower()], capture_output=True, text=True, check=True)
+            output = result.stdout
+
+            match = re.search(r"link/ether\s+([0-9a-f:]{17})", output)
+            if match:
+                return match.group(1)
+            else:
+                return None
+        except subprocess.CalledProcessError:
+            return None
 
     def get_mask(self):
         result = subprocess.run(["ip", "-o", "-f", "inet", "addr", "show", self.name.lower()],
@@ -108,7 +121,7 @@ class Interface:
                     f"      address {self.ip_4}\n"
                     f"      netmask 255.255.255.0\n"
                     # f"      network 192.168.42.0\n"
-                    "f      dns-nameservers 192.168.1.28 8.8.4.4\n"
+                    f"      dns-nameservers 192.168.1.28 8.8.4.4\n"
                     f"      hwaddress ether 02:26:50:FB:16:ED\n"
                 ]) + "\n"
             else:
@@ -280,29 +293,29 @@ class Interface:
         global number
 
         def handle_button_save(e):
-            #TODO: setting dynamic ip
-
             self.ip_4 = ip_address_field.value
             self.ip_4_field.value = self.ip_4
-            self.mac_address = mac_address.value
-            self.mac_address_field.value = self.mac_address
+
             self.mask = mask_field.value
 
             if dropdown4.value == "Вручную":
                 self.set_static_ip4()
+                self.set_mask()
+                # self.mask = self.get_mask()
+                # mask_field.value = self.mask
             elif dropdown4.value == "Использовать DHCP":
                 self.set_dynamic_ip4()
                 self.ip_4 = self.get_ip4()
                 self.ip_4_field.value = self.ip_4
 
-                print(self.ip_4)
-
+            self.mac_address = self.get_mac_address()
+            self.mac_address_field.value = self.mac_address
 
             self.page.close(dialog)
             self.page.update()
 
         def handle_button_cancel(e):
-            #TODO ↓ ♥
+            # ↓ ♥
             if self.dynamic:
                 dropdown4.value = "Использовать DHCP"
             else:
@@ -355,17 +368,16 @@ class Interface:
                 ip_address_field.disabled = False
                 ip_address_field.value = self.ip_4
                 mask_field.disabled = False
-                mask_field.value = "0.0.0.0"
+                mask_field.value = self.mask
 
             else:
                 ip_address_field.disabled = True
                 ip_address_field.value = self.ip_4
                 mask_field.disabled = True
-                mask_field.value = "255.255.255.0"
+                mask_field.value = self.mask
             self.page.update()
 
         dropdown4 = flet.Dropdown(
-            # TODO get static or dhcp from etc file and set dropdown start value
             value="Использовать DHCP" if self.get_static_or_dynamic() == "dhcp" else "Вручную",
             width=240,
             options=[
@@ -475,7 +487,7 @@ class Interface:
                                           on_click=handle_button_save, disabled = False)
 
         # dropdown4 = flet.Dropdown(
-        #                 #TODO get static or dhcp from etc file and set dropdown start value
+        #
         #                 value = "Использовать DHCP" if self.get_static_or_dynamic() == "dhcp" else "Вручную",
         #                 width=240,
         #                 options=[
