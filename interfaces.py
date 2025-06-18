@@ -48,15 +48,47 @@ class Interface:
                                 capture_output=True, text=True, check=True)
         output = result.stdout
 
-        match = re.search(r"(\b\d+\.\d+\.\d+\.\d+/(\d+)\b)", output)
+        match = re.search(r"(/(\d+)\b)", output)
         if not match:
             return None
 
-        cidr = int(match.group(1))
+        cidr = int(match.group(1)[1:]) #cut first symbol "/"
         #Convertation - for example /24 -> 255.255.255.0
         mask = (0xffffffff << (32-cidr)) & 0xffffffff
 
         return ".".join(str((mask >> (8*i)) & 0xff) for i in reversed(range(4)))
+
+    def set_mask(self):
+        with open("/etc/network/interfaces", "r") as f:
+            content = f.read()
+
+        pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+static.*?)(?=(?:iface\s|\Z))"
+
+        match = re.search(pattern, content, re.DOTALL)
+
+        if not match:
+            print("Block not found mask")
+
+        eth_block = match.group(1)
+
+        new_eth_block = re.sub(r"(^\s*netmask\s+)(\d+\.\d+\.\d+\.\d+)", rf"\g<1>{self.mask}", eth_block, flags=re.MULTILINE, count=1)
+
+        new_content = content.replace(eth_block, new_eth_block)
+
+        with open("/tmp/interfaces", "w") as f:
+            f.write(new_content)
+
+        subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
+
+        #reload
+        try:
+            subprocess.run(['sudo', 'ifdown', self.name.lower()], check=True)
+        except Exception:
+            print("error mask")
+        try:
+            subprocess.run(['sudo', 'ifup', self.name.lower()], check=True)
+        except Exception:
+            print("error2 mask")
 
 
     def set_static_ip4(self):
