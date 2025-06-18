@@ -145,7 +145,7 @@ class Interface:
             f.writelines(lines)
 
         # old file copy
-        with open("tmp/interfaces2", "w") as f:
+        with open("/tmp/interfaces2", "w") as f:
             f.writelines(lines)
 
         subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
@@ -239,16 +239,18 @@ class Interface:
         def handle_button_save(e):
             #TODO: setting dynamic ip
 
+            if dropdown4.value == "Вручную":
+                self.set_static_ip4()
+            elif dropdown4.value == "Использовать DHCP":
+                self.set_dynamic_ip4()
+                
             self.ip_4 = ip_address_field.value
             self.ip_4_field.value = self.ip_4
             self.mac_address = mac_address.value
             self.mac_address_field.value = self.mac_address
             self.mask = mask_field.value
 
-            if dropdown4.value == "Вручную":
-                self.set_static_ip4()
-            elif dropdown4.value == "Использовать DHCP":
-                self.set_dynamic_ip4()
+
 
             self.page.close(dialog)
             self.page.update()
