@@ -4,6 +4,8 @@ import time
 import flet
 import subprocess
 
+from httpx import request
+
 grey = "#565759"
 white = "#EAEAEA"
 orange = "#F7941E"
@@ -15,7 +17,7 @@ class Interface:
         self.name = name
         self.ip_4 = self.get_ip4() #active ip from ifconfig
         self.ip_6 = ip_6
-        self.mask = mask
+        self.mask = self.get_mask()
         self.mac_address = "00:1A:2B:3C"
         self.app = app
         self.page = page
@@ -41,30 +43,46 @@ class Interface:
         else:
             print("Not found")
 
+    def get_mask(self):
+        result = subprocess.run(["ip", "-o", "-f", "inet", "addr", "show", self.name.lower()],
+                                capture_output=True, text=True, check=True)
+        output = result.stdout
+
+        match = re.search(r"(\b\d+\.\d+\.\d+\.\d+/(\d+)\b)", output)
+        if not match:
+            return None
+
+        cidr = int(match.group(1))
+        #Convertation - for example /24 -> 255.255.255.0
+        mask = (0xffffffff << (32-cidr)) & 0xffffffff
+
+        return ".".join(str((mask >> (8*i)) & 0xff) for i in reversed(range(4)))
+
 
     def set_static_ip4(self):
         # subprocess.run(["sudo", 'ifconfig', 'eth0', '192.168.1.15', 'netmask', '255.255.255.0'])
 
-
         with open("/etc/network/interfaces", "r") as f:
             content = f.read()
-
-        # TODO: change dynamic to static
 
         def repl(match: re.Match) -> str:
             mode = match.group(2)
             body = match.group(3)
             if mode == "dhcp":
+                # switch to static
                 header = f"iface {self.name.lower()} inet static"
                 return "\n".join([
                     header,
-                    f"      address {self.ip_4}"
-                    f"      netmask 255.255.255.0"
-                    f"      network 192.168.42.0"
-                    f"      hwaddress ether 02:26:50:FB:16:ED"
+                    f"      address {self.ip_4}\n"
+                    f"      netmask 255.255.255.0\n"
+                    # f"      network 192.168.42.0\n"
+                    "f      dns-nameservers 192.168.1.28 8.8.4.4\n"
+                    f"      hwaddress ether 02:26:50:FB:16:ED\n"
                 ]) + "\n"
             else:
+                # keep static - change only address
                 header = f"iface {self.name.lower()} inet static"
+                # if found - change
                 if re.search(r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)", body):
                     body = re.sub(
                         r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)",
@@ -72,11 +90,12 @@ class Interface:
                         body,
                         flags=re.MULTILINE
                     )
+                # if not found - add
                 else:
                     body =  f"      address {self.ip_4}\n" + body
                 return header + body
 
-        pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+(static|dhcp)([\s\S]*?)(?=^\s*iface|\Z)"
+        pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+(static|dhcp))([\s\S]*?)(?=^\s*iface|\Z)"
         new_content, count = re.subn(pattern, repl, content, flags=re.MULTILINE)
 
         if count == 0:
