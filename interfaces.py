@@ -1,4 +1,5 @@
 import re
+import time
 
 import flet
 import subprocess
@@ -44,42 +45,64 @@ class Interface:
     def set_static_ip4(self):
         # subprocess.run(["sudo", 'ifconfig', 'eth0', '192.168.1.15', 'netmask', '255.255.255.0'])
 
+
         with open("/etc/network/interfaces", "r") as f:
             content = f.read()
 
         # TODO: change dynamic to static
 
-        # if self.name == "Eth0":
-        #     eth_block_match = re.search(r"(auto\s+eth0.*?)(?=auto|\Z)", content, re.DOTALL)
-        # if self.name == "Eth1":
-        #     eth_block_match = re.search(r"(auto\s+eth1.*?)(?=auto|\Z)", content, re.DOTALL)
-        # if self.name == "Eth2":
-        #     eth_block_match = re.search(r"(auto\s+eth2.*?)(?=auto|\Z)", content, re.DOTALL)
-        # if self.name == "Eth3":
-        #     eth_block_match = re.search(r"(auto\s+eth3.*?)(?=auto|\Z)", content, re.DOTALL)
+        def repl(match: re.Match) -> str:
+            mode = match.group(2)
+            body = match.group(3)
+            if mode == "dhcp":
+                header = f"iface {self.name.lower()} inet static"
+                return "\n".join([
+                    header,
+                    f"      address {self.ip_4}"
+                    f"      netmask 255.255.255.0"
+                    f"      network 192.168.42.0"
+                    f"      hwaddress ether 02:26:50:FB:16:ED"
+                ]) + "\n"
+            else:
+                header = f"iface {self.name.lower()} inet static"
+                if re.search(r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)", body):
+                    body = re.sub(
+                        r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)",
+                        rf"\g<1>{self.ip_4}",
+                        body,
+                        flags=re.MULTILINE
+                    )
+                else:
+                    body =  f"      address {self.ip_4}\n" + body
+                return header + body
 
-        try:
-            pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+static.*?)(?=(?:iface\s|\Z))"
-        except AttributeError:
-            pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+dhcp.*?)(?=(?:iface\s|\Z)"
+        pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+(static|dhcp)([\s\S]*?)(?=^\s*iface|\Z)"
+        new_content, count = re.subn(pattern, repl, content, flags=re.MULTILINE)
 
-        match = re.search(pattern, content, re.DOTALL)
+        if count == 0:
+            raise RuntimeError("oups")
 
-        if not match:
-            print("Block not found")
-
-        eth_block = match.group(1)
-
-        new_eth_block = re.sub(r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)", rf"\g<1>{self.ip_4}", eth_block, flags=re.MULTILINE, count=1)
-        
-        new_content = content.replace(eth_block, new_eth_block)
+        '''block changing address for static ip'''
+        # try:
+        #     pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+static.*?)(?=(?:iface\s|\Z))"
+        # except AttributeError:
+        #     pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+dhcp.*?)(?=(?:iface\s|\Z)"
+        #
+        # match = re.search(pattern, content, re.DOTALL)
+        #
+        # if not match:
+        #     print("Block not found")
+        #
+        # eth_block = match.group(1)
+        #
+        # new_eth_block = re.sub(r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)", rf"\g<1>{self.ip_4}", eth_block, flags=re.MULTILINE, count=1)
+        #
+        # new_content = content.replace(eth_block, new_eth_block)
 
         with open("/tmp/interfaces", "w") as f:
             f.write(new_content)
 
         subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
-
-        # subprocess.run(['sudo', 'tee', "/etc/network/interfaces"], input=new_config, text=True)
 
         #reload
         try:
@@ -109,37 +132,6 @@ class Interface:
                         continue
                 else:
                     lines.append(line)
-
-
-        # with open("/etc/network/interfaces", "r") as f:
-        #     content = f.read()
-        #
-        # def update_block(match: re.Match) -> str:
-        #     header = match.group(1)
-        #     body = match.group(1)
-        #     header = f"iface {self.name.lower()} inet dhcp\n"
-        #     body = re.sub(r"\n\s*(address|netmask|gateway|hwaddress|dns-nameservers)\s\S+", "", body)
-        #     return header + body
-        #
-        # pattern = rf"(iface\s+{self.name.lower()}\s+inet\s+(?:static|dhcp))([\s\S]*?)(?=^\s*iface|\Z)"
-        #
-        # new_content, count = re.subn(pattern, update_block, content, count=1, flags=re.MULTILINE)
-        # if count == 0:
-        #     raise Exception(f"BLOCK NOT FOUND")
-
-        # with open("/tmp/interfaces", "w") as f:
-        #     f.write(new_content)
-        #
-        # subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
-
-        # try:
-        #     subprocess.run(['sudo', 'ifdown', self.name.lower()], check=True)
-        # except Exception:
-        #     print("error")
-        # try:
-        #     subprocess.run(['sudo', 'ifup', self.name.lower()], check=True)
-        # except Exception:
-        #     print("error2")
 
         with open("/tmp/interfaces", "w") as f:
             f.writelines(lines)
@@ -249,8 +241,10 @@ class Interface:
                 self.set_static_ip4()
             elif dropdown4.value == "Использовать DHCP":
                 self.set_dynamic_ip4()
-                self.get_ip4()
+                self.ip_4 = self.get_ip4()
                 self.ip_4_field.value = self.ip_4
+
+                print(self.ip_4)
 
 
             self.page.close(dialog)
