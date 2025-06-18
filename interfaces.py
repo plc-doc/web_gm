@@ -24,7 +24,7 @@ class Interface:
         self.dynamic = False #from configration file
 
         self.ip_4_field = flet.Text(value=self.ip_4, color="black")
-        self.mac_address_field = flet.Text(value=self.mask, color="black")
+        self.mac_address_field = flet.Text(value=self.mac_address, color="black")
         self.ip_6_field = flet.Text(value=self.ip_6, color="black")
 
     def get_ip4(self):
