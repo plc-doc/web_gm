@@ -43,6 +43,13 @@ class Interface:
         else:
             print("Not found")
 
+    def get_ip6(self):
+        request = subprocess.run(["ip", "-6", "addr", "show", self.name.lower()], capture_output=True, text=True, check=True)
+        output = request.stdout
+
+        match = re.search(r"inet6\s+([0-9a-f:]+)/\d+ scope", output)
+        return match.group(1) if match else None
+
     def get_mac_address(self):
         try:
             result = subprocess.run(['ip', 'link', 'show', self.name.lower()], capture_output=True, text=True, check=True)
