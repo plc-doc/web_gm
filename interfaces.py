@@ -16,12 +16,13 @@ class Interface:
     def __init__(self, name, ip_6, mask, app, page):
         self.name = name
         self.ip_4 = self.get_ip4() #active ip from ifconfig
-        self.ip_6 = ip_6
+        self.ip_6 = self.get_ip6()
         self.mask = self.get_mask()
         self.mac_address = self.get_mac_address()
         self.app = app
         self.page = page
         self.dynamic = False #from configration file
+        self.dynamic_ip6 = False
 
         self.ip_4_field = flet.Text(value=self.ip_4, color="black")
         self.mac_address_field = flet.Text(value=self.mac_address, color="black")
@@ -238,6 +239,41 @@ class Interface:
 
         return mode
 
+    def get_static_or_dynamic_ip6(self):
+        with open("/etc/network/interfaces", "r") as f:
+        #     content = f.read()
+        #
+        # pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet6\s+static.*?)(?=(?:iface\s|\Z))"
+        # m = re.search(pattern, content, flags= re.MULTILINE)
+            for line in f:
+                if line.startswith(f"iface {self.name.lower()} inet6 static"):
+                    self.dynamic_ip6 = False
+                    return "static"
+
+        # if not m:
+        request = subprocess.run(["ip", "-6", "addr", "show", self.name.lower()], capture_output=True, text=True,
+                                 check=True)
+        output = request.stdout
+
+        match = re.search(r"inet6\s+([0-9a-f:]+)/\d+ scope", output)
+
+        if match:
+            self.dynamic_ip6 = True
+            return "dhcp"
+        else:
+            return None
+
+        # return match.group(1) if match else None
+
+        # mode = m.group(2)
+        #
+        # if mode == "dhcp":
+        #     self.dynamic_ip6 = True
+        #
+        # return mode
+
+
+
     def info_structure(self):
         return flet.Column(
             controls=[flet.Text(value=self.name, color="black"),
@@ -401,8 +437,18 @@ class Interface:
             on_change=ipv4_changed,
         )
 
+        def get_dropdown6_value():
+            value = self.get_static_or_dynamic_ip6()
+
+            if value == "dhcp":
+                return "Использовать DHCP"
+            elif value == "static":
+                return "Вручную"
+            else:
+                return "Отключено"
+
         dropdown6 = flet.Dropdown(
-            value="Отключено",
+            value= get_dropdown6_value(),
             width=240,
             options=[
                 flet.dropdown.Option("Отключено"),
@@ -422,6 +468,15 @@ class Interface:
                                           cursor_color= orange, height=40, width=250, fill_color=white, text_size=14, disabled = False if dropdown4.value == "Вручную" else True)
         mask_field = flet.TextField(value = self.mask,bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
                                     cursor_color=orange, height=40, width=250, fill_color=white, text_size=14, disabled = False if dropdown4.value == "Вручную" else True)
+
+        ip6_field = flet.TextField(value=self.ip_6, bgcolor=white, border_radius=14, focused_border_color=orange,
+                                          selection_color=orange, color="black",
+                                          cursor_color=orange, height=40, width=250, fill_color=white, text_size=14,
+                                          disabled= False if dropdown6.value == "Вручную" else True)
+        mask6_field = flet.TextField(value=self.mask, bgcolor=white, border_radius=14, focused_border_color=orange,
+                                    selection_color=orange, color="black",
+                                    cursor_color=orange, height=40, width=250, fill_color=white, text_size=14,
+                                    disabled= False if dropdown6.value == "Вручную" else True)
 
         # def ipv6_changed(e):
         #     selected = e.control.value
@@ -479,8 +534,8 @@ class Interface:
                                         flet.Text(value="Маска подсети", color="black")
                                     ]),
                                     flet.Column([
-                                        ip_address_field,
-                                        mask_field
+                                        ip6_field,
+                                        mask6_field
                                     ])
                                 ], spacing = 55)
                             ])
