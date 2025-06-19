@@ -80,20 +80,12 @@ class ClockView(flet.Container):
         # date = 3
         return date
 
-    def get_browser_date(self):
-        # app = Flask(__name__)
+    # def get_browser_date(self):
+    #     # app = Flask(__name__)
 
-        data = request.json
-        client_time = data.get("time")
-        if not client_time:
-            return "error"
 
-        dt = datetime.datetime.fromisoformat(client_time)
-        formatted_time = dt.strftime('/%Y-%m-%d %H:%M:%S')
-
-        print(formatted_time)
 
     def get_time(self):
         time = datetime.datetime.now().time()
-        self.get_browser_date()
+        
         return time
