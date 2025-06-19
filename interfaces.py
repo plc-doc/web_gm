@@ -374,32 +374,45 @@ class Interface:
             self.page.update()
 
         def ipv6_changed(e):
+            # selected = e.control.value
+            # print(selected)
+            #
+            # if selected == "Вручную":
+            #     container.content = (
+            #         flet.Column([
+            #             flet.Row([
+            #                 flet.Column([
+            #                     flet.Text(value="IP-адрес", color="black"),
+            #                     flet.Text(value="Маска подсети", color="black")
+            #                 ]),
+            #                 flet.Column([
+            #                     flet.TextField(value= "0.0.0.0", bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
+            #                         cursor_color=orange,
+            #                                    height=40,
+            #                                    width=250, fill_color=white, text_size=14),
+            #                     flet.TextField(value= "0.0.0.0", bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
+            #                         cursor_color=orange,
+            #                                    height=40,
+            #                                    width=250, fill_color=white, text_size=14)
+            #                 ])
+            #             ])
+            #         ])
+            #     )
             selected = e.control.value
             print(selected)
 
             if selected == "Вручную":
-                container.content = (
-                    flet.Column([
-                        flet.Row([
-                            flet.Column([
-                                flet.Text(value="IP-адрес", color="black"),
-                                flet.Text(value="Маска подсети", color="black")
-                            ]),
-                            flet.Column([
-                                flet.TextField(value= "0.0.0.0", bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
-                                    cursor_color=orange,
-                                               height=40,
-                                               width=250, fill_color=white, text_size=14),
-                                flet.TextField(value= "0.0.0.0", bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
-                                    cursor_color=orange,
-                                               height=40,
-                                               width=250, fill_color=white, text_size=14)
-                            ])
-                        ])
-                    ])
-                )
+                ip6_field.disabled = False
+                ip6_field.value = self.ip_6
+                mask6_field.disabled = False
+                mask6_field.value = self.mask
 
-            elif container.content is not None:
+            elif selected == "Использовать DHCP":
+                ip6_field.disabled = True
+                ip6_field.value = self.ip_6
+                mask6_field.disabled = True
+                mask6_field.value = self.mask
+            else:
                 container.content.clean()
             self.page.update()
 
@@ -525,8 +538,7 @@ class Interface:
         #         mask_field.value = "255.255.255.0"
         #     self.page.update()
 
-        container = flet.Container()
-        container_4 = flet.Container(
+        container = flet.Container(
                             flet.Column([
                                 flet.Row([
                                     flet.Column([
@@ -536,6 +548,21 @@ class Interface:
                                     flet.Column([
                                         ip6_field,
                                         mask6_field
+                                    ])
+                                ], spacing = 55)
+                            ])
+        )
+
+        container_4 = flet.Container(
+                            flet.Column([
+                                flet.Row([
+                                    flet.Column([
+                                        flet.Text(value="IP-адрес", color="black"),
+                                        flet.Text(value="Маска подсети", color="black")
+                                    ]),
+                                    flet.Column([
+                                        ip_address_field,
+                                        mask_field
                                     ])
                                 ], spacing = 55)
                             ])
