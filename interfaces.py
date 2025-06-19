@@ -413,7 +413,7 @@ class Interface:
                 mask6_field.disabled = True
                 mask6_field.value = self.mask
             else:
-                container.content.clean()
+                container.visible = False
             self.page.update()
 
         def ipv4_changed(e):
@@ -551,7 +551,7 @@ class Interface:
                                     ])
                                 ], spacing = 55)
                             ])
-        )
+        ) if dropdown6.value != "Отключено" else flet.Container()
 
         container_4 = flet.Container(
                             flet.Column([
