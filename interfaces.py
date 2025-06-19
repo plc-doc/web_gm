@@ -382,7 +382,7 @@ class Interface:
             width=240,
             options=[
                 flet.dropdown.Option("Использовать DHCP"),
-                flet.dropdown.Option("Использовать BOOTP"),
+                # flet.dropdown.Option("Использовать BOOTP"),
                 flet.dropdown.Option("Вручную")
             ],
             border_radius=10,
@@ -395,11 +395,11 @@ class Interface:
         )
 
         dropdown6 = flet.Dropdown(
-            value="Использовать DHCP",
+            value="Отключено",
             width=240,
             options=[
+                flet.dropdown.Option("Отключено"),
                 flet.dropdown.Option("Использовать DHCP"),
-                flet.dropdown.Option("Использовать BOOTP"),
                 flet.dropdown.Option("Вручную"),
             ],
             border_radius=10,
