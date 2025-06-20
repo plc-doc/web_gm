@@ -18,7 +18,7 @@ class ClockView:
         self.app = app
         self.page = page
 
-        self.date_field = flet.TextField(value= self.get_date(),border= flet.InputBorder.NONE, color= "black", on_click=self.date_changes())
+        self.date_field = flet.TextField(value= self.get_date(),border= flet.InputBorder.NONE, color= "black", on_click=lambda e: self.date_changes)
         self.time_field = flet.TextField(border= flet.InputBorder.NONE, color="black")
 
         # self.get_time()
@@ -149,22 +149,21 @@ class ClockView:
         )
 
         self.get_time()
-        self.button.on_click = lambda e: self.stop_time()
-        self.time_field.on_click = lambda e: self.time_changed()
+        self.button.on_click = lambda e: self.stop_time
+        self.time_field.on_click = lambda e: self.time_changed
 
-    def time_changed(self):
+    def time_changed(self, e):
         global task
 
         task.cancel()
         self.page.update()
 
-        self.time_field.filled = True
-        self.time_field.bgcolor = white
+        e.filled = True
+        e.bgcolor = white
 
-    def date_changes(self):
-        self.date_field.filled = True
-        self.date_field.bgcolor = white
-
+    def date_changes(self, e):
+        e.filled = True
+        e.bgcolor = white
 
     def stop_time(self):
         global task
