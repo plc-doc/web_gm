@@ -116,8 +116,18 @@ class ClockView:
                         flet.VerticalDivider(width= 946, color= "#ACACAC"),
                         flet.Row([
                             flet.Text("Часовой пояс", color="black"),
-                            flet.TextField(value=self.get_time_zone(), border=flet.InputBorder.NONE, color="black")
-
+                            flet.Dropdown(
+                                value=self.get_time_zone(),
+                                width=240,
+                                options=self.get_time_zones_list(),
+                                border_radius=10,
+                                color="black",
+                                text_size=14,
+                                bgcolor=grey,
+                                border_color="black",
+                                focused_border_color=white,
+                                # on_change=ipv6_changed
+                            )
                         ], alignment=flet.MainAxisAlignment.CENTER, spacing= 30)
                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
                 ),
@@ -161,6 +171,7 @@ class ClockView:
         self.time_field.bgcolor = white
         self.time_field.border = flet.InputBorder.OUTLINE
         self.time_field.border_radius = 14
+        self.time_field.focused_border_color = orange
 
         self.page.update()
 
@@ -169,6 +180,7 @@ class ClockView:
         self.date_field.bgcolor = white
         self.date_field.border = flet.InputBorder.OUTLINE
         self.date_field.border_radius = 14
+        self.date_field.focused_border_color = orange
 
         self.page.update()
 
@@ -207,6 +219,17 @@ class ClockView:
     def get_time_zone(self):
         time_zone = subprocess.run(["date", '+%Z %z'], capture_output=True, text=True, check= True)
         return time_zone.stdout
+
+    def get_time_zones_list(self):
+        result = subprocess.run(["timedatectl","list-timezones"], capture_output=True, check=True, text=True)
+        time_zones = result.stdout.strip().split('\n')
+
+        options = []
+
+        for time_zone in time_zones:
+            options.append(flet.dropdown.Option(time_zone))
+
+        return options
 
     # TODO:
     #  setting time zones
