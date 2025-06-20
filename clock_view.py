@@ -85,11 +85,17 @@ class ClockView:
         #     expand=True,
         #     padding=20
         # )
-        self.button = flet.FilledTonalButton(text="Синхронизировать с компьютером",
-                                                  bgcolor=orange,
-                                                  color="black",
-                                                  # on_click=self.stop()
-                                                   )
+        self.button_save = flet.ElevatedButton(text="Сохранить изменения",
+                                             bgcolor=orange,
+                                             color="black",
+                                             on_click= self.handle_button_save()
+                                             )
+        self.button_cancel = flet.ElevatedButton(text="Отменить изменения",
+                                                  bgcolor="#CACACA",
+                                                  color=orange,
+                                                  on_click=self.handle_button_cancel()
+                                                  )
+
         self.container = flet.Container(flet.Column(
             controls=[
                 flet.Text("Настройка даты и времени", text_align=flet.alignment.center,color=orange,size=20),
@@ -111,15 +117,15 @@ class ClockView:
                                 self.date_field,
                                 self.time_field
                             ], horizontal_alignment=flet.CrossAxisAlignment.CENTER),
-                            self.button
+                            # self.button
                         ], alignment=flet.MainAxisAlignment.SPACE_EVENLY),
                         flet.VerticalDivider(width= 946, color= "#ACACAC"),
                         flet.Row([
                             flet.Text("Часовой пояс", color="black"),
                             flet.Dropdown(
-                                value=self.get_time_zone(),
+                                value= self.get_time_zone().strip(),
                                 width=240,
-                                menu_height = 200,
+                                menu_height = 400,
                                 options=self.get_time_zones_list(),
                                 border_radius=10,
                                 color="black",
@@ -127,6 +133,8 @@ class ClockView:
                                 bgcolor=grey,
                                 border_color="black",
                                 focused_border_color=white,
+                                filled =True,
+                                fill_color=white
                                 # on_change=ipv6_changed
                             )
                         ], alignment=flet.MainAxisAlignment.CENTER, spacing= 30)
@@ -151,20 +159,40 @@ class ClockView:
                             ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
                         ], alignment=flet.MainAxisAlignment.SPACE_EVENLY)
                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
-                )
+                ),
+                flet.Row([
+                    self.button_save,
+
+                ])
+
+
             ],
             horizontal_alignment=flet.CrossAxisAlignment.CENTER
             ),
             expand=True,
             padding=20
         )
+        self.page.update()
 
         self.get_time()
-        self.button.on_click = lambda e: self.stop_time()
-        self.time_field.on_click = lambda e: self.time_changed(e)
-        self.date_field.on_click = lambda e: self.date_changes(e)
+        # self.button_save.on_click = lambda e: self.stop_time()
+        self.time_field.on_click = lambda e: self.time_changed()
+        self.date_field.on_click = lambda e: self.date_changes()
 
-    def time_changed(self, e):
+    def handle_button_save(self):
+        print("saved")
+
+    def handle_button_cancel(self):
+        self.date_field.value = self.get_date()
+        self.get_time()
+        self.time_field.filled = False
+        self.date_field.filled = False
+        self.time_field.border= flet.InputBorder.NONE
+        self.date_field.border= flet.InputBorder.NONE
+
+        self.page.update()
+
+    def time_changed(self):
         global task
 
         self.stop_time()
@@ -176,7 +204,7 @@ class ClockView:
 
         self.page.update()
 
-    def date_changes(self, e):
+    def date_changes(self):
         self.date_field.filled = True
         self.date_field.bgcolor = white
         self.date_field.border = flet.InputBorder.OUTLINE
@@ -215,12 +243,27 @@ class ClockView:
 
         task = self.page.run_task(update_time)
 
+    def set_time_zone(self, new_time_zone):
+        lines = []
+        with open("/etc/timezone", "r") as f:
+            for line in f:
+                lines.append(new_time_zone)
 
+        with open("/tmp/timezone", "w") as f:
+            f.writelines(new_time_zone)
+
+        with open("/etc/timezone", "w") as f:
+            f.writelines(lines)
+
+        subprocess.run(["sudo", "cp", "/tmp/timezone", "/etc/timezone"], check=True)
+
+        subprocess.run(["sudo", "systemctl", "restart", "systemd-timesyncd.service"], check=True)
 
     def get_time_zone(self):
         time_zone = subprocess.run(["cat", '/etc/timezone'], capture_output=True, text=True, check= True)
-        print(time_zone.stdout)
-        return time_zone.stdout
+        result = time_zone.stdout
+        print(result)
+        return result
 
     def get_time_zones_list(self):
         result = subprocess.run(["timedatectl","list-timezones"], capture_output=True, check=True, text=True)
