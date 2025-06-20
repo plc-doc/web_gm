@@ -21,6 +21,22 @@ class ClockView:
         self.date_field = flet.TextField(value= self.get_date(),border= flet.InputBorder.NONE, color= "black")
         self.time_field = flet.TextField(border= flet.InputBorder.NONE, color="black")
 
+        self.time_zone = flet.Dropdown(
+                                value= self.get_time_zone().strip(),
+                                width=240,
+                                menu_height = 400,
+                                options=self.get_time_zones_list(),
+                                border_radius=10,
+                                color="black",
+                                text_size=14,
+                                bgcolor=grey,
+                                border_color="black",
+                                focused_border_color=white,
+                                filled =True,
+                                fill_color=white
+                                # on_change=ipv6_changed
+                            )
+
         # self.get_time()
 
         # super().__init__(
@@ -122,21 +138,7 @@ class ClockView:
                         flet.VerticalDivider(width= 946, color= "#ACACAC"),
                         flet.Row([
                             flet.Text("Часовой пояс", color="black"),
-                            flet.Dropdown(
-                                value= self.get_time_zone().strip(),
-                                width=240,
-                                menu_height = 400,
-                                options=self.get_time_zones_list(),
-                                border_radius=10,
-                                color="black",
-                                text_size=14,
-                                bgcolor=grey,
-                                border_color="black",
-                                focused_border_color=white,
-                                filled =True,
-                                fill_color=white
-                                # on_change=ipv6_changed
-                            )
+                            self.time_zone
                         ], alignment=flet.MainAxisAlignment.CENTER, spacing= 30)
                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
                 ),
@@ -184,6 +186,9 @@ class ClockView:
 
         # if task.cancelled():
         self.set_local_datetime()
+
+        if self.time_zone.value != self.get_time_zone():
+            self.set_time_zone()
 
         # self.date_field.value = self.get_date()
         self.stop_time()
@@ -266,14 +271,14 @@ class ClockView:
 
         self.page.update()
 
-    def set_time_zone(self, new_time_zone):
+    def set_time_zone(self):
         lines = []
         with open("/etc/timezone", "r") as f:
             for line in f:
-                lines.append(new_time_zone)
+                lines.append(self.time_zone.value)
 
         with open("/tmp/timezone", "w") as f:
-            f.writelines(new_time_zone)
+            f.writelines(self.time_zone.value)
 
         with open("/etc/timezone", "w") as f:
             f.writelines(lines)
