@@ -182,12 +182,21 @@ class ClockView:
     def handle_button_save(self):
         global task
 
-        if task.cancelled():
-            self.set_local_time()
+        # if task.cancelled():
+        self.set_local_datetime()
 
-        print("saved")
+        # self.date_field.value = self.get_date()
+        self.stop_time()
+        self.get_time()
+        self.time_field.filled = False
+        self.date_field.filled = False
+        self.time_field.border = flet.InputBorder.NONE
+        self.date_field.border = flet.InputBorder.NONE
+
+        self.page.update()
 
     def handle_button_cancel(self):
+        self.stop_time()
         self.date_field.value = self.get_date()
         self.get_time()
         self.time_field.filled = False
@@ -248,11 +257,12 @@ class ClockView:
 
         task = self.page.run_task(update_time)
 
-    def set_local_time(self):
+
+    def set_local_datetime(self):
         date = self.date_field.value
         date_obj = datetime.datetime.strptime(date, "%d.%m.%Y")
         formatted_date = date_obj.strftime("%Y-%m-%d")
-        subprocess.run(["sudo", "date", "--set", f'"{formatted_date} {self.time_field.value}"'])
+        subprocess.run(["sudo", "date", "--set", f"{formatted_date} {self.time_field.value}"])
 
         self.page.update()
 
