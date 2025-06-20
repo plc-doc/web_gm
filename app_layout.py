@@ -91,7 +91,7 @@ class AppLayout(flet.Row):
         #
 
 
-        self.clock_view = ClockView(self, self.page)
+        self.clock_view = ClockView(self, self.page).container
         self.net_settings_view = (
             flet.Column(
                 [
