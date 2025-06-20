@@ -298,12 +298,16 @@ class ClockView:
 
         request_timezone = subprocess.run(['timedatectl', 'status'], text = True, capture_output=True, check=True)
         result = request_timezone.stdout
+        print(result)
 
-        for line in result:
-            if line.startswith("Time zone:"):
+        for line in result.strip().split('\n'):
+
+            if line.strip().startswith("                Time zone:"):
                 timezone = line.split(":", 1)[1].split("(",1)[0].strip()
+                print(timezone)
+                return timezone
 
-        return timezone
+        return "None"
 
     def get_time_zones_list(self):
         result = subprocess.run(["timedatectl","list-timezones"], capture_output=True, check=True, text=True)
