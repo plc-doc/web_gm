@@ -11,7 +11,7 @@ orange = "#F7941E"
 
 now = datetime.datetime.now()
 
-time = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
+# time = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
 
 class ClockView(flet.Container):
     def __init__(self, app, page: flet.Page):
@@ -19,7 +19,7 @@ class ClockView(flet.Container):
         self.page: flet.Page = page
 
         self.date_field = flet.TextField(value= self.get_date(),border= flet.InputBorder.NONE, color= "black")
-        self.time_field = flet.TextField(value= time, border= flet.InputBorder.NONE, color="black")
+        self.time_field = flet.TextField(border= flet.InputBorder.NONE, color="black")
 
         super().__init__(
             flet.Column(
@@ -105,7 +105,7 @@ class ClockView(flet.Container):
                 # time_now = datetime.datetime.now()
 
                 self.time_field.value = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
-                page.update()
+                self.page.update()
 
                 await asyncio.sleep(1)
 
