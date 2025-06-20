@@ -192,8 +192,9 @@ class ClockView:
 
         # self.date_field.value = self.get_date()
         self.time_zone.value = self.get_time_zone()
-        self.stop_time()
+        # self.stop_time()
         self.get_time()
+        self.get_date()
         # self.time_field.filled = False
         # self.date_field.filled = False
         # self.time_field.border = flet.InputBorder.NONE
@@ -302,7 +303,7 @@ class ClockView:
 
         for line in result.strip().split('\n'):
 
-            if line.strip().startswith("                Time zone:"):
+            if line.startswith("                Time zone:"):
                 timezone = line.split(":", 1)[1].split("(",1)[0].strip()
                 print(timezone)
                 return timezone
