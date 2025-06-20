@@ -13,9 +13,9 @@ now = datetime.datetime.now()
 time = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
 
 class ClockView(flet.Container):
-    def __init__(self, app, page):
+    def __init__(self, app, page: flet.Page):
         self.app = app
-        self.page = page
+        self.page: flet.Page = page
 
         self.date_field = flet.TextField(value= self.get_date(),border= flet.InputBorder.NONE, color= "black")
         self.time_field = flet.TextField(value= time, border= flet.InputBorder.NONE, color="black")
