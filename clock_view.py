@@ -244,21 +244,33 @@ class ClockView:
         # date = datetime.date.today().strftime("%d.%m.%Y")
         # date = 3
 
-        now = datetime.datetime.now()
-        formatted_date = f"{now.day:02d}.{now.month:02d}.{now.year}"
+        r = subprocess.run(["timedatectl", "status"], capture_output=True, check=True, text=True)
+        now = r.stdout.split()[3]
+        #
+        # date = self.date_field.value
+        date_obj = datetime.datetime.strptime(now, "%Y-%m-%d")
+        formatted_date = date_obj.strftime("%d.%m.%Y")
+
+        # r = subprocess.run("")
+        # now = datetime.datetime.now()
+        # formatted_date = f"{now.day:02d}.{now.month:02d}.{now.year}"
 
         # self.get_time()
 
-        return formatted_date
+        return str(formatted_date)
 
     def get_time(self):
         global task
         async def update_time():
             # global time
             while True:
-                now = datetime.datetime.now()
+                r = subprocess.run(["timedatectl", "status"], capture_output=True, check=True, text=True)
+                now = r.stdout.split()[4]
+                # now = datetime.datetime.now()
+                print(now)
 
-                self.time_field.value = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
+                # self.time_field.value = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
+                self.time_field.value = now
                 self.page.update()
                 await asyncio.sleep(1)
 
