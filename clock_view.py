@@ -149,21 +149,22 @@ class ClockView:
         )
 
         self.get_time()
-        self.button.on_click = lambda e: self.stop_time
+        self.button.on_click = lambda e: self.stop_time()
         self.time_field.on_click = lambda e: self.time_changed
 
     def time_changed(self, e):
         global task
 
-        task.cancel()
-        self.page.update()
-
+        self.stop_time()
         e.filled = True
         e.bgcolor = white
+
+        self.page.update()
 
     def date_changes(self, e):
         e.filled = True
         e.bgcolor = white
+        self.page.update()
 
     def stop_time(self):
         global task
