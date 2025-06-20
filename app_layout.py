@@ -152,22 +152,6 @@ class AppLayout(flet.Row):
 
         self.controls = [self.sidebar, flet.VerticalDivider(width=0, color= "#CACACA"), self.active_view]
 
-        def get_time():
-            now = datetime.now()
-            async def update_time():
-                # global time
-                while True:
-                    # time_now = datetime.datetime.now()
-
-                    self.clock_view.time_field.value = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
-                    self.page.update()
-
-                    await asyncio.sleep(1)
-
-            self.page.run_task(update_time)
-
-            get_time()
-
     # def get_ip4(self):
     #     result = subprocess.run(["ifconfig eth2| grep 'inet' | cut -d: -f2 | awk '{print $2}'"], shell=True,
     #                             capture_output=True, text=True, check=True)
