@@ -88,12 +88,12 @@ class ClockView:
         self.button_save = flet.ElevatedButton(text="Сохранить изменения",
                                              bgcolor=orange,
                                              color="black",
-                                             on_click= self.handle_button_save()
+                                             on_click= lambda e: self.handle_button_save()
                                              )
         self.button_cancel = flet.ElevatedButton(text="Отменить изменения",
-                                                  bgcolor="#CACACA",
+                                                  bgcolor=white,
                                                   color=orange,
-                                                  on_click=self.handle_button_cancel()
+                                                  on_click= lambda e: self.handle_button_cancel()
                                                   )
 
         self.container = flet.Container(flet.Column(
@@ -162,8 +162,8 @@ class ClockView:
                 ),
                 flet.Row([
                     self.button_save,
-
-                ])
+                    self.button_cancel
+                ], alignment=flet.MainAxisAlignment.CENTER, vertical_alignment=flet.CrossAxisAlignment.CENTER)
 
 
             ],
