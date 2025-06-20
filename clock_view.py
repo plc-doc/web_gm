@@ -191,6 +191,7 @@ class ClockView:
         self.set_time_zone()
 
         # self.date_field.value = self.get_date()
+        self.time_zone.value = self.get_time_zone()
         self.stop_time()
         self.get_time()
         # self.time_field.filled = False
@@ -272,7 +273,7 @@ class ClockView:
     #     self.page.update()
 
     def set_time_zone(self):
-        subprocess.run(["sudo", "timedatectl", "set-timezone", f"{self.time_zone.value}"])
+        subprocess.run(["sudo", "timedatectl", "set-timezone", self.time_zone.value],check=True)
 
         # lines = []
         # with open("/etc/timezone", "r") as f:
@@ -290,10 +291,19 @@ class ClockView:
         # subprocess.run(["sudo", "systemctl", "restart", "systemd-timesyncd.service"], check=True)
 
     def get_time_zone(self):
-        time_zone = subprocess.run(["cat", '/etc/timezone'], capture_output=True, text=True, check= True)
-        result = time_zone.stdout
-        print(result)
-        return result
+        # time_zone = subprocess.run(["cat", '/etc/timezone'], capture_output=True, text=True, check= True)
+        # result = time_zone.stdout
+        # print(result)
+        # return result
+
+        request_timezone = subprocess.run(['timedatectl', 'status'], text = True, capture_output=True, check=True)
+        result = request_timezone.stdout
+
+        for line in result:
+            if line.startswith("Time zone:"):
+                timezone = line.split(":", 1)[1].split("(",1)[0].strip()
+
+        return timezone
 
     def get_time_zones_list(self):
         result = subprocess.run(["timedatectl","list-timezones"], capture_output=True, check=True, text=True)
