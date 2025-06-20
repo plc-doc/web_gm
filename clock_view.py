@@ -84,7 +84,7 @@ class ClockView(flet.Container):
             padding=20
         )
 
-        self.get_time()
+        # self.get_time()
 
 
     def get_date(self):
@@ -105,7 +105,7 @@ class ClockView(flet.Container):
                 # time_now = datetime.datetime.now()
 
                 self.time_field.value = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
-                self.app.page.update()
+                self.update()
 
                 await asyncio.sleep(1)
 

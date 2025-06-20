@@ -150,6 +150,8 @@ class AppLayout(flet.Row):
 
         self.controls = [self.sidebar, flet.VerticalDivider(width=0, color= "#CACACA"), self.active_view]
 
+        self.clock_view.get_time()
+
     # def get_ip4(self):
     #     result = subprocess.run(["ifconfig eth2| grep 'inet' | cut -d: -f2 | awk '{print $2}'"], shell=True,
     #                             capture_output=True, text=True, check=True)
