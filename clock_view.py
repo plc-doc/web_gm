@@ -159,16 +159,16 @@ class ClockView:
         self.stop_time()
         self.time_field.filled = True
         self.time_field.bgcolor = white
+        self.time_field.border = flet.InputBorder.OUTLINE
         self.time_field.border_radius = 14
-        self.time_field.width = 14
 
         self.page.update()
 
     def date_changes(self, e):
         self.date_field.filled = True
         self.date_field.bgcolor = white
+        self.date_field.border = flet.InputBorder.OUTLINE
         self.date_field.border_radius = 14
-        self.date_field.width = 14
 
         self.page.update()
 
