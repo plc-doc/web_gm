@@ -18,7 +18,7 @@ class ClockView:
         self.app = app
         self.page = page
 
-        self.date_field = flet.TextField(value= self.get_date(),border= flet.InputBorder.NONE, color= "black")
+        self.date_field = flet.TextField(value= self.get_date(),border= flet.InputBorder.NONE, color= "black", on_click=self.date_changes())
         self.time_field = flet.TextField(border= flet.InputBorder.NONE, color="black")
 
         # self.get_time()
@@ -149,12 +149,26 @@ class ClockView:
         )
 
         self.get_time()
-        self.button.on_click = self.stop
+        self.button.on_click = lambda e: self.stop_time()
+        self.time_field.on_click = lambda e: self.time_changed()
 
-    def stop(self):
+    def time_changed(self):
         global task
 
-        print(2)
+        task.cancel()
+        self.page.update()
+
+        self.time_field.filled = True
+        self.time_field.bgcolor = white
+
+    def date_changes(self):
+        self.date_field.filled = True
+        self.date_field.bgcolor = white
+
+
+    def stop_time(self):
+        global task
+
         task.cancel()
         self.page.update()
 
@@ -189,9 +203,7 @@ class ClockView:
         return time_zone.stdout
 
     # TODO:
-    #  formatting time
-    #  updating time every second
-    #  reading and setting time zones
+    #  setting time zones
     #  setting NTP and choosing servers (list)
     #  button edit (add ability to change date/time values)
     # def set_time(self):
