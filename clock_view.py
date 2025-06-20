@@ -18,8 +18,8 @@ class ClockView:
         self.app = app
         self.page = page
 
-        self.date_field = flet.TextField(value= self.get_date(),border= flet.InputBorder.NONE, color= "black")
-        self.time_field = flet.TextField(border= flet.InputBorder.NONE, color="black")
+        self.date_field = flet.Text(value= self.get_date(), color= "black")
+        self.time_field = flet.Text( color="black")
 
         self.time_zone = flet.Dropdown(
                                 value= self.get_time_zone().strip(),
@@ -178,25 +178,25 @@ class ClockView:
 
         self.get_time()
         # self.button_save.on_click = lambda e: self.stop_time()
-        self.time_field.on_click = lambda e: self.time_changed()
-        self.date_field.on_click = lambda e: self.date_changes()
+        # self.time_field.on_click = lambda e: self.time_changed()
+        # self.date_field.on_click = lambda e: self.date_changes()
 
     def handle_button_save(self):
         global task
 
         # if task.cancelled():
-        self.set_local_datetime()
+        # self.set_local_datetime()
 
-        if self.time_zone.value != self.get_time_zone():
-            self.set_time_zone()
+        # if self.time_zone.value != self.get_time_zone():
+        self.set_time_zone()
 
         # self.date_field.value = self.get_date()
         self.stop_time()
         self.get_time()
-        self.time_field.filled = False
-        self.date_field.filled = False
-        self.time_field.border = flet.InputBorder.NONE
-        self.date_field.border = flet.InputBorder.NONE
+        # self.time_field.filled = False
+        # self.date_field.filled = False
+        # self.time_field.border = flet.InputBorder.NONE
+        # self.date_field.border = flet.InputBorder.NONE
 
         self.page.update()
 
@@ -204,33 +204,33 @@ class ClockView:
         self.stop_time()
         self.date_field.value = self.get_date()
         self.get_time()
-        self.time_field.filled = False
-        self.date_field.filled = False
-        self.time_field.border= flet.InputBorder.NONE
-        self.date_field.border= flet.InputBorder.NONE
+        # self.time_field.filled = False
+        # self.date_field.filled = False
+        # self.time_field.border= flet.InputBorder.NONE
+        # self.date_field.border= flet.InputBorder.NONE
 
         self.page.update()
 
-    def time_changed(self):
-        global task
-
-        self.stop_time()
-        self.time_field.filled = True
-        self.time_field.bgcolor = white
-        self.time_field.border = flet.InputBorder.OUTLINE
-        self.time_field.border_radius = 14
-        self.time_field.focused_border_color = orange
-
-        self.page.update()
-
-    def date_changes(self):
-        self.date_field.filled = True
-        self.date_field.bgcolor = white
-        self.date_field.border = flet.InputBorder.OUTLINE
-        self.date_field.border_radius = 14
-        self.date_field.focused_border_color = orange
-
-        self.page.update()
+    # def time_changed(self):
+    #     global task
+    #
+    #     self.stop_time()
+    #     self.time_field.filled = True
+    #     self.time_field.bgcolor = white
+    #     self.time_field.border = flet.InputBorder.OUTLINE
+    #     self.time_field.border_radius = 14
+    #     self.time_field.focused_border_color = orange
+    #
+    #     self.page.update()
+    #
+    # def date_changes(self):
+    #     self.date_field.filled = True
+    #     self.date_field.bgcolor = white
+    #     self.date_field.border = flet.InputBorder.OUTLINE
+    #     self.date_field.border_radius = 14
+    #     self.date_field.focused_border_color = orange
+    #
+    #     self.page.update()
 
     def stop_time(self):
         global task
@@ -263,29 +263,31 @@ class ClockView:
         task = self.page.run_task(update_time)
 
 
-    def set_local_datetime(self):
-        date = self.date_field.value
-        date_obj = datetime.datetime.strptime(date, "%d.%m.%Y")
-        formatted_date = date_obj.strftime("%Y-%m-%d")
-        subprocess.run(["sudo", "date", "--set", f"{formatted_date} {self.time_field.value}"])
-
-        self.page.update()
+    # def set_local_datetime(self):
+    #     date = self.date_field.value
+    #     date_obj = datetime.datetime.strptime(date, "%d.%m.%Y")
+    #     formatted_date = date_obj.strftime("%Y-%m-%d")
+    #     subprocess.run(["sudo", "date", "--set", f"{formatted_date} {self.time_field.value}"])
+    #
+    #     self.page.update()
 
     def set_time_zone(self):
-        lines = []
-        with open("/etc/timezone", "r") as f:
-            for line in f:
-                lines.append(self.time_zone.value)
+        subprocess.run(["sudo", "timedatectl", "set-timezone", f"{self.time_zone.value}"])
 
-        with open("/tmp/timezone", "w") as f:
-            f.writelines(self.time_zone.value)
-
-        with open("/etc/timezone", "w") as f:
-            f.writelines(lines)
-
-        subprocess.run(["sudo", "cp", "/tmp/timezone", "/etc/timezone"], check=True)
-
-        subprocess.run(["sudo", "systemctl", "restart", "systemd-timesyncd.service"], check=True)
+        # lines = []
+        # with open("/etc/timezone", "r") as f:
+        #     for line in f:
+        #         lines.append(self.time_zone.value)
+        #
+        # with open("/tmp/timezone", "w") as f:
+        #     f.writelines(self.time_zone.value)
+        #
+        # # with open("/etc/timezone", "w") as f:
+        # #     f.writelines(lines)
+        #
+        # subprocess.run(["sudo", "cp", "/tmp/timezone", "/etc/timezone"], check=True)
+        #
+        # subprocess.run(["sudo", "systemctl", "restart", "systemd-timesyncd.service"], check=True)
 
     def get_time_zone(self):
         time_zone = subprocess.run(["cat", '/etc/timezone'], capture_output=True, text=True, check= True)
