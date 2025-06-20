@@ -2,6 +2,7 @@ import asyncio
 
 import flet
 import datetime
+import subprocess
 from flask import Flask, request
 
 grey = "#565759"
@@ -51,6 +52,7 @@ class ClockView(flet.Container):
                         flet.VerticalDivider(width= 946, color= "#ACACAC"),
                         flet.Row([
                             flet.Text("Часовой пояс", color="black"),
+                            flet.TextField(value=self.get_time_zone(), border=flet.InputBorder.NONE, color="black")
 
                         ], alignment=flet.MainAxisAlignment.CENTER, spacing= 30)
                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
@@ -109,6 +111,10 @@ class ClockView(flet.Container):
                 await asyncio.sleep(1)
 
         self.page.run_task(update_time)
+
+    def get_time_zone(self):
+        time_zone = subprocess.run(["date", '+%Z %z'], capture_output=True, text=True, check= True)
+        return time_zone.stdout
 
     # TODO:
     #  formatting time
