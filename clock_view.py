@@ -84,7 +84,7 @@ class ClockView(flet.Container):
             padding=20
         )
 
-        self.get_time()
+        self.get_time(page)
 
 
     def get_date(self):
@@ -98,19 +98,18 @@ class ClockView(flet.Container):
 
 
 
-    def get_time(self):
-
+    def get_time(self, page):
         async def update_time():
             # global time
             while True:
                 # time_now = datetime.datetime.now()
 
                 self.time_field.value = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
-                self.page.update()
+                page.update()
 
                 await asyncio.sleep(1)
 
-        self.page.run_task(update_time)
+        page.run_task(update_time)
 
     def get_time_zone(self):
         time_zone = subprocess.run(["date", '+%Z %z'], capture_output=True, text=True, check= True)
