@@ -9,7 +9,7 @@ grey = "#565759"
 white = "#EAEAEA"
 orange = "#F7941E"
 
-now = datetime.datetime.now()
+# now = datetime.datetime.now()
 
 # time = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
 
@@ -17,7 +17,6 @@ class ClockView:
     def __init__(self, app, page):
         self.app = app
         self.page = page
-        self.task = None
 
         self.date_field = flet.TextField(value= self.get_date(),border= flet.InputBorder.NONE, color= "black")
         self.time_field = flet.TextField(border= flet.InputBorder.NONE, color="black")
@@ -86,7 +85,11 @@ class ClockView:
         #     expand=True,
         #     padding=20
         # )
-
+        self.button = flet.FilledTonalButton(text="Синхронизировать с компьютером",
+                                                  bgcolor=orange,
+                                                  color="black",
+                                                  # on_click=self.stop()
+                                                   )
         self.container = flet.Container(flet.Column(
             controls=[
                 flet.Text("Настройка даты и времени", text_align=flet.alignment.center,color=orange,size=20),
@@ -108,11 +111,7 @@ class ClockView:
                                 self.date_field,
                                 self.time_field
                             ], horizontal_alignment=flet.CrossAxisAlignment.CENTER),
-                            flet.FilledTonalButton(text="Синхронизировать с компьютером",
-                                                  bgcolor=orange,
-                                                  color="black",
-                                                  on_click=lambda e: self.stop
-                                                   )
+                            self.button
                         ], alignment=flet.MainAxisAlignment.SPACE_EVENLY),
                         flet.VerticalDivider(width= 946, color= "#ACACAC"),
                         flet.Row([
@@ -150,9 +149,14 @@ class ClockView:
         )
 
         self.get_time()
+        self.button.on_click = self.stop
 
     def stop(self):
-        self.task = None
+        global task
+
+        print(2)
+        task.cancel()
+        self.page.update()
 
     def get_date(self):
         # date = datetime.date.today().strftime("%d.%m.%Y")
@@ -166,16 +170,17 @@ class ClockView:
         return formatted_date
 
     def get_time(self):
+        global task
         async def update_time():
             # global time
             while True:
-                time_now = datetime.datetime.now()
+                now = datetime.datetime.now()
 
-                self.time_field.value = f"{time_now.hour:02d}:{time_now.minute:02d}:{time_now.second:02d}"
-                self.app.page.update()
+                self.time_field.value = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
+                self.page.update()
                 await asyncio.sleep(1)
 
-        self.task = self.page.run_task(update_time)
+        task = self.page.run_task(update_time)
 
 
 
