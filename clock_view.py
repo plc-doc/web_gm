@@ -1,3 +1,5 @@
+import asyncio
+
 import flet
 import datetime
 from flask import Flask, request
@@ -6,11 +8,17 @@ grey = "#565759"
 white = "#EAEAEA"
 orange = "#F7941E"
 
+now = datetime.datetime.now()
+
+time = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
 
 class ClockView(flet.Container):
     def __init__(self, app, page):
         self.app = app
         self.page = page
+
+        self.date_field = flet.TextField(value= self.get_date(),border= flet.InputBorder.NONE, color= "black")
+        self.time_field = flet.TextField(value= time, border= flet.InputBorder.NONE, color="black")
 
         super().__init__(
             flet.Column(
@@ -31,8 +39,8 @@ class ClockView(flet.Container):
                                 flet.Text("Время", color="black")
                             ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30),
                             flet.Column([
-                                flet.TextField(value= self.get_date(),border= flet.InputBorder.NONE, color= "black"),
-                                flet.TextField(value= str(self.get_time()), border= flet.InputBorder.NONE, color="black")
+                                self.date_field,
+                                self.time_field
                             ], horizontal_alignment=flet.CrossAxisAlignment.CENTER),
                             flet.FilledTonalButton(text="Синхронизировать с компьютером",
                                                   bgcolor=orange,
@@ -74,18 +82,40 @@ class ClockView(flet.Container):
             padding=20
         )
 
+        self.get_time()
+
 
     def get_date(self):
-        date = datetime.date.today().strftime("%d.%m.%Y")
+        # date = datetime.date.today().strftime("%d.%m.%Y")
         # date = 3
-        return date
 
-    # def get_browser_date(self):
-    #     # app = Flask(__name__)
+        now = datetime.datetime.now()
+        formatted_date = f"{now.day:02d}.{now.month:02d}.{now.year}"
+
+        return formatted_date
 
 
 
     def get_time(self):
-        time = datetime.datetime.now().time()
-        
-        return time
+
+        async def update_time():
+            # global time
+            while True:
+                # time_now = datetime.datetime.now()
+
+                self.time_field.value = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
+                self.page.update()
+
+                await asyncio.sleep(1)
+
+        self.page.run_task(update_time)
+
+    # TODO:
+    #  formatting time
+    #  updating time every second
+    #  reading and setting time zones
+    #  setting NTP and choosing servers (list)
+    #  button edit (add ability to change date/time values)
+    # def set_time(self):
+    # def set_date(self):
+    # def set_ntp_server(self):
