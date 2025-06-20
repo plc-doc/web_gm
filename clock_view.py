@@ -37,6 +37,10 @@ class ClockView:
                                 # on_change=ipv6_changed
                             )
 
+        self.ntp_servers = flet.Dropdown()
+        self.option_textbox = flet.TextField(hint_text="Enter item name")
+        self.add = flet.ElevatedButton("Добавить NTP сервер", on_click=self.add_clicked)
+
         # self.get_time()
 
         # super().__init__(
@@ -153,11 +157,14 @@ class ClockView:
                         flet.Row([
                             flet.Column([
                                 flet.Text("Синхронизация времени при помощи NTP", color="black"),
-                                flet.Text("NTP - серверы", color= "black")
+                                flet.Row([
+                                    flet.Text("NTP - серверы", color= "black")
+
+                                ]),
                             ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 30),
                             flet.Column([
                                 flet.CupertinoSwitch(value= False, active_color=orange),
-
+                                flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
                             ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
                         ], alignment=flet.MainAxisAlignment.SPACE_EVENLY)
                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
@@ -180,6 +187,13 @@ class ClockView:
         # self.button_save.on_click = lambda e: self.stop_time()
         # self.time_field.on_click = lambda e: self.time_changed()
         # self.date_field.on_click = lambda e: self.date_changes()
+
+    def add_clicked(self, e):
+        self.ntp_servers.options.append(flet.dropdown.Option(self.option_textbox.value))
+        self.ntp_servers.value = self.option_textbox.value
+        self.option_textbox.value = ""
+        self.option_textbox.update()
+        self.ntp_servers.update()
 
     def handle_button_save(self):
         global task
@@ -267,7 +281,6 @@ class ClockView:
                 r = subprocess.run(["timedatectl", "status"], capture_output=True, check=True, text=True)
                 now = r.stdout.split()[4]
                 # now = datetime.datetime.now()
-                print(now)
 
                 # self.time_field.value = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
                 self.time_field.value = now
@@ -311,13 +324,11 @@ class ClockView:
 
         request_timezone = subprocess.run(['timedatectl', 'status'], text = True, capture_output=True, check=True)
         result = request_timezone.stdout
-        print(result)
 
         for line in result.strip().split('\n'):
 
             if line.startswith("                Time zone:"):
                 timezone = line.split(":", 1)[1].split("(",1)[0].strip()
-                print(timezone)
                 return timezone
 
         return "None"
@@ -333,10 +344,16 @@ class ClockView:
 
         return options
 
+    def turn_on_NTP(self):
+        subprocess.run(["sudo", "timedatectl", "set-ntp", "true"], check = True)
+
+    def turn_off_NTP(self):
+        subprocess.run([])
+
+
     # TODO:
-    #  setting time zones
     #  setting NTP and choosing servers (list)
-    #  button edit (add ability to change date/time values)
+
     # def set_time(self):
     # def set_date(self):
     # def set_ntp_server(self):
