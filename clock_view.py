@@ -19,7 +19,9 @@ class ClockView(flet.Container):
         self.page = page
 
         self.date_field = flet.TextField(value= self.get_date(),border= flet.InputBorder.NONE, color= "black")
-        self.time_field = flet.TextField(border= flet.InputBorder.NONE, color="black")
+        self.time_field = flet.TextField(value= self.get_time(), border= flet.InputBorder.NONE, color="black")
+
+        # self.get_time()
 
         super().__init__(
             flet.Column(
@@ -105,11 +107,12 @@ class ClockView(flet.Container):
                 # time_now = datetime.datetime.now()
 
                 self.time_field.value = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
-                self.app.update()
+                self.page.update()
 
                 await asyncio.sleep(1)
 
         self.app.page.run_task(update_time)
+        return "1"
 
 
     def get_time_zone(self):
