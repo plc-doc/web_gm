@@ -118,12 +118,12 @@ class ClockView:
                             flet.Text("Часовой пояс", color="black"),
                             flet.Dropdown(
                                 value=self.get_time_zone(),
-                                width=240,
+                                width=100,
                                 options=self.get_time_zones_list(),
                                 border_radius=10,
                                 color="black",
                                 text_size=14,
-                                bgcolor=grey,
+                                bgcolor=white,
                                 border_color="black",
                                 focused_border_color=white,
                                 # on_change=ipv6_changed
@@ -217,8 +217,8 @@ class ClockView:
 
 
     def get_time_zone(self):
-        time_zone = subprocess.run(["date", '+%Z %z'], capture_output=True, text=True, check= True)
-        return time_zone.stdout
+        time_zone = subprocess.run(["cat", '/etc/timezone'], capture_output=True, text=True, check= True)
+        return str(time_zone.stdout)
 
     def get_time_zones_list(self):
         result = subprocess.run(["timedatectl","list-timezones"], capture_output=True, check=True, text=True)
