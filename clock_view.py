@@ -84,7 +84,7 @@ class ClockView(flet.Container):
             padding=20
         )
 
-        self.get_time(self.page)
+        # self.get_time(self.page)
 
 
     def get_date(self):
@@ -94,18 +94,20 @@ class ClockView(flet.Container):
         now = datetime.datetime.now()
         formatted_date = f"{now.day:02d}.{now.month:02d}.{now.year}"
 
+        self.get_time()
+
         return formatted_date
 
 
 
-    def get_time(self, page: flet.Page):
+    def get_time(self):
         async def update_time():
             # global time
             while True:
                 # time_now = datetime.datetime.now()
 
                 self.time_field.value = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
-                page.update()
+                self.page.update()
 
                 await asyncio.sleep(1)
 
