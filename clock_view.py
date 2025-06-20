@@ -161,9 +161,9 @@ class ClockView:
                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
                 ),
                 flet.Row([
-                    self.button_save,
-                    self.button_cancel
-                ], alignment=flet.MainAxisAlignment.CENTER, vertical_alignment=flet.CrossAxisAlignment.CENTER)
+                    self.button_cancel,
+                    self.button_save
+                ], alignment=flet.MainAxisAlignment.CENTER, vertical_alignment=flet.CrossAxisAlignment.CENTER, spacing = 40)
 
 
             ],
@@ -180,6 +180,11 @@ class ClockView:
         self.date_field.on_click = lambda e: self.date_changes()
 
     def handle_button_save(self):
+        global task
+
+        if task.cancelled():
+            self.set_local_time()
+
         print("saved")
 
     def handle_button_cancel(self):
@@ -242,6 +247,14 @@ class ClockView:
                 await asyncio.sleep(1)
 
         task = self.page.run_task(update_time)
+
+    def set_local_time(self):
+        date = self.date_field.value
+        date_obj = datetime.datetime.strptime(date, "%d.%m.%Y")
+        formatted_date = date_obj.strftime("%Y-%m-%d")
+        subprocess.run(["sudo", "date", "--set", f'"{formatted_date} {self.time_field.value}"'])
+
+        self.page.update()
 
     def set_time_zone(self, new_time_zone):
         lines = []
