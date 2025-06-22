@@ -282,7 +282,7 @@ class ClockView:
                                                         icon=flet.Icons.DELETE_FOREVER_ROUNDED,
                                                         icon_color="red",
                                                         icon_size=23,
-                                                        on_click = lambda e: self.delete_server)
+                                                        on_click = self.delete_server)
                                                      ]
             ))
 
@@ -303,19 +303,26 @@ class ClockView:
         for i, controls in enumerate(self.servers_column.controls):
             if e.control == controls.controls[1]:
                 self.servers_column.controls.pop(i)
+                self.NTP_servers.pop(i)
+                print(i)
+        self.servers_count -= 1
 
         # self.servers_column.controls.pop()
         self.page.update()
 
     def add_server(self, e):
+        s = flet.TextField(filled=True, fill_color=white, color="black")
         self.servers_column.controls.insert(len(self.servers_column.controls) - 1,
-                                            flet.Row([flet.TextField(filled=True, fill_color=white, color="black"),
+                                            flet.Row([s,
                                                       flet.IconButton(
                                                           icon=flet.Icons.DELETE_FOREVER_ROUNDED,
                                                           icon_color="red",
                                                           icon_size=23,
                                                           on_click=self.delete_server)
                                                       ]))
+
+        self.NTP_servers.append(s)
+        self.servers_count += 1
         self.page.update()
 
 
@@ -327,21 +334,19 @@ class ClockView:
                 if line.startswith("NTP"):
                     string = f"NTP= "
                     for s in self.NTP_servers:
-                        string += f"{s.value }"
+                        string += f"{s.value} "
                     print(string)
                     string += "\n"
                     lines.append(string)
                 else:
                     lines.append(line)
 
-        with open("/tmp/interfaces", "w") as f:
+        with open("/tmp/systemd/timesyncd.conf", "w") as f:
             f.writelines(lines)
 
         # old file copy
-        with open("/tmp/interfaces2", "w") as f:
-            f.writelines(lines)
 
-        subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
+        subprocess.run(["sudo", "cp", "/etc/systemd/timesyncd.conf", "/etc/systemd/timesyncd.conf"], check=True)
 
 
     # def time_changed(self):
