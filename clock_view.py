@@ -22,6 +22,12 @@ class ClockView:
         self.date_field = flet.Text(value= self.get_date(), color= "black")
         self.time_field = flet.Text( color="black")
 
+        self.NTP_servers = []
+        self.NTP = False
+        self.start_NTP = self.NTP
+
+        self.servers_column = flet.Column()
+
         self.time_zone = flet.Dropdown(
                                 value= self.get_time_zone().strip(),
                                 width=240,
@@ -164,7 +170,7 @@ class ClockView:
                                 ]),
                             ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 30),
                             flet.Column([
-                                flet.CupertinoSwitch(value= self.NTP_on_or_off(), active_color=orange, on_change=lambda e: self.switch(e)),
+                                flet.CupertinoSwitch(value= self.NTP_on_or_off(),disabled= True if self.NTP else False,active_color=orange, on_change=self.switch),
                                 # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
                                 self.NTC_servers(),
                             ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
@@ -204,16 +210,16 @@ class ClockView:
         for line in result:
             if line.startswith("NTP service"):
                 if line.split(":", 1)[1] == "active":
-                    return True
+                    self.NTP = True
 
-        return False
+        return self.NTP
 
 
     def switch(self, e):
-        turn_on = e.value
+        turn_on = e.control.value
+        self.NTP = turn_on
+
         print(turn_on)
-
-
 
     def handle_button_save(self):
         global task
@@ -222,8 +228,15 @@ class ClockView:
         # self.set_local_datetime()
 
         # if self.time_zone.value != self.get_time_zone():
+        if self.start_NTP != self.NTP:
+            if self.NTP:
+                self.turn_on_NTP()
+            else:
+                self.turn_off_NTP()
+
         self.set_time_zone()
 
+        self.set_NTP_servers()
         # self.date_field.value = self.get_date()
         self.time_zone.value = self.get_time_zone()
         # self.stop_time()
@@ -248,7 +261,7 @@ class ClockView:
         self.page.update()
 
     def NTC_servers(self):
-        servers_column = flet.Column()
+        # servers_column = flet.Column()
 
         with open("/etc/systemd/timesyncd.conf", "r") as f:
             for line in f:
@@ -258,22 +271,67 @@ class ClockView:
 
         for server in servers:
             print(server)
-            servers_column.controls.append(flet.Row([flet.TextField(value=server, filled=True, fill_color=white, color="black"),
+            s = flet.TextField(filled=True, fill_color=white, color="black")
+            s.value = server
+            self.NTP_servers.append(s)
+            self.servers_column.controls.append(flet.Row([s,
                                                      flet.IconButton(
                                                         icon=flet.Icons.DELETE_FOREVER_ROUNDED,
                                                         icon_color="red",
-                                                        icon_size=23,)
+                                                        icon_size=23,
+                                                        on_click = self.delete_server)
                                                      ]))
 
-        servers_column.controls.append(flet.Row([flet.TextField(filled=True, fill_color=white, color="black"),
+        self.servers_column.controls.append(flet.Row([flet.TextField(filled=True, fill_color=white, color="black"),
                                                  flet.IconButton(
                                                     icon=flet.Icons.ADD_BOX,
                                                     icon_color="green",
-                                                    icon_size=20,)
+                                                    icon_size=20,
+                                                    on_click = self.add_server()
+                                                 )
                                         ]))
 
-        return servers_column
+        return self.servers_column
 
+    def delete_server(self, e):
+        self.servers_column.controls.pop(self.servers_column.controls.index(e))
+        self.page.update()
+
+    def add_server(self):
+        self.servers_column.controls.insert(len(self.servers_column.controls) - 1,
+                                            flet.Row([flet.TextField(filled=True, fill_color=white, color="black"),
+                                                      flet.IconButton(
+                                                          icon=flet.Icons.DELETE_FOREVER_ROUNDED,
+                                                          icon_color="red",
+                                                          icon_size=23,
+                                                          on_click=self.delete_server)
+                                                      ]))
+        self.page.update()
+
+
+    def set_NTP_servers(self):
+        lines = []
+
+        with open("/etc/systemd/timesyncd", "r") as f:
+            for line in f:
+                if line.startswith("NTP"):
+                    string = f"NTP= "
+                    for s in self.NTP_servers:
+                        string += f"{s }"
+                    print(string)
+                    string += "\n"
+                    lines.append(string)
+                else:
+                    lines.append(line)
+
+        with open("/tmp/interfaces", "w") as f:
+            f.writelines(lines)
+
+        # old file copy
+        with open("/tmp/interfaces2", "w") as f:
+            f.writelines(lines)
+
+        subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
 
 
     # def time_changed(self):
@@ -397,7 +455,8 @@ class ClockView:
         subprocess.run(["sudo", "timedatectl", "set-ntp", "true"], check = True)
 
     def turn_off_NTP(self):
-        subprocess.run([])
+        subprocess.run(["sudo", "timedatectl", "set-ntp", "false"], check = True)
+        subprocess.run(["sudo", "systemctl", "reboot"])
 
 
     # TODO:
