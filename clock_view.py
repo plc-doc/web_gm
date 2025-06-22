@@ -25,6 +25,7 @@ class ClockView:
         self.NTP_servers = []
         self.NTP = False
         self.start_NTP = self.NTP
+        self.servers_count = 0
 
         self.servers_column = flet.Column()
 
@@ -274,12 +275,13 @@ class ClockView:
             s = flet.TextField(filled=True, fill_color=white, color="black")
             s.value = server
             self.NTP_servers.append(s)
+            self.servers_count += 1
             self.servers_column.controls.append(flet.Row([s,
                                                      flet.IconButton(
                                                         icon=flet.Icons.DELETE_FOREVER_ROUNDED,
                                                         icon_color="red",
                                                         icon_size=23,
-                                                        on_click = self.delete_server)
+                                                        on_click = self.delete_server(self.servers_count))
                                                      ]))
 
         self.servers_column.controls.append(flet.Row([flet.TextField(filled=True, fill_color=white, color="black"),
@@ -287,17 +289,17 @@ class ClockView:
                                                     icon=flet.Icons.ADD_BOX,
                                                     icon_color="green",
                                                     icon_size=20,
-                                                    on_click = self.add_server()
+                                                    on_click = self.add_server
                                                  )
                                         ]))
 
         return self.servers_column
 
-    def delete_server(self, e):
-        self.servers_column.controls.pop(self.servers_column.controls.index(e))
+    def delete_server(self, index):
+        self.servers_column.controls.pop(self.servers_column.controls.index(index))
         self.page.update()
 
-    def add_server(self):
+    def add_server(self, e):
         self.servers_column.controls.insert(len(self.servers_column.controls) - 1,
                                             flet.Row([flet.TextField(filled=True, fill_color=white, color="black"),
                                                       flet.IconButton(
@@ -312,12 +314,12 @@ class ClockView:
     def set_NTP_servers(self):
         lines = []
 
-        with open("/etc/systemd/timesyncd", "r") as f:
+        with open("/etc/systemd/timesyncd.conf", "r") as f:
             for line in f:
                 if line.startswith("NTP"):
                     string = f"NTP= "
                     for s in self.NTP_servers:
-                        string += f"{s }"
+                        string += f"{s.value }"
                     print(string)
                     string += "\n"
                     lines.append(string)
