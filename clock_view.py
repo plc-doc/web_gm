@@ -24,7 +24,7 @@ class ClockView:
 
         self.NTP_servers = []
         self.NTP = False
-        self.start_NTP = self.NTP
+        self.start_NTP = self.NTP_on_or_off()
         self.servers_count = 0
 
         self.servers_column = flet.Column()
@@ -171,7 +171,7 @@ class ClockView:
                                 ]),
                             ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 30),
                             flet.Column([
-                                flet.CupertinoSwitch(value= self.NTP_on_or_off(),disabled= True if self.NTP else False,active_color=orange, on_change=self.switch),
+                                flet.CupertinoSwitch(value= self.NTP_on_or_off(),active_color=orange, on_change=self.switch),
                                 # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
                                 self.NTC_servers(),
                             ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
@@ -206,11 +206,13 @@ class ClockView:
 
     def NTP_on_or_off(self):
         r = subprocess.run(["timedatectl", "status"], capture_output=True, check=True, text=True)
-        result = r.stdout.split("\n")
+        result = r.stdout.strip().split("\n")
 
         for line in result:
-            if line.startswith("NTP service"):
-                if line.split(":", 1)[1] == "active":
+            if line.startswith("              NTP service"):
+                print(line)
+                if line.split(":", 1)[1].strip() == "active":
+                    print(line.split(":", 1)[1])
                     self.NTP = True
 
         return self.NTP
@@ -231,8 +233,10 @@ class ClockView:
         # if self.time_zone.value != self.get_time_zone():
         if self.start_NTP != self.NTP:
             if self.NTP:
+                print('on')
                 self.turn_on_NTP()
             else:
+                print('off')
                 self.turn_off_NTP()
 
         self.set_time_zone()
