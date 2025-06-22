@@ -235,11 +235,18 @@ class ClockView:
         with open("/etc/systemd/timesyncd.conf", "r") as f:
             for line in f:
                 if line.startswith("NTP"):
-                    servers = re.findall(r'[\w\.\-]+', line.split("=", 1)[1])
+                    servers = re.findall(r'[\w.\-]+', line.split("=", 1)[1])
+
 
         for server in servers:
+            print(server)
             servers_column.controls.append(flet.Row([flet.TextField(value=server),
-                                                     flet.FilledTonalButton(color=orange)]),)
+                                                     flet.IconButton(
+                                                        icon=flet.Icons.PAUSE_CIRCLE_FILLED_ROUNDED,
+                                                        icon_color="blue400",
+                                                        icon_size=20,
+                                                        tooltip="Pause record",)
+                                                     ]))
 
         return servers_column
 
