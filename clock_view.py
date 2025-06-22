@@ -236,6 +236,8 @@ class ClockView:
                 print('on')
                 self.turn_on_NTP()
             else:
+                self.set_time_zone()
+                self.set_NTP_servers()
                 print('off')
                 self.turn_off_NTP()
 
