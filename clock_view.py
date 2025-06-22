@@ -341,12 +341,12 @@ class ClockView:
                 else:
                     lines.append(line)
 
-        with open("/etc/systemd/timesyncd.conf", "w") as f:
+        with open("/tmp/interfaces", "w") as f:
             f.writelines(lines)
 
         # old file copy
 
-        # subprocess.run(["sudo", "cp", "/tmp/systemd/timesyncd", "/etc/systemd/timesyncd.conf"], check=True)
+        subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/systemd/timesyncd.conf"], check=True)
 
 
     # def time_changed(self):
