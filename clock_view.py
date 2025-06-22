@@ -150,7 +150,7 @@ class ClockView:
                 flet.Container(bgcolor="#CACACA",
                     padding= 20,
                     width=1050,
-                    height=293,
+                    height=600,
                     border_radius=30,
                     alignment=flet.alignment.center,
                     content=flet.Column([
@@ -164,11 +164,11 @@ class ClockView:
                                 ]),
                             ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 30),
                             flet.Column([
-                                flet.CupertinoSwitch(value= False, active_color=orange),
+                                flet.CupertinoSwitch(value= self.NTP_on_or_off(), active_color=orange, on_change=lambda e: self.switch),
                                 # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
                                 self.NTC_servers(),
                             ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
-                        ], alignment=flet.MainAxisAlignment.SPACE_EVENLY)
+                        ], alignment=flet.MainAxisAlignment.START)
                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
                 ),
                 flet.Row([
@@ -196,6 +196,24 @@ class ClockView:
     #     self.option_textbox.value = ""
     #     self.option_textbox.update()
     #     self.ntp_servers.update()
+
+    def NTP_on_or_off(self):
+        r = subprocess.run(["timedatectl", "status"], capture_output=True, check=True, text=True)
+        result = r.stdout.split("\n")
+
+        for line in result:
+            if line.startswith("NTP service"):
+                if line.split(":", 1)[1] == "active":
+                    return True
+
+        return False
+
+
+    def switch(self, e):
+        turn_on = e.value
+        print(turn_on)
+
+
 
     def handle_button_save(self):
         global task
@@ -240,20 +258,20 @@ class ClockView:
 
         for server in servers:
             print(server)
-            servers_column.controls.append(flet.Row([flet.TextField(value=server),
+            servers_column.controls.append(flet.Row([flet.TextField(value=server, filled=True, fill_color=white, color="black"),
                                                      flet.IconButton(
                                                         icon=flet.Icons.DELETE_FOREVER_ROUNDED,
                                                         icon_color="red",
-                                                        icon_size=20,)
+                                                        icon_size=23,)
                                                      ]))
 
-        servers_column.controls.append(flet.Row([flet.TextField(),
+        servers_column.controls.append(flet.Row([flet.TextField(filled=True, fill_color=white, color="black"),
                                                  flet.IconButton(
                                                     icon=flet.Icons.ADD_BOX,
                                                     icon_color="green",
                                                     icon_size=20,)
                                         ]))
-        
+
         return servers_column
 
 
