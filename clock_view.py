@@ -37,9 +37,9 @@ class ClockView:
                                 # on_change=ipv6_changed
                             )
 
-        self.ntp_servers = flet.Dropdown()
-        self.option_textbox = flet.TextField(hint_text="Enter item name")
-        self.add = flet.ElevatedButton("Добавить NTP сервер", on_click=self.add_clicked)
+        # self.ntp_servers = flet.Dropdown()
+        # self.option_textbox = flet.TextField(hint_text="Enter item name")
+        # self.add = flet.ElevatedButton("Добавить NTP сервер", on_click=self.add_clicked)
 
         # self.get_time()
 
@@ -164,7 +164,9 @@ class ClockView:
                             ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 30),
                             flet.Column([
                                 flet.CupertinoSwitch(value= False, active_color=orange),
-                                flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
+                                # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
+                                flet.Column(controls= [flet.TextField(suffix=flet.FilledTonalButton()),
+                                                       flet.TextField(suffix=flet.FilledTonalButton())])
                             ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
                         ], alignment=flet.MainAxisAlignment.SPACE_EVENLY)
                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
@@ -188,12 +190,12 @@ class ClockView:
         # self.time_field.on_click = lambda e: self.time_changed()
         # self.date_field.on_click = lambda e: self.date_changes()
 
-    def add_clicked(self, e):
-        self.ntp_servers.options.append(flet.dropdown.Option(self.option_textbox.value))
-        self.ntp_servers.value = self.option_textbox.value
-        self.option_textbox.value = ""
-        self.option_textbox.update()
-        self.ntp_servers.update()
+    # def add_clicked(self, e):
+    #     self.ntp_servers.options.append(flet.dropdown.Option(self.option_textbox.value))
+    #     self.ntp_servers.value = self.option_textbox.value
+    #     self.option_textbox.value = ""
+    #     self.option_textbox.update()
+    #     self.ntp_servers.update()
 
     def handle_button_save(self):
         global task
