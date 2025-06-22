@@ -1,4 +1,5 @@
 import asyncio
+import re
 
 import flet
 import datetime
@@ -165,8 +166,7 @@ class ClockView:
                             flet.Column([
                                 flet.CupertinoSwitch(value= False, active_color=orange),
                                 # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
-                                flet.Column(controls= [flet.TextField(suffix=flet.FilledTonalButton()),
-                                                       flet.TextField(suffix=flet.FilledTonalButton())])
+                                self.NTC_servers(),
                             ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
                         ], alignment=flet.MainAxisAlignment.SPACE_EVENLY)
                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
@@ -228,6 +228,22 @@ class ClockView:
         # self.date_field.border= flet.InputBorder.NONE
 
         self.page.update()
+
+    def NTC_servers(self):
+        servers_column = flet.Column()
+
+        with open("/etc/systemd/timesyncd.conf", "r") as f:
+            for line in f:
+                if line.startswith("NTP"):
+                    servers = re.findall(r'[\w\.\-]+', line.split("=", 1)[1])
+
+        for server in servers:
+            servers_column.controls.append(flet.Row([flet.TextField(value=server),
+                                                     flet.FilledTonalButton(color=orange)]),)
+
+        return servers_column
+
+
 
     # def time_changed(self):
     #     global task
