@@ -150,7 +150,7 @@ class ClockView:
                 flet.Container(bgcolor="#CACACA",
                     padding= 20,
                     width=1050,
-                    height=600,
+                    height=400,
                     border_radius=30,
                     alignment=flet.alignment.center,
                     content=flet.Column([
@@ -164,11 +164,11 @@ class ClockView:
                                 ]),
                             ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 30),
                             flet.Column([
-                                flet.CupertinoSwitch(value= self.NTP_on_or_off(), active_color=orange, on_change=lambda e: self.switch),
+                                flet.CupertinoSwitch(value= self.NTP_on_or_off(), active_color=orange, on_change=lambda e: self.switch(e)),
                                 # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
                                 self.NTC_servers(),
                             ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
-                        ], alignment=flet.MainAxisAlignment.START)
+                        ], alignment=flet.MainAxisAlignment.SPACE_EVENLY, vertical_alignment=flet.CrossAxisAlignment.START)
                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
                 ),
                 flet.Row([
