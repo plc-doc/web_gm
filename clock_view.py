@@ -242,12 +242,18 @@ class ClockView:
             print(server)
             servers_column.controls.append(flet.Row([flet.TextField(value=server),
                                                      flet.IconButton(
-                                                        icon=flet.Icons.PAUSE_CIRCLE_FILLED_ROUNDED,
-                                                        icon_color="blue400",
-                                                        icon_size=20,
-                                                        tooltip="Pause record",)
+                                                        icon=flet.Icons.DELETE_FOREVER_ROUNDED,
+                                                        icon_color="red",
+                                                        icon_size=20,)
                                                      ]))
 
+        servers_column.controls.append(flet.Row([flet.TextField(),
+                                                 flet.IconButton(
+                                                    icon=flet.Icons.ADD_BOX,
+                                                    icon_color="green",
+                                                    icon_size=20,)
+                                        ]))
+        
         return servers_column
 
 
