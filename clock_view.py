@@ -275,28 +275,36 @@ class ClockView:
             s = flet.TextField(filled=True, fill_color=white, color="black")
             s.value = server
             self.NTP_servers.append(s)
-            self.servers_count += 1
-            self.servers_column.controls.append(flet.Row([s,
+
+            self.servers_column.controls.append(flet.Row(
+                                                    [s,
                                                      flet.IconButton(
                                                         icon=flet.Icons.DELETE_FOREVER_ROUNDED,
                                                         icon_color="red",
                                                         icon_size=23,
-                                                        on_click = self.delete_server(self.servers_count))
-                                                     ]))
+                                                        on_click = lambda e: self.delete_server)
+                                                     ]
+            ))
+
+            self.servers_count += 1
 
         self.servers_column.controls.append(flet.Row([flet.TextField(filled=True, fill_color=white, color="black"),
-                                                 flet.IconButton(
-                                                    icon=flet.Icons.ADD_BOX,
-                                                    icon_color="green",
-                                                    icon_size=20,
-                                                    on_click = self.add_server
-                                                 )
+                                                     flet.IconButton(
+                                                        icon=flet.Icons.ADD_BOX,
+                                                        icon_color="green",
+                                                        icon_size=20,
+                                                        on_click = self.add_server
+                                                    )
                                         ]))
 
         return self.servers_column
 
-    def delete_server(self, index):
-        self.servers_column.controls.pop(self.servers_column.controls.index(index))
+    def delete_server(self, e):
+        for i, controls in enumerate(self.servers_column.controls):
+            if e.control == controls.controls[1]:
+                self.servers_column.controls.pop(i)
+
+        # self.servers_column.controls.pop()
         self.page.update()
 
     def add_server(self, e):
