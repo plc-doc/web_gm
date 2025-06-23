@@ -124,10 +124,12 @@ class ClockView:
                                                   on_click= lambda e: self.handle_button_cancel()
                                                   )
 
-        self.NTP_container = flet.Container(bgcolor="#CACACA",
+        self.NTP_container = flet.Container(
+                    bgcolor="#CACACA",
                     padding= 20,
                     width=1050,
                     height=400,
+                    # height=self.app.page.height,
                     border_radius=30,
                     alignment=flet.alignment.center,
                     content=flet.Column([
@@ -147,7 +149,7 @@ class ClockView:
                             ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
                         ], alignment=flet.MainAxisAlignment.SPACE_EVENLY, vertical_alignment=flet.CrossAxisAlignment.START)
                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
-                ),
+        ),
 
         self.container = flet.Container(flet.Column(
             controls=[
@@ -225,9 +227,9 @@ class ClockView:
 
         print(turn_on)
 
-    def resize(self, nav_rail_extended, width, height):
-        self.NTP_container.width = (width - 310) if nav_rail_extended else (width - 50)
-        self.NTP_container.height = height
+    def resize(self, width, height):
+        self.NTP_container.height = height - 50
+        self.NTP_container.width = width
         self.page.update()
 
     def handle_button_save(self):
