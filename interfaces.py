@@ -374,15 +374,15 @@ class Interface:
                                                   bgcolor=orange,
                                                   color="black",
                                                   on_click=self.open_ip_settings,
-                                                  icon_color="black"), ],
-                                          alignment=flet.MainAxisAlignment.END,
+                                                  icon_color="black"),
+                                          ],alignment=flet.MainAxisAlignment.END,
                                       ),
                                   ],
                                   horizontal_alignment=flet.CrossAxisAlignment.CENTER,
                                   alignment=flet.MainAxisAlignment.CENTER,
                                   spacing=20
                               ),
-                              width=282,
+                              width=300,
                               height=161,
                               padding=10,
                               bgcolor=white,
@@ -573,7 +573,7 @@ class Interface:
         )
 
         gateway_field = flet.TextField(value=self.gateway, bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
-                                    cursor_color=orange, height=40, width=250, fill_color=white, text_size=14)
+                                    cursor_color=orange, height=40, width=250, fill_color=white, text_size=14, disabled = False if dropdown4.value == "Вручную" else True)
         button_cancel = flet.ElevatedButton(text="Отменить изменения", color=orange, bgcolor="white", width=209,
                                             height=28, on_click=handle_button_cancel, )
         button_save = flet.ElevatedButton(text="Применить", color="black", bgcolor=orange, width=137, height=28,
@@ -595,7 +595,7 @@ class Interface:
                         flet.Row([
                             flet.Text(value= "Сетевой шлюз", color= "black"),
                             gateway_field
-                        ], alignment=flet.MainAxisAlignment.START, spacing = 85),
+                        ], alignment= flet.MainAxisAlignment.START, spacing = 60),
                         # flet.Row([
                         #     button_cancel,
                         #     button_save
