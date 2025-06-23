@@ -216,7 +216,7 @@ class ClockView:
                     self.button_save
                 ], alignment=flet.MainAxisAlignment.CENTER, vertical_alignment=flet.CrossAxisAlignment.CENTER, spacing = 40)
             ],
-            horizontal_alignment=flet.CrossAxisAlignment.CENTER
+            horizontal_alignment=flet.CrossAxisAlignment.CENTER, scroll=flet.ScrollMode.AUTO,
             ),
             expand=True,
             padding=20
@@ -255,10 +255,10 @@ class ClockView:
         print(turn_on)
 
     def resize(self):
-        self.height = self.page.height
+        self.servers_column.height += 50
         # self.NTP_container.width = width
-        print("yes")
-        self.page.update(self.container)
+        print(self.servers_column.height)
+        self.page.update()
 
     def handle_button_save(self):
         global task
@@ -325,19 +325,22 @@ class ClockView:
                                                         icon_color="red",
                                                         icon_size=23,
                                                         on_click = self.delete_server)
-                                                     ]
+                                                     ], scroll = flet.ScrollMode.AUTO
             ))
 
             self.servers_count += 1
 
-        self.servers_column.controls.append(flet.Row([flet.TextField(filled=True, fill_color=white, color="black"),
-                                                     flet.IconButton(
-                                                        icon=flet.Icons.ADD_BOX,
-                                                        icon_color="green",
-                                                        icon_size=20,
-                                                        on_click = self.add_server
-                                                    )
-                                        ]))
+        self.servers_column.controls.append(flet.Row(
+                                        [
+                                                 flet.TextField(filled=True, fill_color=white, color="black"),
+                                                 flet.IconButton(
+                                                    icon=flet.Icons.ADD_BOX,
+                                                    icon_color="green",
+                                                    icon_size=20,
+                                                    on_click = self.add_server
+                                                )
+                                                ],scroll = flet.ScrollMode.AUTO)
+        )
 
         return self.servers_column
 
