@@ -28,6 +28,7 @@ class ClockView:
         self.servers_count = 0
 
         self.height = 400
+        self.page.on_resized = self.resize
 
         self.servers_column = flet.Column()
 
@@ -252,7 +253,7 @@ class ClockView:
 
         print(turn_on)
 
-    def resize(self, nav_rail_extended, width, height):
+    def resize(self):
         self.height += 50
         # self.NTP_container.width = width
         self.page.update()
@@ -347,6 +348,8 @@ class ClockView:
         self.servers_count -= 1
 
         # self.servers_column.controls.pop()
+        if self.servers_count <= 3:
+            self.height = 400
         self.page.update()
 
     def add_server(self, e):
@@ -362,6 +365,9 @@ class ClockView:
 
         self.NTP_servers.append(s)
         self.servers_count += 1
+
+        if self.servers_count > 3:
+            self.resize()
         self.page.update()
 
 
