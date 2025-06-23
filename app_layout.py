@@ -25,6 +25,16 @@ class AppLayout(flet.Row):
 
         paint = flet.Paint(stroke_width= 4, color= orange)
 
+        self.banner = flet.Banner(
+            bgcolor=flet.Colors.AMBER_100,
+            leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color=flet.Colors.AMBER, size=40),
+            content=flet.Text(
+            ),
+            actions=[
+
+            ],
+        )
+
         # self.eth_info0 = (
         #     flet.Column(
         #         controls= [flet.Text(value= "Eth0", color= "black"),
@@ -84,7 +94,6 @@ class AppLayout(flet.Row):
         #     )
         # )
         #
-
 
         self.clock_view = ClockView(self, self.page).container
         self.net_settings_view = (
@@ -181,7 +190,33 @@ class AppLayout(flet.Row):
         # self.page_resize()
         self.page.update()
 
-    def page_resize(self, e=None):
-        if type(self.active_view) is ClockView:
-            self.clock_view.resize(self.page.width, self.page.height)
-        self.page.update()
+    def show_warning(self, text):
+        def close_banner(e):
+            self.banner.open = False
+            self.active_view.page.update()
+
+        # banner = flet.Banner(
+        #     bgcolor=flet.Colors.AMBER_100,
+        #     leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color=flet.Colors.AMBER, size=40),
+        #     content=flet.Text(
+        #         value=text
+        #     ),
+        #     actions=[
+        #         flet.TextButton("Отменить", on_click=close_banner),
+        #         # flet.TextButton("Ignore", on_click=close_banner),
+        #         flet.TextButton("Перезагрузить", on_click=close_banner),
+        #     ],
+        # )
+        self.banner.content.value = text
+        self.banner.actions = [
+                flet.TextButton("Отменить", on_click=close_banner),
+                # flet.TextButton("Ignore", on_click=close_banner),
+                flet.TextButton("Перезагрузить", on_click=close_banner),
+            ],
+
+    def show_banner_click(self, e):
+        # if type(self.active_view) == ClockView:
+        self.show_warning("Restart")
+        self.active_view.page.overlay.append(self.banner)
+        self.banner.open = True
+        self.active_view.page.update()

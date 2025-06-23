@@ -27,10 +27,9 @@ class ClockView:
         self.start_NTP = self.NTP_on_or_off()
         self.servers_count = 0
 
-        self.height = 400
         self.page.on_resized = self.resize
 
-        self.servers_column = flet.Column(height=200, scroll=flet.ScrollMode.AUTO)
+        self.servers_column = flet.Column(height=250, scroll=flet.ScrollMode.AUTO)
 
         self.time_zone = flet.Dropdown(
                                 value= self.get_time_zone().strip(),
@@ -275,6 +274,7 @@ class ClockView:
                 self.set_time_zone()
                 self.set_NTP_servers()
                 print('off')
+                self.app.show_banner_click()
                 self.turn_off_NTP()
 
         self.set_time_zone()
@@ -523,9 +523,6 @@ class ClockView:
         subprocess.run(["sudo", "timedatectl", "set-ntp", "false"], check = True)
         subprocess.run(["sudo", "systemctl", "reboot"])
 
-
-    # TODO:
-    #  setting NTP and choosing servers (list)
 
     # def set_time(self):
     # def set_date(self):
