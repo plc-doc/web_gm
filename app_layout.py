@@ -16,7 +16,7 @@ class AppLayout(flet.Row):
         self.app = app
         self.page: flet.Page = page
         self.sidebar = Sidebar(self) # creating sidebar
-        # self.page.on_resized = self.page_resize
+        self.page.on_resized = self.page_resize
 
         self.eth0 = Interface("Eth0", "abcd.abcd.abcd.abcd", "255.255.255.0", self, self.page)
         self.eth1 = Interface("Eth1", "abcd.abcd.abcd.abcd", "255.255.255.1", self, self.page)
@@ -181,7 +181,7 @@ class AppLayout(flet.Row):
         # self.page_resize()
         self.page.update()
 
-    # def page_resize(self, e=None):
-    #     if type(self.active_view) is ClockView:
-    #         self.active_view.resize(self.page.width, self.page.height)
-    #     self.page.update()
+    def page_resize(self, e=None):
+        if type(self.active_view) is ClockView:
+            self.clock_view.resize(self.page.width, self.page.height)
+        self.page.update()

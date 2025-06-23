@@ -27,6 +27,8 @@ class ClockView:
         self.start_NTP = self.NTP_on_or_off()
         self.servers_count = 0
 
+        self.height = 400
+
         self.servers_column = flet.Column()
 
         self.time_zone = flet.Dropdown(
@@ -182,37 +184,35 @@ class ClockView:
                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
                 ),
                 flet.Container(
-                                bgcolor="#CACACA",
-                                padding= 20,
-                                width=1050,
-                                # height=400,
-                                height=self.app.page.height,
-                                border_radius=30,
-                                alignment=flet.alignment.center,
-                                content=flet.Column([
-                                    flet.Text("Синхронизация времени", color="black", size=18),
-                                    flet.Row([
-                                        flet.Column([
-                                            flet.Text("Синхронизация времени при помощи NTP", color="black"),
-                                            flet.Row([
-                                                flet.Text("NTP - серверы", color= "black")
+                    bgcolor="#CACACA",
+                    padding= 20,
+                    width=1050,
+                    height=self.height,
+                    # height=self.app.page.height,
+                    border_radius=30,
+                    alignment=flet.alignment.center,
+                    content=flet.Column([
+                        flet.Text("Синхронизация времени", color="black", size=18),
+                        flet.Row([
+                            flet.Column([
+                                flet.Text("Синхронизация времени при помощи NTP", color="black"),
+                                flet.Row([
+                                    flet.Text("NTP - серверы", color= "black")
 
-                                            ]),
-                                        ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 30),
-                                        flet.Column([
-                                            flet.CupertinoSwitch(value= self.NTP_on_or_off(),active_color=orange, on_change=self.switch),
-                                            # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
-                                            self.NTC_servers(),
-                                        ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
-                                    ], alignment=flet.MainAxisAlignment.SPACE_EVENLY, vertical_alignment=flet.CrossAxisAlignment.START)
-                                ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
-                    ),
+                                ]),
+                            ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 30),
+                            flet.Column([
+                                flet.CupertinoSwitch(value= self.NTP_on_or_off(),active_color=orange, on_change=self.switch),
+                                # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
+                                self.NTC_servers(),
+                            ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
+                        ], alignment=flet.MainAxisAlignment.SPACE_EVENLY, vertical_alignment=flet.CrossAxisAlignment.START)
+                    ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
+                ),
                 flet.Row([
                     self.button_cancel,
                     self.button_save
                 ], alignment=flet.MainAxisAlignment.CENTER, vertical_alignment=flet.CrossAxisAlignment.CENTER, spacing = 40)
-
-
             ],
             horizontal_alignment=flet.CrossAxisAlignment.CENTER
             ),
@@ -252,10 +252,10 @@ class ClockView:
 
         print(turn_on)
 
-    # def resize(self, nav_rail_extended, width, height):
-    #     self.height = (height - 310) if nav_rail_extended else (height - 50)
-    #     self.NTP_containerwidth = width
-    #     self.page.update()
+    def resize(self, nav_rail_extended, width, height):
+        self.height += 50
+        # self.NTP_container.width = width
+        self.page.update()
 
     def handle_button_save(self):
         global task
