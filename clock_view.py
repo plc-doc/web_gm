@@ -536,7 +536,7 @@ class ClockView:
     def show_warning(self, text):
         def close_banner(e):
             self.banner.open = False
-            self.page.update()
+            e.control.page.update()
 
     # banner = flet.Banner(
     #     bgcolor=flet.Colors.AMBER_100,
@@ -557,12 +557,12 @@ class ClockView:
                 flet.TextButton("Перезагрузить", on_click=close_banner),
         ],
 
-    def show_banner_click(self):
+    def show_banner_click(self, e):
         # if type(self.active_view) == ClockView:
         self.show_warning("Restart")
-        self.page.overlay.append(self.banner)
+        self.button_save.page.overlay.append(self.banner)
         self.banner.open = True
-        self.page.update()
+        self.button_save.page.update()
 
     # def set_time(self):
     # def set_date(self):
