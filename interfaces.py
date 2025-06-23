@@ -32,6 +32,7 @@ class Interface:
         self.ip_6 = self.get_ip6()
         self.mask = self.get_mask()
         self.mac_address = self.get_mac_address()
+        self.gateway = self.get_gateway()
         self.app = app
         self.page = page
         self.dynamic = False #from configration file
@@ -92,6 +93,46 @@ class Interface:
 
         return ".".join(str((mask >> (8*i)) & 0xff) for i in reversed(range(4)))
 
+    def get_gateway(self):
+        with open("/etc/network/interfaces", "r") as f:
+            for line in f:
+                if line.strip().startswith("gateway"):
+                    return line.split()[1]
+
+        return None
+
+    def set_gateway(self):
+        with open("/etc/network/interfaces", "r") as f:
+            content = f.read()
+
+        pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+static.*?)(?=(?:iface\s|\Z))"
+
+        match = re.search(pattern, content, re.DOTALL)
+
+        if not match:
+            print("Block not found mask")
+
+        eth_block = match.group(1)
+
+        new_eth_block = re.sub(r"(^\s*gateway\s+)(\d+\.\d+\.\d+\.\d+)", rf"\g<1>{self.gateway}", eth_block, flags=re.MULTILINE, count=1)
+
+        new_content = content.replace(eth_block, new_eth_block)
+
+        with open("/tmp/interfaces", "w") as f:
+            f.write(new_content)
+
+        subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
+
+        #reload
+        try:
+            subprocess.run(['sudo', 'ifdown', self.name.lower()], check=True)
+        except Exception:
+            print("error mask")
+        try:
+            subprocess.run(['sudo', 'ifup', self.name.lower()], check=True)
+        except Exception:
+            print("error2 mask")
+
     def set_mask(self):
         with open("/etc/network/interfaces", "r") as f:
             content = f.read()
@@ -140,10 +181,10 @@ class Interface:
                 return "\n".join([
                     header,
                     f"      address {self.ip_4}\n"
-                    f"      netmask 255.255.255.0\n"
-                    # f"      network 192.168.42.0\n"
+                    f"      netmask {self.mask}\n"
+                    f"      gateway {self.mac_address_field.value}\n"
                     f"      dns-nameservers 192.168.1.28 8.8.4.4\n"
-                    f"      hwaddress ether 02:26:50:FB:16:ED\n"
+                    f"      hwaddress ether {self.mac_address.value}\n"
                 ]) + "\n"
             else:
                 # keep static - change only address
@@ -357,6 +398,7 @@ class Interface:
             if dropdown4.value == "Вручную":
                 self.set_static_ip4()
                 self.set_mask()
+                self.set_gateway()
                 # self.mask = self.get_mask()
                 # mask_field.value = self.mask
             elif dropdown4.value == "Использовать DHCP":
@@ -382,9 +424,10 @@ class Interface:
             mask_field.value = self.mask
             mask_field.disabled = True
 
-            mac_address.value = self.mac_address
+            gateway_field.value = self.mac_address
             dropdown6.value = "Использовать DHCP"
             self.page.update()
+            self.page.close(dialog)
 
         def ipv6_changed(e):
 
@@ -514,7 +557,7 @@ class Interface:
                             ])
         )
 
-        mac_address = flet.TextField(value=self.mac_address, bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
+        gateway_field = flet.TextField(value=self.gateway, bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
                                     cursor_color=orange, height=40, width=250, fill_color=white, text_size=14)
         button_cancel = flet.ElevatedButton(text="Отменить изменения", color=orange, bgcolor="white", width=209,
                                             height=28, on_click=handle_button_cancel, )
@@ -535,8 +578,8 @@ class Interface:
                         ],alignment=flet.MainAxisAlignment.CENTER,spacing= 100),
                         flet.Row([container_4, container], alignment= flet.MainAxisAlignment.SPACE_BETWEEN, spacing= 85), #Появляющееся окно ручной настройки
                         flet.Row([
-                            flet.Text(value= "mac адрес", color= "black"),
-                            mac_address
+                            flet.Text(value= "Сетевой шлюз", color= "black"),
+                            gateway_field
                         ], alignment=flet.MainAxisAlignment.START, spacing = 85),
                         # flet.Row([
                         #     button_cancel,
