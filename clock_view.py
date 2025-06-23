@@ -30,7 +30,7 @@ class ClockView:
         self.height = 400
         self.page.on_resized = self.resize
 
-        self.servers_column = flet.Column()
+        self.servers_column = flet.Column(height=200, scroll=flet.ScrollMode.AUTO)
 
         self.time_zone = flet.Dropdown(
                                 value= self.get_time_zone().strip(),
@@ -354,7 +354,7 @@ class ClockView:
 
         # self.servers_column.controls.pop()
         if self.servers_count <= 3:
-            self.height = 400
+            self.servers_column.height = 200
         self.page.update()
 
     def add_server(self, e):
