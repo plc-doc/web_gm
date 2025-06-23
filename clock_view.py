@@ -188,7 +188,8 @@ class ClockView:
                     bgcolor="#CACACA",
                     padding= 20,
                     width=1050,
-                    height=self.height,
+                    height=400,
+
                     # height=self.app.page.height,
                     border_radius=30,
                     alignment=flet.alignment.center,
@@ -206,7 +207,7 @@ class ClockView:
                                 flet.CupertinoSwitch(value= self.NTP_on_or_off(),active_color=orange, on_change=self.switch),
                                 # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
                                 self.NTC_servers(),
-                            ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
+                            ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30, scroll=flet.ScrollMode.AUTO)
                         ], alignment=flet.MainAxisAlignment.SPACE_EVENLY, vertical_alignment=flet.CrossAxisAlignment.START)
                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
                 ),
@@ -254,9 +255,10 @@ class ClockView:
         print(turn_on)
 
     def resize(self):
-        self.height += 50
+        self.height = self.page.height
         # self.NTP_container.width = width
-        self.page.update()
+        print("yes")
+        self.page.update(self.container)
 
     def handle_button_save(self):
         global task
