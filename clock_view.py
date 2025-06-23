@@ -128,8 +128,8 @@ class ClockView:
                     bgcolor="#CACACA",
                     padding= 20,
                     width=1050,
-                    height=400,
-                    # height=self.app.page.height,
+                    # height=400,
+                    height=self.app.page.height,
                     border_radius=30,
                     alignment=flet.alignment.center,
                     content=flet.Column([
@@ -227,10 +227,10 @@ class ClockView:
 
         print(turn_on)
 
-    def resize(self, width, height):
-        self.NTP_container.height = height - 50
-        self.NTP_container.width = width
-        self.page.update()
+    # def resize(self, nav_rail_extended, width, height):
+    #     self.height = (height - 310) if nav_rail_extended else (height - 50)
+    #     self.NTP_containerwidth = width
+    #     self.page.update()
 
     def handle_button_save(self):
         global task

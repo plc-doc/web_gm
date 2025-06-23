@@ -1,12 +1,6 @@
-import asyncio
-from datetime import datetime
-from ipaddress import ip_address
-
 import flet
-import subprocess
 
 import flet.canvas as cv
-import math
 
 from sidebar import Sidebar
 from interfaces import Interface
@@ -22,7 +16,7 @@ class AppLayout(flet.Row):
         self.app = app
         self.page: flet.Page = page
         self.sidebar = Sidebar(self) # creating sidebar
-        self.page.on_resized = self.page_resize
+        # self.page.on_resized = self.page_resize
 
         self.eth0 = Interface("Eth0", "abcd.abcd.abcd.abcd", "255.255.255.0", self, self.page)
         self.eth1 = Interface("Eth1", "abcd.abcd.abcd.abcd", "255.255.255.1", self, self.page)
@@ -184,10 +178,10 @@ class AppLayout(flet.Row):
         self.active_view = self.clock_view
         self.sidebar.rail.selected_index = 1
         # self.sidebar.bottom_nav_rail.selected_index = None
-        self.page_resize()
+        # self.page_resize()
         self.page.update()
 
-    def page_resize(self, e=None):
-        if type(self.active_view) is ClockView:
-            self.active_view.resize(self.page.width, self.page.height)
-        self.page.update()
+    # def page_resize(self, e=None):
+    #     if type(self.active_view) is ClockView:
+    #         self.active_view.resize(self.page.width, self.page.height)
+    #     self.page.update()
