@@ -94,11 +94,22 @@ class Interface:
         return ".".join(str((mask >> (8*i)) & 0xff) for i in reversed(range(4)))
 
     def get_gateway(self):
+        in_block = False
+
         with open("/etc/network/interfaces", "r") as f:
             for line in f:
-                if line.strip().startswith("gateway"):
-                    return line.split()[1]
+                # if line.strip().startswith("gateway"):
+                #     return line.split()[1]
 
+                if line.startswith(f"iface {self.name.lower()} inet static"):
+                    in_block = True
+                    continue
+                if in_block:
+                    if line.strip().startswith("gateway"):
+                        return line.split()[1]
+                    else:
+                        continue
+            
         return None
 
     def set_gateway(self):
