@@ -50,11 +50,12 @@ class ClockView:
         self.banner = flet.Banner(
             bgcolor=flet.Colors.AMBER_100,
             leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color=flet.Colors.AMBER, size=40),
-            content=flet.Text(
-            ),
+            content=flet.Text("Restart"),
             actions=[
-
-            ],
+                flet.TextButton("Отменить", on_click=self.close_banner),
+                # flet.TextButton("Ignore", on_click=close_banner),
+                flet.TextButton("Перезагрузить", on_click=self.close_banner),
+        ],
         )
 
         # self.ntp_servers = flet.Dropdown()
@@ -274,6 +275,7 @@ class ClockView:
 
         # if task.cancelled():
         # self.set_local_datetime()
+        self.show_banner_click()
 
         # if self.time_zone.value != self.get_time_zone():
         if self.start_NTP != self.NTP:
@@ -284,7 +286,7 @@ class ClockView:
                 self.set_time_zone()
                 self.set_NTP_servers()
                 print('off')
-                self.app.show_banner_click()
+                self.show_banner_click()
                 self.turn_off_NTP()
 
         self.set_time_zone()
@@ -533,10 +535,10 @@ class ClockView:
         subprocess.run(["sudo", "timedatectl", "set-ntp", "false"], check = True)
         subprocess.run(["sudo", "systemctl", "reboot"])
 
-    def show_warning(self, text):
-        def close_banner(e):
-            self.banner.open = False
-            e.control.page.update()
+
+    def close_banner(self, e):
+        self.banner.open = False
+        self.page.update()
 
     # banner = flet.Banner(
     #     bgcolor=flet.Colors.AMBER_100,
@@ -550,19 +552,15 @@ class ClockView:
     #         flet.TextButton("Перезагрузить", on_click=close_banner),
     #     ],
     # )
-        self.banner.content.value = text
-        self.banner.actions = [
-                flet.TextButton("Отменить", on_click=close_banner),
-                # flet.TextButton("Ignore", on_click=close_banner),
-                flet.TextButton("Перезагрузить", on_click=close_banner),
-        ],
 
-    def show_banner_click(self, e):
+
+    def show_banner_click(self):
         # if type(self.active_view) == ClockView:
-        self.show_warning("Restart")
-        self.button_save.page.overlay.append(self.banner)
+        print("b")
+
+        self.page.overlay.append(self.banner)
         self.banner.open = True
-        self.button_save.page.update()
+        self.page.update()
 
     # def set_time(self):
     # def set_date(self):
