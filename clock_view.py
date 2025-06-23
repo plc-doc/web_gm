@@ -49,13 +49,14 @@ class ClockView:
 
         self.banner = flet.Banner(
             bgcolor=flet.Colors.AMBER_100,
-            leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color=flet.Colors.AMBER, size=40),
-            content=flet.Text("Restart"),
+            leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color="black", size=40),
+            content=flet.Text("Restart", color="black"),
             actions=[
                 flet.TextButton("Отменить", on_click=self.close_banner),
                 # flet.TextButton("Ignore", on_click=close_banner),
                 flet.TextButton("Перезагрузить", on_click=self.close_banner),
-        ],
+            ],
+            content_padding= flet.padding.only(left=316.0, top=24.0, right=66.0, bottom=4.0)
         )
 
         # self.ntp_servers = flet.Dropdown()
