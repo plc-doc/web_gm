@@ -109,7 +109,7 @@ class Interface:
                         return line.split()[1]
                     else:
                         continue
-            
+
         return None
 
     def set_gateway(self):
@@ -471,12 +471,16 @@ class Interface:
                 ip_address_field.value = self.ip_4
                 mask_field.disabled = False
                 mask_field.value = self.mask
+                gateway_field.disabled = False
+                gateway_field.value = self.gateway
 
             else:
                 ip_address_field.disabled = True
                 ip_address_field.value = self.ip_4
                 mask_field.disabled = True
                 mask_field.value = self.mask
+                gateway_field.disabled = True
+                gateway_field.value = self.gateway
             self.page.update()
 
         dropdown4 = flet.Dropdown(
