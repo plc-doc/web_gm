@@ -124,6 +124,31 @@ class ClockView:
                                                   on_click= lambda e: self.handle_button_cancel()
                                                   )
 
+        self.NTP_container = flet.Container(bgcolor="#CACACA",
+                    padding= 20,
+                    width=1050,
+                    height=400,
+                    border_radius=30,
+                    alignment=flet.alignment.center,
+                    content=flet.Column([
+                        flet.Text("Синхронизация времени", color="black", size=18),
+                        flet.Row([
+                            flet.Column([
+                                flet.Text("Синхронизация времени при помощи NTP", color="black"),
+                                flet.Row([
+                                    flet.Text("NTP - серверы", color= "black")
+
+                                ]),
+                            ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 30),
+                            flet.Column([
+                                flet.CupertinoSwitch(value= self.NTP_on_or_off(),active_color=orange, on_change=self.switch),
+                                # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
+                                self.NTC_servers(),
+                            ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
+                        ], alignment=flet.MainAxisAlignment.SPACE_EVENLY, vertical_alignment=flet.CrossAxisAlignment.START)
+                    ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
+                ),
+
         self.container = flet.Container(flet.Column(
             controls=[
                 flet.Text("Настройка даты и времени", text_align=flet.alignment.center,color=orange,size=20),
@@ -154,30 +179,7 @@ class ClockView:
                         ], alignment=flet.MainAxisAlignment.CENTER, spacing= 30)
                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
                 ),
-                flet.Container(bgcolor="#CACACA",
-                    padding= 20,
-                    width=1050,
-                    height=400,
-                    border_radius=30,
-                    alignment=flet.alignment.center,
-                    content=flet.Column([
-                        flet.Text("Синхронизация времени", color="black", size=18),
-                        flet.Row([
-                            flet.Column([
-                                flet.Text("Синхронизация времени при помощи NTP", color="black"),
-                                flet.Row([
-                                    flet.Text("NTP - серверы", color= "black")
-
-                                ]),
-                            ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 30),
-                            flet.Column([
-                                flet.CupertinoSwitch(value= self.NTP_on_or_off(),active_color=orange, on_change=self.switch),
-                                # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
-                                self.NTC_servers(),
-                            ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
-                        ], alignment=flet.MainAxisAlignment.SPACE_EVENLY, vertical_alignment=flet.CrossAxisAlignment.START)
-                    ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
-                ),
+                self.NTP_container,
                 flet.Row([
                     self.button_cancel,
                     self.button_save
@@ -217,12 +219,16 @@ class ClockView:
 
         return self.NTP
 
-
     def switch(self, e):
         turn_on = e.control.value
         self.NTP = turn_on
 
         print(turn_on)
+
+    def resize(self, nav_rail_extended, width, height):
+        self.NTP_container.width = (width - 310) if nav_rail_extended else (width - 50)
+        self.NTP_container.height = height
+        self.page.update()
 
     def handle_button_save(self):
         global task
