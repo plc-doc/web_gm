@@ -47,6 +47,16 @@ class ClockView:
                                 # on_change=ipv6_changed
                             )
 
+        self.banner = flet.Banner(
+            bgcolor=flet.Colors.AMBER_100,
+            leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color=flet.Colors.AMBER, size=40),
+            content=flet.Text(
+            ),
+            actions=[
+
+            ],
+        )
+
         # self.ntp_servers = flet.Dropdown()
         # self.option_textbox = flet.TextField(hint_text="Enter item name")
         # self.add = flet.ElevatedButton("Добавить NTP сервер", on_click=self.add_clicked)
@@ -523,6 +533,36 @@ class ClockView:
         subprocess.run(["sudo", "timedatectl", "set-ntp", "false"], check = True)
         subprocess.run(["sudo", "systemctl", "reboot"])
 
+    def show_warning(self, text):
+        def close_banner(e):
+            self.banner.open = False
+            self.page.update()
+
+    # banner = flet.Banner(
+    #     bgcolor=flet.Colors.AMBER_100,
+    #     leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color=flet.Colors.AMBER, size=40),
+    #     content=flet.Text(
+    #         value=text
+    #     ),
+    #     actions=[
+    #         flet.TextButton("Отменить", on_click=close_banner),
+    #         # flet.TextButton("Ignore", on_click=close_banner),
+    #         flet.TextButton("Перезагрузить", on_click=close_banner),
+    #     ],
+    # )
+        self.banner.content.value = text
+        self.banner.actions = [
+                flet.TextButton("Отменить", on_click=close_banner),
+                # flet.TextButton("Ignore", on_click=close_banner),
+                flet.TextButton("Перезагрузить", on_click=close_banner),
+        ],
+
+    def show_banner_click(self):
+        # if type(self.active_view) == ClockView:
+        self.show_warning("Restart")
+        self.page.overlay.append(self.banner)
+        self.banner.open = True
+        self.page.update()
 
     # def set_time(self):
     # def set_date(self):
