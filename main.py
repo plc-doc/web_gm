@@ -1,6 +1,8 @@
 import flet
 import os
+import hashlib
 
+import User
 from app_layout import AppLayout
 
 grey = "#565759"
@@ -11,6 +13,10 @@ DEFAULT_FLET_PORT = 1040
 # flet_path = 'app'
 flet_port = int(os.getenv("FLET_PORT", DEFAULT_FLET_PORT))
 
+'''
+  Authorization
+  Switches to App
+'''
 class AuthorizationPage:
     def __init__(self, page: flet.Page):
         self.page = page
@@ -24,57 +30,65 @@ class AuthorizationPage:
         self.user_name = ""
         self.password = ""
 
-
-
-
         self.tb = flet.TextField(bgcolor=white, label="Имя пользователя:", width=350, color="black", selection_color=orange,
-                                 focused_border_color=orange, cursor_color=orange, border_radius=14)
+                                 focused_border_color=orange, cursor_color=orange, border_radius=14, on_click=self.on_click)
         self.tb_password = flet.TextField(width=350, bgcolor=white, label="Пароль:", shift_enter=True, password=True,
                                           can_reveal_password=True, color="black", focused_border_color=orange,
-                                          cursor_color=orange, selection_color=orange, border_radius=14)
+                                          cursor_color=orange, selection_color=orange, border_radius=14, on_click= self.on_click)
         self.b = flet.ElevatedButton(text="Войти", on_click=self.button_clicked, bgcolor=orange, color="black", width=130,
                                      height=35)
 
+        self.error_text = flet.Text(value="Не удалось войти. Неверный логин или пароль", color="red", size=15, visible=False)
+
         self.page.add(flet.Column(
-                [
+                    [
                             flet.Text(value="Авторизация",
                                       size=25,
-                                      # font_family="Times New Roman",
                                       color= "black"),
-                            flet.Column(controls=[self.tb, self.tb_password, self.b],
+                            flet.Column(controls=[self.error_text ,
+                                                  self.tb,
+                                                  self.tb_password,
+                                                  self.b,
+                                                  ],
                                         horizontal_alignment=flet.CrossAxisAlignment.CENTER,
                                         spacing= 15,
                                         alignment=flet.MainAxisAlignment.CENTER)
-                        ],
-                        horizontal_alignment=flet.CrossAxisAlignment.CENTER,
-                        alignment=flet.MainAxisAlignment.CENTER,
-                        spacing= 40))
+                            ],
+                            horizontal_alignment=flet.CrossAxisAlignment.CENTER,
+                            alignment=flet.MainAxisAlignment.CENTER,
+                            spacing= 40
+        ))
+        self.page.update()
+
+    # hide error texts
+    def on_click(self, e):
+        print('a')
+        self.error_text.visible = False
+        self.tb.error_text = None
+        self.tb_password.error_text = None
         self.page.update()
 
     def button_clicked(self, e):
-        # t.value = tb.value
-        # t.update()
-        # flet.Column(controls=[tb, t])
         if not self.tb.value:
-            self.tb.error_text = "Please enter your name"
+            self.tb.error_text = "Пожалуйста, введите логин"
             self.page.update()
         elif not self.tb_password.value:
-            self.tb_password.error_text = "Please enter password"
+            self.tb_password.error_text = "Пожалуйста, введите пароль"
             self.page.update()
-        #TODO: no user has entered user_name or password
         else:
-            self.user_name = self.tb.value
-            self.password = self.tb_password.value
-            print(self.user_name, self.password)
-            self.tb.update()
-            self.tb_password.update()
+            if User.get_user(self.tb.value, hashlib.sha256(self.tb_password.value.encode()).hexdigest()):
+                self.user_name = self.tb.value
+                self.password = self.tb_password.value
+                print(self.user_name, self.password)
+                self.tb.update()
+                self.tb_password.update()
 
-            # self.page.clean()
+                win = App(self.page)
+            else:
+                self.tb_password.error_text = ""
+                self.error_text.visible = True
 
-            win = App(self.page)
-
-            # self.page.clean()
-            # self.page.add(win)
+                self.page.update()
 
 
 class App(AppLayout):
@@ -87,7 +101,8 @@ class App(AppLayout):
             flet.PopupMenuItem(),  # divider
             flet.PopupMenuItem(text="Settings"),
         ]
-        self.appbar = flet.AppBar(
+
+        self.appbar = flet.AppBar( # invisible appbar, without which doesn't work
             leading=flet.Icon(flet.Icons.GRID_GOLDENRATIO_ROUNDED),
             leading_width=100,
             title=flet.Text(
@@ -120,7 +135,6 @@ class App(AppLayout):
         )
 
         self.initialize()
-        # self.page.add()
 
     def initialize(self):
         self.page.views.append(
@@ -147,4 +161,4 @@ class App(AppLayout):
         self.page.update()
 
 
-flet.app(target=AuthorizationPage, view=flet.WEB_BROWSER,host= "0.0.0.0",port=flet_port, assets_dir="assets")
+flet.app(target=AuthorizationPage, view=flet.WEB_BROWSER,host= "192.168.1.58",port=flet_port, assets_dir="assets")

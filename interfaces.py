@@ -17,16 +17,14 @@ current_eth0_ip = "ifconfig eth0| grep 'inet' | cut -d: -f2 | awk '{print $2}'"
 #   ↓
 #   main field must be in the center
 #   show that interface is inactive
-#   make white clouds wider
 #   mb put interface name inside white cloud
 #   ↓
 #   class Users (login, logout)
-#   ↓
-#   icon to loading page and application icon
+
 
 
 class Interface:
-    def __init__(self, name, ip_6, mask, app, page):
+    def __init__(self, name, app, page):
         self.name = name
         self.ip_4 = self.get_ip4() #active ip from ifconfig
         self.ip_6 = self.get_ip6()
@@ -43,8 +41,6 @@ class Interface:
         self.ip_6_field = flet.Text(value=self.ip_6, color="black")
 
     def get_ip4(self):
-        # result = subprocess.run(["ifconfig {self.name.lower()}| grep 'inet' | cut -d: -f2 | awk '{print $2}'"], shell=True,
-        #                         capture_output=True, text=True, check=True)
 
         request = subprocess.run(["ip", "addr", "show", self.name.lower()], capture_output=True, text=True, check=True)
 
@@ -193,7 +189,7 @@ class Interface:
                     header,
                     f"      address {self.ip_4}\n"
                     f"      netmask {self.mask}\n"
-                    f"      gateway {self.mac_address_field.value}\n"
+                    f"      gateway {self.gateway}\n"
                     f"      dns-nameservers 192.168.1.28 8.8.4.4\n"
                     f"      hwaddress ether {self.mac_address.value}\n"
                 ]) + "\n"
@@ -306,10 +302,7 @@ class Interface:
 
     def get_static_or_dynamic_ip6(self):
         with open("/etc/network/interfaces", "r") as f:
-        #     content = f.read()
-        #
-        # pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet6\s+static.*?)(?=(?:iface\s|\Z))"
-        # m = re.search(pattern, content, flags= re.MULTILINE)
+
             for line in f:
                 if line.startswith(f"iface {self.name.lower()} inet6 static"):
                     self.dynamic_ip6 = False
@@ -328,17 +321,8 @@ class Interface:
         else:
             return None
 
-        # return match.group(1) if match else None
 
-        # mode = m.group(2)
-        #
-        # if mode == "dhcp":
-        #     self.dynamic_ip6 = True
-        #
-        # return mode
-
-
-
+    # Eth (i) white clouds layout
     def info_structure(self):
         return flet.Column(
             controls=[flet.Text(value=self.name, color="black"),
@@ -395,8 +379,11 @@ class Interface:
             spacing=5,
             horizontal_alignment=flet.CrossAxisAlignment.CENTER,
             alignment=flet.MainAxisAlignment.CENTER,
+            expand = True
         )
 
+    # Eth (i) settings
+    # opening dialog
     def open_ip_settings(self, e):
         global number
 
@@ -405,6 +392,8 @@ class Interface:
             self.ip_4_field.value = self.ip_4
 
             self.mask = mask_field.value
+            self.gateway = gateway_field.value
+
 
             if dropdown4.value == "Вручную":
                 self.set_static_ip4()
@@ -417,8 +406,8 @@ class Interface:
                 self.ip_4 = self.get_ip4()
                 self.ip_4_field.value = self.ip_4
 
-            self.mac_address = self.get_mac_address()
-            self.mac_address_field.value = self.mac_address
+            self.gateway = self.get_gateway()
+            gateway_field.value = self.gateway
 
             self.page.close(dialog)
             self.page.update()
@@ -488,7 +477,6 @@ class Interface:
             width=240,
             options=[
                 flet.dropdown.Option("Использовать DHCP"),
-                # flet.dropdown.Option("Использовать BOOTP"),
                 flet.dropdown.Option("Вручную")
             ],
             border_radius=10,

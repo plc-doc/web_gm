@@ -18,82 +18,12 @@ class AppLayout(flet.Row):
         self.sidebar = Sidebar(self) # creating sidebar
         # self.page.on_resized = self.page_resize
 
-        self.eth0 = Interface("Eth0", "abcd.abcd.abcd.abcd", "255.255.255.0", self, self.page)
-        self.eth1 = Interface("Eth1", "abcd.abcd.abcd.abcd", "255.255.255.1", self, self.page)
-        self.eth2 = Interface("Eth2", "abcd.abcd.abcd.abcd", "255.255.255.2", self, self.page)
-        self.eth3 = Interface("Eth3", "abcd.abcd.abcd.abcd", "255.255.255.3", self, self.page)
+        self.eth0 = Interface("Eth0", self, self.page)
+        self.eth1 = Interface("Eth1", self, self.page)
+        self.eth2 = Interface("Eth2", self, self.page)
+        self.eth3 = Interface("Eth3", self, self.page)
 
-        paint = flet.Paint(stroke_width= 4, color= orange)
-
-        # self.banner = flet.Banner(
-        #     bgcolor=flet.Colors.AMBER_100,
-        #     leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color=flet.Colors.AMBER, size=40),
-        #     content=flet.Text(
-        #     ),
-        #     actions=[
-        #
-        #     ],
-        # )
-
-        # self.eth_info0 = (
-        #     flet.Column(
-        #         controls= [flet.Text(value= "Eth0", color= "black"),
-        #                    flet.Card(
-        #                         content=flet.Container(
-        #                             content=flet.Column(
-        #                                 controls=[
-        #                                     flet.Row(
-        #                                         controls =
-        #                                         [flet.Column(
-        #                                             controls =[
-        #                                                 flet.Text(value= "IP-адрес(IPv4)", color= "black"),
-        #                                                 flet.Text(value= "mac адрес",color= "black"),
-        #                                                 flet.Text(value= "IP-адрес(IPv6)",color="black")],
-        #                                             horizontal_alignment= flet.CrossAxisAlignment.START
-        #                                         ),
-        #                                         flet.Column(
-        #                                             controls=[
-        #                                                 flet.Text(value="192.168.1.42",color="black"),
-        #                                                 flet.Text(value="255.255.255.0",color="black"),
-        #                                                 flet.Text(value="192.168.1.42",color="black")],
-        #                                             alignment=flet.MainAxisAlignment.START,
-        #                                         ),
-        #                                         ],
-        #                                         alignment=flet.MainAxisAlignment.CENTER,
-        #                                         spacing= 40,
-        #                                     ),
-        #                                     flet.Row(
-        #                                         controls = [
-        #                                             flet.FilledTonalButton(
-        #                                                 text= "Настроить",
-        #                                                 icon=flet.Icons.SETTINGS,
-        #                                                 bgcolor= orange,
-        #                                                 color= "black",
-        #                                                 on_click=self.app.open_ip_settings,
-        #                                                 icon_color="black"),],
-        #                                         alignment=flet.MainAxisAlignment.END,
-        #                                     ),
-        #                                 ],
-        #                                 horizontal_alignment=flet.CrossAxisAlignment.CENTER,
-        #                                 alignment=flet.MainAxisAlignment.CENTER,
-        #                                 spacing= 20
-        #                             ),
-        #                             width=282,
-        #                             height=161,
-        #                             padding=10,
-        #                             bgcolor=white,
-        #                             border_radius=20,
-        #                         ),
-        #                         color=white,
-        #                         shadow_color="black",
-        #                    ),
-        #         ],
-        #         spacing= 5,
-        #         horizontal_alignment=flet.CrossAxisAlignment.CENTER,
-        #         alignment=flet.MainAxisAlignment.CENTER,
-        #     )
-        # )
-        #
+        paint = flet.Paint(stroke_width= 4, color= orange) # orange lines
 
         self.clock_view = ClockView(self, self.page).container
         self.net_settings_view = (
@@ -156,10 +86,6 @@ class AppLayout(flet.Row):
 
         self.controls = [self.sidebar, flet.VerticalDivider(width=0, color= "#CACACA"), self.active_view]
 
-    # def get_ip4(self):
-    #     result = subprocess.run(["ifconfig eth2| grep 'inet' | cut -d: -f2 | awk '{print $2}'"], shell=True,
-    #                             capture_output=True, text=True, check=True)
-    #     return result.stdout
 
     @property
     def active_view(self):  # change active view
@@ -169,54 +95,19 @@ class AppLayout(flet.Row):
     def active_view(self, view):
         self._active_view = view
         self.controls[-1] = self._active_view
-        # self.sidebar.sync_board_destinations()
         self.page.update()
 
     def set_net_settings_view(self):
         self.active_view = self.net_settings_view
-        # self.sidebar.bottom_nav_rail.selected_index = i
         self.sidebar.rail.selected_index = 0
-        # self.page_resize()
         self.page.update()
 
-    def update_net_settings(self):
-        self.net_settings_view.update()
-        self.set_net_settings_view()
+    # def update_net_settings(self):
+    #     self.net_settings_view.update()
+    #     self.set_net_settings_view()
 
     def set_clock_view(self):
         self.active_view = self.clock_view
         self.sidebar.rail.selected_index = 1
-        # self.sidebar.bottom_nav_rail.selected_index = None
-        # self.page_resize()
         self.page.update()
 
-    # def show_warning(self, text):
-    #     def close_banner(e):
-    #         self.banner.open = False
-    #         self.page.update()
-    #
-    #     # banner = flet.Banner(
-    #     #     bgcolor=flet.Colors.AMBER_100,
-    #     #     leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color=flet.Colors.AMBER, size=40),
-    #     #     content=flet.Text(
-    #     #         value=text
-    #     #     ),
-    #     #     actions=[
-    #     #         flet.TextButton("Отменить", on_click=close_banner),
-    #     #         # flet.TextButton("Ignore", on_click=close_banner),
-    #     #         flet.TextButton("Перезагрузить", on_click=close_banner),
-    #     #     ],
-    #     # )
-    #     self.banner.content.value = text
-    #     self.banner.actions = [
-    #             flet.TextButton("Отменить", on_click=close_banner),
-    #             # flet.TextButton("Ignore", on_click=close_banner),
-    #             flet.TextButton("Перезагрузить", on_click=close_banner),
-    #         ],
-    #
-    # def show_banner_click(self):
-    #     # if type(self.active_view) == ClockView:
-    #     self.show_warning("Restart")
-    #     self.page.overlay.append(self.banner)
-    #     self.banner.open = True
-    #     self.page.update()

@@ -4,15 +4,10 @@ import re
 import flet
 import datetime
 import subprocess
-from flask import Flask, request
 
 grey = "#565759"
 white = "#EAEAEA"
 orange = "#F7941E"
-
-# now = datetime.datetime.now()
-
-# time = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
 
 class ClockView:
     def __init__(self, app, page):
@@ -23,8 +18,8 @@ class ClockView:
         self.time_field = flet.Text( color="black")
 
         self.NTP_servers = []
-        self.NTP = False
-        self.start_NTP = self.NTP_on_or_off()
+        self.NTP = False # Ntp active or not
+        self.start_NTP = self.NTP_on_or_off() #start value of ntp
         self.servers_count = 0
 
         self.page.on_resized = self.resize
@@ -47,86 +42,19 @@ class ClockView:
                                 # on_change=ipv6_changed
                             )
 
+        # banner with reboot warning
+        # TODO: give it functionality (buttons restart and cancel)
         self.banner = flet.Banner(
             bgcolor=flet.Colors.AMBER_100,
             leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color="black", size=40),
             content=flet.Text("Restart", color="black"),
             actions=[
                 flet.TextButton("Отменить", on_click=self.close_banner),
-                # flet.TextButton("Ignore", on_click=close_banner),
                 flet.TextButton("Перезагрузить", on_click=self.close_banner),
             ],
-            content_padding= flet.padding.only(left=316.0, top=24.0, right=66.0, bottom=4.0)
+            content_padding= flet.padding.only(left=316.0, top=24.0, right=16.0, bottom=4.0)
         )
 
-        # self.ntp_servers = flet.Dropdown()
-        # self.option_textbox = flet.TextField(hint_text="Enter item name")
-        # self.add = flet.ElevatedButton("Добавить NTP сервер", on_click=self.add_clicked)
-
-        # self.get_time()
-
-        # super().__init__(
-        #     flet.Column(
-        #     controls=[
-        #         flet.Text("Настройка даты и времени", text_align=flet.alignment.center,color=orange,size=20),
-        #         flet.Container(
-        #             padding= 20,
-        #             bgcolor="#CACACA",
-        #             width=1050,
-        #             height=293,
-        #             border_radius=30,
-        #             alignment=flet.alignment.center,
-        #             content=flet.Column([
-        #                 flet.Text("Настройки локального времени", color= "black", size= 18),
-        #                 flet.Row([
-        #                     flet.Column([
-        #                         flet.Text("Дата", color="black"),
-        #                         flet.Text("Время", color="black")
-        #                     ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30),
-        #                     flet.Column([
-        #                         self.date_field,
-        #                         self.time_field
-        #                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER),
-        #                     flet.FilledTonalButton(text="Синхронизировать с компьютером",
-        #                                           bgcolor=orange,
-        #                                           color="black",
-        #                                           on_click=lambda e: print()
-        #                                            )
-        #                 ], alignment=flet.MainAxisAlignment.SPACE_EVENLY),
-        #                 flet.VerticalDivider(width= 946, color= "#ACACAC"),
-        #                 flet.Row([
-        #                     flet.Text("Часовой пояс", color="black"),
-        #                     flet.TextField(value=self.get_time_zone(), border=flet.InputBorder.NONE, color="black")
-        #
-        #                 ], alignment=flet.MainAxisAlignment.CENTER, spacing= 30)
-        #             ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
-        #         ),
-        #         flet.Container(bgcolor="#CACACA",
-        #             padding= 20,
-        #             width=1050,
-        #             height=293,
-        #             border_radius=30,
-        #             alignment=flet.alignment.center,
-        #             content=flet.Column([
-        #                 flet.Text("Синхронизация времени", color="black", size=18),
-        #                 flet.Row([
-        #                     flet.Column([
-        #                         flet.Text("Синхронизация времени при помощи NTP", color="black"),
-        #                         flet.Text("NTP - серверы", color= "black")
-        #                     ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 30),
-        #                     flet.Column([
-        #                         flet.CupertinoSwitch(value= False, active_color=orange),
-        #
-        #                     ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
-        #                 ], alignment=flet.MainAxisAlignment.SPACE_EVENLY)
-        #             ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
-        #         )
-        #     ],
-        #     horizontal_alignment=flet.CrossAxisAlignment.CENTER
-        #     ),
-        #     expand=True,
-        #     padding=20
-        # )
         self.button_save = flet.ElevatedButton(text="Сохранить изменения",
                                              bgcolor=orange,
                                              color="black",
@@ -138,33 +66,7 @@ class ClockView:
                                                   on_click= lambda e: self.handle_button_cancel()
                                                   )
 
-        # self.NTP_container = flet.Container(
-        #             bgcolor="#CACACA",
-        #             padding= 20,
-        #             width=1050,
-        #             # height=400,
-        #             height=self.app.page.height,
-        #             border_radius=30,
-        #             alignment=flet.alignment.center,
-        #             content=flet.Column([
-        #                 flet.Text("Синхронизация времени", color="black", size=18),
-        #                 flet.Row([
-        #                     flet.Column([
-        #                         flet.Text("Синхронизация времени при помощи NTP", color="black"),
-        #                         flet.Row([
-        #                             flet.Text("NTP - серверы", color= "black")
-        #
-        #                         ]),
-        #                     ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 30),
-        #                     flet.Column([
-        #                         flet.CupertinoSwitch(value= self.NTP_on_or_off(),active_color=orange, on_change=self.switch),
-        #                         # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
-        #                         self.NTC_servers(),
-        #                     ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30)
-        #                 ], alignment=flet.MainAxisAlignment.SPACE_EVENLY, vertical_alignment=flet.CrossAxisAlignment.START)
-        #             ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
-        # ),
-
+        # Clock view layout
         self.container = flet.Container(flet.Column(
             controls=[
                 flet.Text("Настройка даты и времени", text_align=flet.alignment.center,color=orange,size=20),
@@ -235,16 +137,6 @@ class ClockView:
         self.page.update()
 
         self.get_time()
-        # self.button_save.on_click = lambda e: self.stop_time()
-        # self.time_field.on_click = lambda e: self.time_changed()
-        # self.date_field.on_click = lambda e: self.date_changes()
-
-    # def add_clicked(self, e):
-    #     self.ntp_servers.options.append(flet.dropdown.Option(self.option_textbox.value))
-    #     self.ntp_servers.value = self.option_textbox.value
-    #     self.option_textbox.value = ""
-    #     self.option_textbox.update()
-    #     self.ntp_servers.update()
 
     def NTP_on_or_off(self):
         r = subprocess.run(["timedatectl", "status"], capture_output=True, check=True, text=True)
@@ -265,6 +157,7 @@ class ClockView:
 
         print(turn_on)
 
+    # adding scrollbar if ntp servers count > 3
     def resize(self):
         self.servers_column.height += 50
         # self.NTP_container.width = width
@@ -274,11 +167,8 @@ class ClockView:
     def handle_button_save(self):
         global task
 
-        # if task.cancelled():
-        # self.set_local_datetime()
         self.show_banner_click()
 
-        # if self.time_zone.value != self.get_time_zone():
         if self.start_NTP != self.NTP:
             if self.NTP:
                 print('on')
@@ -317,13 +207,11 @@ class ClockView:
         self.page.update()
 
     def NTC_servers(self):
-        # servers_column = flet.Column()
 
         with open("/etc/systemd/timesyncd.conf", "r") as f:
             for line in f:
                 if line.startswith("NTP"):
                     servers = re.findall(r'[\w.\-]+', line.split("=", 1)[1])
-
 
         for server in servers:
             print(server)
@@ -366,8 +254,8 @@ class ClockView:
         self.servers_count -= 1
 
         # self.servers_column.controls.pop()
-        if self.servers_count <= 3:
-            self.servers_column.height = 200
+        # if self.servers_count <= 3:
+        #     self.servers_column.height = 200
         self.page.update()
 
     def add_server(self, e):
@@ -384,8 +272,8 @@ class ClockView:
         self.NTP_servers.append(s)
         self.servers_count += 1
 
-        if self.servers_count > 3:
-            self.resize()
+        # if self.servers_count > 3:
+        #     self.resize()
         self.page.update()
 
 
@@ -486,27 +374,7 @@ class ClockView:
     def set_time_zone(self):
         subprocess.run(["sudo", "timedatectl", "set-timezone", self.time_zone.value],check=True)
 
-        # lines = []
-        # with open("/etc/timezone", "r") as f:
-        #     for line in f:
-        #         lines.append(self.time_zone.value)
-        #
-        # with open("/tmp/timezone", "w") as f:
-        #     f.writelines(self.time_zone.value)
-        #
-        # # with open("/etc/timezone", "w") as f:
-        # #     f.writelines(lines)
-        #
-        # subprocess.run(["sudo", "cp", "/tmp/timezone", "/etc/timezone"], check=True)
-        #
-        # subprocess.run(["sudo", "systemctl", "restart", "systemd-timesyncd.service"], check=True)
-
     def get_time_zone(self):
-        # time_zone = subprocess.run(["cat", '/etc/timezone'], capture_output=True, text=True, check= True)
-        # result = time_zone.stdout
-        # print(result)
-        # return result
-
         request_timezone = subprocess.run(['timedatectl', 'status'], text = True, capture_output=True, check=True)
         result = request_timezone.stdout
 
@@ -541,28 +409,8 @@ class ClockView:
         self.banner.open = False
         self.page.update()
 
-    # banner = flet.Banner(
-    #     bgcolor=flet.Colors.AMBER_100,
-    #     leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color=flet.Colors.AMBER, size=40),
-    #     content=flet.Text(
-    #         value=text
-    #     ),
-    #     actions=[
-    #         flet.TextButton("Отменить", on_click=close_banner),
-    #         # flet.TextButton("Ignore", on_click=close_banner),
-    #         flet.TextButton("Перезагрузить", on_click=close_banner),
-    #     ],
-    # )
-
-
     def show_banner_click(self):
-        # if type(self.active_view) == ClockView:
-        print("b")
-
         self.page.overlay.append(self.banner)
         self.banner.open = True
         self.page.update()
 
-    # def set_time(self):
-    # def set_date(self):
-    # def set_ntp_server(self):
