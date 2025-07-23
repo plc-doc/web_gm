@@ -59,7 +59,7 @@ class Sidebar(flet.Container):
                             width=140,
                         ),
                         flet.Container(
-                            content=flet.ElevatedButton("Выйти", on_click=self.app_layout.route_change(), bgcolor="red",
+                            content=flet.ElevatedButton("Выйти", on_click=lambda e: self.app_layout.route_change(e), bgcolor="red",
                                                         color=white, width=10),
                             bgcolor="#CACACA",
                             padding=0,
