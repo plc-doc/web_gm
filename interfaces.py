@@ -1,10 +1,7 @@
 import re
-import time
 
 import flet
 import subprocess
-
-from httpx import request
 
 grey = "#565759"
 white = "#EAEAEA"
@@ -15,7 +12,7 @@ current_eth0_ip = "ifconfig eth0| grep 'inet' | cut -d: -f2 | awk '{print $2}'"
 # TODO:
 #   ! IPv6 still does NOT work (can only read but no idea how to change)
 #   ↓
-#   main field must be in the center
+#   main field must be in the center (dynamic height, width (page.height-x) )
 #   show that interface is inactive
 #   mb put interface name inside white cloud
 #   ↓

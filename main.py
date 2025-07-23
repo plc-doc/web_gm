@@ -161,4 +161,4 @@ class App(AppLayout):
         self.page.update()
 
 
-flet.app(target=AuthorizationPage, view=flet.WEB_BROWSER,host= "192.168.1.58",port=flet_port, assets_dir="assets")
+flet.app(target=AuthorizationPage, view=flet.WEB_BROWSER,host= "0.0.0.0",port=flet_port, assets_dir="assets")
