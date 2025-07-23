@@ -62,7 +62,7 @@ class AppLayout(flet.Row):
                                         fit=flet.ImageFit.CONTAIN
                                     ),
                                     self.eth3.info_structure()
-                                ],
+                                ]
                             )
                     ),
                     cv.Canvas(
@@ -76,7 +76,7 @@ class AppLayout(flet.Row):
                 ]),
 
                 ],
-                horizontal_alignment=flet.CrossAxisAlignment.CENTER,
+                horizontal_alignment=flet.CrossAxisAlignment.START,
                 alignment=flet.MainAxisAlignment.CENTER,
                 spacing=20,
             )
