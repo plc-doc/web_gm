@@ -1,8 +1,6 @@
 import flet
 
 import flet.canvas as cv
-from flet.core.border_radius import horizontal
-from reportlab.lib.pdfencrypt import padding
 
 from sidebar import Sidebar
 from interfaces import Interface
@@ -43,6 +41,7 @@ class AppLayout(flet.Row):
                         width=1343,
                         height=803,
                         border_radius=30,
+                        padding=54,
                         alignment=flet.alignment.center,
                         content=
                             flet.Row(

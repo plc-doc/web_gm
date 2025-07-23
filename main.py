@@ -9,7 +9,7 @@ grey = "#565759"
 white = "#EAEAEA"
 orange = "#F7941E"
 
-DEFAULT_FLET_PORT = 1040
+DEFAULT_FLET_PORT = 1050
 # flet_path = 'app'
 flet_port = int(os.getenv("FLET_PORT", DEFAULT_FLET_PORT))
 
@@ -20,7 +20,8 @@ flet_port = int(os.getenv("FLET_PORT", DEFAULT_FLET_PORT))
 class AuthorizationPage:
     def __init__(self, page: flet.Page):
         self.page = page
-        self.page.title = "Authorization"
+        # self.page.favicon = "favicon.png"
+        self.page.title = "GM"
         self.page.vertical_alignment = flet.MainAxisAlignment.CENTER
         self.page.horizontal_alignment = flet.CrossAxisAlignment.CENTER
         self.page.bgcolor = white
@@ -161,4 +162,4 @@ class App(AppLayout):
         self.page.update()
 
 
-flet.app(target=AuthorizationPage, view=flet.WEB_BROWSER,host= "0.0.0.0",port=flet_port, assets_dir="assets")
+flet.app(target=AuthorizationPage, view=flet.WEB_BROWSER, host= "127.0.0.1", port=flet_port, assets_dir="assets")
