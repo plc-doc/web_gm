@@ -1,6 +1,8 @@
 import flet
 
 import flet.canvas as cv
+from flet.core.border_radius import horizontal
+from reportlab.lib.pdfencrypt import padding
 
 from sidebar import Sidebar
 from interfaces import Interface
@@ -46,6 +48,7 @@ class AppLayout(flet.Row):
                             flet.Row(
                                 spacing=137,
                                 alignment=flet.MainAxisAlignment.CENTER,
+                                vertical_alignment=flet.CrossAxisAlignment.CENTER, #added
                                 controls=[
                                     flet.Column(
                                         controls=[self.eth0.info_structure(),
@@ -76,9 +79,10 @@ class AppLayout(flet.Row):
                 ]),
 
                 ],
-                horizontal_alignment=flet.CrossAxisAlignment.START,
+                horizontal_alignment=flet.CrossAxisAlignment.CENTER,
                 alignment=flet.MainAxisAlignment.CENTER,
                 spacing=20,
+
             )
         )
 
