@@ -139,17 +139,20 @@ class ClockView:
         self.get_time()
 
     def NTP_on_or_off(self):
-        r = subprocess.run(["timedatectl", "status"], capture_output=True, check=True, text=True)
-        result = r.stdout.strip().split("\n")
+        try:
+            r = subprocess.run(["timedatectl", "status"], capture_output=True, check=True, text=True)
+            result = r.stdout.strip().split("\n")
 
-        for line in result:
-            if line.startswith("              NTP service"):
-                print(line)
-                if line.split(":", 1)[1].strip() == "active":
-                    print(line.split(":", 1)[1])
-                    self.NTP = True
+            for line in result:
+                if line.startswith("              NTP service"):
+                    print(line)
+                    if line.split(":", 1)[1].strip() == "active":
+                        print(line.split(":", 1)[1])
+                        self.NTP = True
 
-        return self.NTP
+            return self.NTP
+        except Exception:
+            return ""
 
     def switch(self, e):
         turn_on = e.control.value
@@ -207,43 +210,45 @@ class ClockView:
         self.page.update()
 
     def NTC_servers(self):
+        try:
+            with open("/etc/systemd/timesyncd.conf", "r") as f:
+                for line in f:
+                    if line.startswith("NTP"):
+                        servers = re.findall(r'[\w.\-]+', line.split("=", 1)[1])
 
-        with open("/etc/systemd/timesyncd.conf", "r") as f:
-            for line in f:
-                if line.startswith("NTP"):
-                    servers = re.findall(r'[\w.\-]+', line.split("=", 1)[1])
+            for server in servers:
+                print(server)
+                s = flet.TextField(filled=True, fill_color=white, color="black")
+                s.value = server
+                self.NTP_servers.append(s)
 
-        for server in servers:
-            print(server)
-            s = flet.TextField(filled=True, fill_color=white, color="black")
-            s.value = server
-            self.NTP_servers.append(s)
+                self.servers_column.controls.append(flet.Row(
+                                                        [s,
+                                                         flet.IconButton(
+                                                            icon=flet.Icons.DELETE_FOREVER_ROUNDED,
+                                                            icon_color="red",
+                                                            icon_size=23,
+                                                            on_click = self.delete_server)
+                                                         ], scroll = flet.ScrollMode.AUTO
+                ))
+
+                self.servers_count += 1
 
             self.servers_column.controls.append(flet.Row(
-                                                    [s,
+                                            [
+                                                     flet.TextField(filled=True, fill_color=white, color="black"),
                                                      flet.IconButton(
-                                                        icon=flet.Icons.DELETE_FOREVER_ROUNDED,
-                                                        icon_color="red",
-                                                        icon_size=23,
-                                                        on_click = self.delete_server)
-                                                     ], scroll = flet.ScrollMode.AUTO
-            ))
+                                                        icon=flet.Icons.ADD_BOX,
+                                                        icon_color="green",
+                                                        icon_size=20,
+                                                        on_click = self.add_server
+                                                    )
+                                                    ],scroll = flet.ScrollMode.AUTO)
+            )
 
-            self.servers_count += 1
-
-        self.servers_column.controls.append(flet.Row(
-                                        [
-                                                 flet.TextField(filled=True, fill_color=white, color="black"),
-                                                 flet.IconButton(
-                                                    icon=flet.Icons.ADD_BOX,
-                                                    icon_color="green",
-                                                    icon_size=20,
-                                                    on_click = self.add_server
-                                                )
-                                                ],scroll = flet.ScrollMode.AUTO)
-        )
-
-        return self.servers_column
+            return self.servers_column
+        except Exception:
+            return self.servers_column
 
     def delete_server(self, e):
         for i, controls in enumerate(self.servers_column.controls):
@@ -280,25 +285,27 @@ class ClockView:
     def set_NTP_servers(self):
         lines = []
 
-        with open("/etc/systemd/timesyncd.conf", "r") as f:
-            for line in f:
-                if line.startswith("NTP"):
-                    string = f"NTP= "
-                    for s in self.NTP_servers:
-                        string += f"{s.value} "
-                    print(string)
-                    string += "\n"
-                    lines.append(string)
-                else:
-                    lines.append(line)
+        try:
+            with open("/etc/systemd/timesyncd.conf", "r") as f:
+                for line in f:
+                    if line.startswith("NTP"):
+                        string = f"NTP= "
+                        for s in self.NTP_servers:
+                            string += f"{s.value} "
+                        print(string)
+                        string += "\n"
+                        lines.append(string)
+                    else:
+                        lines.append(line)
 
-        with open("/tmp/interfaces", "w") as f:
-            f.writelines(lines)
+            with open("/tmp/interfaces", "w") as f:
+                f.writelines(lines)
 
-        # old file copy
+            # old file copy
 
-        subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/systemd/timesyncd.conf"], check=True)
-
+            subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/systemd/timesyncd.conf"], check=True)
+        except Exception:
+            print("")
 
     # def time_changed(self):
     #     global task
@@ -331,34 +338,40 @@ class ClockView:
         # date = datetime.date.today().strftime("%d.%m.%Y")
         # date = 3
 
-        r = subprocess.run(["timedatectl", "status"], capture_output=True, check=True, text=True)
-        now = r.stdout.split()[3]
-        #
-        # date = self.date_field.value
-        date_obj = datetime.datetime.strptime(now, "%Y-%m-%d")
-        formatted_date = date_obj.strftime("%d.%m.%Y")
+        try:
+            r = subprocess.run(["timedatectl", "status"], capture_output=True, check=True, text=True)
+            now = r.stdout.split()[3]
+            #
+            # date = self.date_field.value
+            date_obj = datetime.datetime.strptime(now, "%Y-%m-%d")
+            formatted_date = date_obj.strftime("%d.%m.%Y")
 
-        # r = subprocess.run("")
-        # now = datetime.datetime.now()
-        # formatted_date = f"{now.day:02d}.{now.month:02d}.{now.year}"
+            # r = subprocess.run("")
+            # now = datetime.datetime.now()
+            # formatted_date = f"{now.day:02d}.{now.month:02d}.{now.year}"
 
-        # self.get_time()
+            # self.get_time()
 
-        return str(formatted_date)
+            return str(formatted_date)
+        except Exception:
+            return ""
 
     def get_time(self):
         global task
         async def update_time():
             # global time
-            while True:
-                r = subprocess.run(["timedatectl", "status"], capture_output=True, check=True, text=True)
-                now = r.stdout.split()[4]
-                # now = datetime.datetime.now()
+            try:
+                while True:
+                    r = subprocess.run(["timedatectl", "status"], capture_output=True, check=True, text=True)
+                    now = r.stdout.split()[4]
+                    # now = datetime.datetime.now()
 
-                # self.time_field.value = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
-                self.time_field.value = now
-                self.page.update()
-                await asyncio.sleep(1)
+                    # self.time_field.value = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
+                    self.time_field.value = now
+                    self.page.update()
+                    await asyncio.sleep(1)
+            except Exception:
+                self.time_field.value = ""
 
         task = self.page.run_task(update_time)
 
@@ -372,38 +385,52 @@ class ClockView:
     #     self.page.update()
 
     def set_time_zone(self):
-        subprocess.run(["sudo", "timedatectl", "set-timezone", self.time_zone.value],check=True)
+        try:
+            subprocess.run(["sudo", "timedatectl", "set-timezone", self.time_zone.value],check=True)
+        except Exception:
+            print("")
 
     def get_time_zone(self):
-        request_timezone = subprocess.run(['timedatectl', 'status'], text = True, capture_output=True, check=True)
-        result = request_timezone.stdout
+        try:
+            request_timezone = subprocess.run(['timedatectl', 'status'], text = True, capture_output=True, check=True)
+            result = request_timezone.stdout
 
-        for line in result.strip().split('\n'):
+            for line in result.strip().split('\n'):
 
-            if line.startswith("                Time zone:"):
-                timezone = line.split(":", 1)[1].split("(",1)[0].strip()
-                return timezone
+                if line.startswith("                Time zone:"):
+                    timezone = line.split(":", 1)[1].split("(",1)[0].strip()
+                    return timezone
 
-        return "None"
+            return "None"
+        except Exception:
+            return ""
 
     def get_time_zones_list(self):
-        result = subprocess.run(["timedatectl","list-timezones"], capture_output=True, check=True, text=True)
-        time_zones = result.stdout.strip().split('\n')
-
         options = []
 
-        for time_zone in time_zones:
-            options.append(flet.dropdown.Option(time_zone))
+        try:
+            result = subprocess.run(["timedatectl","list-timezones"], capture_output=True, check=True, text=True)
+            time_zones = result.stdout.strip().split('\n')
 
-        return options
+            for time_zone in time_zones:
+                options.append(flet.dropdown.Option(time_zone))
+
+            return options
+        except Exception:
+            return options
 
     def turn_on_NTP(self):
-        subprocess.run(["sudo", "timedatectl", "set-ntp", "true"], check = True)
+        try:
+            subprocess.run(["sudo", "timedatectl", "set-ntp", "true"], check = True)
+        except Exception:
+            print("")
 
     def turn_off_NTP(self):
-        subprocess.run(["sudo", "timedatectl", "set-ntp", "false"], check = True)
-        subprocess.run(["sudo", "systemctl", "reboot"])
-
+        try:
+            subprocess.run(["sudo", "timedatectl", "set-ntp", "false"], check = True)
+            subprocess.run(["sudo", "systemctl", "reboot"])
+        except Exception:
+            print("")
 
     def close_banner(self, e):
         self.banner.open = False

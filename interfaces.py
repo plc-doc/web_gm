@@ -16,7 +16,7 @@ current_eth0_ip = "ifconfig eth0| grep 'inet' | cut -d: -f2 | awk '{print $2}'"
 #   show that interface is inactive
 #   mb put interface name inside white cloud
 #   ↓
-#   class Users (login, logout)
+#   class Users (ability to change username)
 
 
 
@@ -38,25 +38,31 @@ class Interface:
         self.ip_6_field = flet.Text(value=self.ip_6, color="black")
 
     def get_ip4(self):
+        try:
 
-        request = subprocess.run(["ip", "addr", "show", self.name.lower()], capture_output=True, text=True, check=True)
+            request = subprocess.run(["ip", "addr", "show", self.name.lower()], capture_output=True, text=True, check=True)
 
-        output = request.stdout
+            output = request.stdout
 
-        match = re.search(r"inet\s+(\d+\.\d+\.\d+\.\d+)", output)
-        if match:
-            ip = match.group(1)
+            match = re.search(r"inet\s+(\d+\.\d+\.\d+\.\d+)", output)
+            if match:
+                ip = match.group(1)
 
-            return ip
-        else:
-            print("Not found")
+                return ip
+            else:
+                print("Not found")
+        except Exception:
+            return ""
 
     def get_ip6(self):
-        request = subprocess.run(["ip", "-6", "addr", "show", self.name.lower()], capture_output=True, text=True, check=True)
-        output = request.stdout
+        try:
+            request = subprocess.run(["ip", "-6", "addr", "show", self.name.lower()], capture_output=True, text=True, check=True)
+            output = request.stdout
 
-        match = re.search(r"inet6\s+([0-9a-f:]+)/\d+ scope", output)
-        return match.group(1) if match else None
+            match = re.search(r"inet6\s+([0-9a-f:]+)/\d+ scope", output)
+            return match.group(1) if match else None
+        except Exception:
+            return ""
 
     def get_mac_address(self):
         try:
@@ -70,40 +76,48 @@ class Interface:
                 return None
         except subprocess.CalledProcessError:
             return None
+        except Exception:
+            return ""
 
     def get_mask(self):
-        result = subprocess.run(["ip", "-o", "-f", "inet", "addr", "show", self.name.lower()],
-                                capture_output=True, text=True, check=True)
-        output = result.stdout
+        try:
+            result = subprocess.run(["ip", "-o", "-f", "inet", "addr", "show", self.name.lower()],
+                                    capture_output=True, text=True, check=True)
+            output = result.stdout
 
-        match = re.search(r"(/(\d+)\b)", output)
-        if not match:
-            return None
+            match = re.search(r"(/(\d+)\b)", output)
+            if not match:
+                return None
 
-        cidr = int(match.group(1)[1:]) #cut first symbol "/"
-        #Convertation - for example /24 -> 255.255.255.0
-        mask = (0xffffffff << (32-cidr)) & 0xffffffff
+            cidr = int(match.group(1)[1:]) #cut first symbol "/"
+            #Convertation - for example /24 -> 255.255.255.0
+            mask = (0xffffffff << (32-cidr)) & 0xffffffff
 
-        return ".".join(str((mask >> (8*i)) & 0xff) for i in reversed(range(4)))
+            return ".".join(str((mask >> (8*i)) & 0xff) for i in reversed(range(4)))
+        except Exception:
+            return ""
 
     def get_gateway(self):
         in_block = False
 
-        with open("/etc/network/interfaces", "r") as f:
-            for line in f:
-                # if line.strip().startswith("gateway"):
-                #     return line.split()[1]
+        try:
+            with open("/etc/network/interfaces", "r") as f:
+                for line in f:
+                    # if line.strip().startswith("gateway"):
+                    #     return line.split()[1]
 
-                if line.startswith(f"iface {self.name.lower()} inet static"):
-                    in_block = True
-                    continue
-                if in_block:
-                    if line.strip().startswith("gateway"):
-                        return line.split()[1]
-                    else:
+                    if line.startswith(f"iface {self.name.lower()} inet static"):
+                        in_block = True
                         continue
+                    if in_block:
+                        if line.strip().startswith("gateway"):
+                            return line.split()[1]
+                        else:
+                            continue
 
-        return None
+            return None
+        except Exception:
+            return ""
 
     def set_gateway(self):
         with open("/etc/network/interfaces", "r") as f:
@@ -283,40 +297,46 @@ class Interface:
 
 
     def get_static_or_dynamic(self):
-        with open("/etc/network/interfaces", "r") as f:
-            content = f.read()
+        try:
+            with open("/etc/network/interfaces", "r") as f:
+                content = f.read()
 
-        pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+(static|dhcp))([\s\S]*?)(?=\niface|\Z)"
-        m = re.search(pattern, content, flags= re.MULTILINE)
-        if not m:
-            return None, None
-        mode = m.group(2)
+            pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+(static|dhcp))([\s\S]*?)(?=\niface|\Z)"
+            m = re.search(pattern, content, flags= re.MULTILINE)
+            if not m:
+                return None, None
+            mode = m.group(2)
 
-        if mode == "dhcp":
-            self.dynamic = True
+            if mode == "dhcp":
+                self.dynamic = True
 
-        return mode
+            return mode
+        except Exception:
+            return ""
 
     def get_static_or_dynamic_ip6(self):
-        with open("/etc/network/interfaces", "r") as f:
+        try:
+            with open("/etc/network/interfaces", "r") as f:
 
-            for line in f:
-                if line.startswith(f"iface {self.name.lower()} inet6 static"):
-                    self.dynamic_ip6 = False
-                    return "static"
+                for line in f:
+                    if line.startswith(f"iface {self.name.lower()} inet6 static"):
+                        self.dynamic_ip6 = False
+                        return "static"
 
-        # if not m:
-        request = subprocess.run(["ip", "-6", "addr", "show", self.name.lower()], capture_output=True, text=True,
-                                 check=True)
-        output = request.stdout
+            # if not m:
+            request = subprocess.run(["ip", "-6", "addr", "show", self.name.lower()], capture_output=True, text=True,
+                                     check=True)
+            output = request.stdout
 
-        match = re.search(r"inet6\s+([0-9a-f:]+)/\d+ scope", output)
+            match = re.search(r"inet6\s+([0-9a-f:]+)/\d+ scope", output)
 
-        if match:
-            self.dynamic_ip6 = True
-            return "dhcp"
-        else:
-            return None
+            if match:
+                self.dynamic_ip6 = True
+                return "dhcp"
+            else:
+                return None
+        except Exception:
+            return ""
 
 
     # Eth (i) white clouds layout

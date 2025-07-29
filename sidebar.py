@@ -85,7 +85,6 @@ class Sidebar(flet.Container):
             visible=self.nav_rail_visible,
         )
 
-    # TODO: not tested (can cause errors or not work)
     def handle_profile_button(self, x):
         def change_password(e):
             login = dialog_field.controls[0].value
