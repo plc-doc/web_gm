@@ -9,7 +9,7 @@ grey = "#565759"
 white = "#EAEAEA"
 orange = "#F7941E"
 
-DEFAULT_FLET_PORT = 1040
+DEFAULT_FLET_PORT = 80
 # flet_path = 'app'
 flet_port = int(os.getenv("FLET_PORT", DEFAULT_FLET_PORT))
 
