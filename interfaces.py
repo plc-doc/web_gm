@@ -231,78 +231,111 @@ class Interface:
     def set_static_ip4(self):
         # subprocess.run(["sudo", 'ifconfig', 'eth0', '192.168.1.15', 'netmask', '255.255.255.0'])
 
-        with open("/etc/network/interfaces", "r") as f:
-            content = f.read()
-
-        def repl(match: re.Match) -> str:
-            mode = match.group(2)
-            body = match.group(3)
-            if mode == "dhcp":
-                # switch to static
-                header = f"iface {self.name.lower()} inet static"
-                return "\n".join([
-                    header,
-                    f"      address {self.ip_4}\n"
-                    f"      netmask {self.mask}\n"
-                    f"      gateway {self.gateway}\n"
-                    f"      dns-nameservers 192.168.1.28 8.8.4.4\n"
-                    f"      hwaddress ether {self.mac_address.value}\n"
-                ]) + "\n"
-            else:
-                # keep static - change only address
-                header = f"iface {self.name.lower()} inet static"
-                # if found - change
-                if re.search(r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)", body):
-                    body = re.sub(
-                        r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)",
-                        rf"\g<1>{self.ip_4}",
-                        body,
-                        flags=re.MULTILINE
-                    )
-                # if not found - add
-                else:
-                    body =  f"      address {self.ip_4}\n" + body
-                return header + body
-
-        pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+(static|dhcp))([\s\S]*?)(?=^\s*iface|\Z)"
-        new_content, count = re.subn(pattern, repl, content, flags=re.MULTILINE)
-
-        if count == 0:
-            raise RuntimeError("oups")
-
-        '''block changing address for static ip'''
+        # with open("/etc/network/interfaces", "r") as f:
+        #     content = f.read()
+        #
+        # def repl(match: re.Match) -> str:
+        #     mode = match.group(2)
+        #     body = match.group(3)
+        #     if mode == "dhcp":
+        #         # switch to static
+        #         header = f"iface {self.name.lower()} inet static"
+        #         return "\n".join([
+        #             header,
+        #             f"      address {self.ip_4}\n"
+        #             f"      netmask {self.mask}\n"
+        #             f"      gateway {self.gateway}\n"
+        #             f"      dns-nameservers 192.168.1.28 8.8.4.4\n"
+        #             f"      hwaddress ether {self.mac_address.value}\n"
+        #         ]) + "\n"
+        #     else:
+        #         # keep static - change only address
+        #         header = f"iface {self.name.lower()} inet static"
+        #         # if found - change
+        #         if re.search(r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)", body):
+        #             body = re.sub(
+        #                 r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)",
+        #                 rf"\g<1>{self.ip_4}",
+        #                 body,
+        #                 flags=re.MULTILINE
+        #             )
+        #         # if not found - add
+        #         else:
+        #             body =  f"      address {self.ip_4}\n" + body
+        #         return header + body
+        #
+        # pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+(static|dhcp))([\s\S]*?)(?=^\s*iface|\Z)"
+        # new_content, count = re.subn(pattern, repl, content, flags=re.MULTILINE)
+        #
+        # if count == 0:
+        #     raise RuntimeError("oups")
+        #
+        # '''block changing address for static ip'''
+        # # try:
+        # #     pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+static.*?)(?=(?:iface\s|\Z))"
+        # # except AttributeError:
+        # #     pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+dhcp.*?)(?=(?:iface\s|\Z)"
+        # #
+        # # match = re.search(pattern, content, re.DOTALL)
+        # #
+        # # if not match:
+        # #     print("Block not found")
+        # #
+        # # eth_block = match.group(1)
+        # #
+        # # new_eth_block = re.sub(r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)", rf"\g<1>{self.ip_4}", eth_block, flags=re.MULTILINE, count=1)
+        # #
+        # # new_content = content.replace(eth_block, new_eth_block)
+        #
+        # with open("/tmp/interfaces", "w") as f:
+        #     f.write(new_content)
+        #
+        # subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
+        #
+        # #reload
         # try:
-        #     pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+static.*?)(?=(?:iface\s|\Z))"
-        # except AttributeError:
-        #     pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+dhcp.*?)(?=(?:iface\s|\Z)"
-        #
-        # match = re.search(pattern, content, re.DOTALL)
-        #
-        # if not match:
-        #     print("Block not found")
-        #
-        # eth_block = match.group(1)
-        #
-        # new_eth_block = re.sub(r"(^\s*address\s+)(\d+\.\d+\.\d+\.\d+)", rf"\g<1>{self.ip_4}", eth_block, flags=re.MULTILINE, count=1)
-        #
-        # new_content = content.replace(eth_block, new_eth_block)
+        #     subprocess.run(['sudo', 'ifdown', self.name.lower()], check=True)
+        # except Exception:
+        #     print("error")
+        # try:
+        #     subprocess.run(['sudo', 'ifup', self.name.lower()], check=True)
+        # except Exception:
+        #     print("error2")
 
-        with open("/tmp/interfaces", "w") as f:
-            f.write(new_content)
+        with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
+            config = yaml.safe_load(f)
 
-        subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
+        ethernets = config.get("network", {}).get("ethernets", {})
 
-        #reload
-        try:
-            subprocess.run(['sudo', 'ifdown', self.name.lower()], check=True)
-        except Exception:
-            print("error")
-        try:
-            subprocess.run(['sudo', 'ifup', self.name.lower()], check=True)
-        except Exception:
-            print("error2")
+        target_key = None
+        for key, value in ethernets.items():
+            if key.lower() == self.name.lower() or value.get("set_name", "").lower() == self.name.lower():
+                target_key = key
+                break
+        if not target_key:
+            raise ValueError(f"interface {self.name.lower()} not found in yaml")
 
-    #TODO:
+        iface = ethernets[target_key]
+
+        iface["dhcp4"] = False
+
+        iface["addresses"] = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}']
+        if self.name.lower() == "eth0":
+            iface["routes"] = [{"to": "0.0.0.0/0", "via": self.gateway}]
+            iface["nameservers"] = {"addresses":["8.8.8.8", "8.8.4.4"]}
+
+        with open("/etc/netplan/50-cloud-init", "w") as f:
+            yaml.safe_dump(config, f, default_flow_style=False)
+
+        with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
+            content = src_file.read()
+
+        with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
+            backup_file.write(content)
+
+        print("copied static ip4")
+
+
     def set_dynamic_ip4(self):
         # lines = []
         # in_block = False
@@ -381,6 +414,7 @@ class Interface:
 
         with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
             backup_file.write(content)
+
 
 
     def get_static_or_dynamic(self):
