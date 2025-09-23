@@ -2,6 +2,8 @@ import re
 
 import flet
 import subprocess
+import ipaddress
+import yaml
 
 grey = "#565759"
 white = "#EAEAEA"
@@ -17,8 +19,6 @@ current_eth0_ip = "ifconfig eth0| grep 'inet' | cut -d: -f2 | awk '{print $2}'"
 #   mb put interface name inside white cloud
 #   ↓
 #   class Users (ability to change username)
-
-
 
 class Interface:
     def __init__(self, name, app, page):
@@ -97,6 +97,7 @@ class Interface:
         except Exception:
             return ""
 
+    #TODO:
     def get_gateway(self):
         in_block = False
 
@@ -119,6 +120,7 @@ class Interface:
         except Exception:
             return ""
 
+    #TODO:
     def set_gateway(self):
         with open("/etc/network/interfaces", "r") as f:
             content = f.read()
@@ -152,38 +154,69 @@ class Interface:
             print("error2 mask")
 
     def set_mask(self):
-        with open("/etc/network/interfaces", "r") as f:
-            content = f.read()
+        def set_netmask(interface, new_prefix, netplan_file = "/etc/netplan/50-cloud-init.yaml"):
+            with open(netplan_file, "r") as f:
+                config = yaml.safe_load(f)
 
-        pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+static.*?)(?=(?:iface\s|\Z))"
+            ethernets = config.get("network", {}).get("ethernets", {})
+            if interface not in ethernets:
+                raise ValueError(f'interface not found in netplan file')
 
-        match = re.search(pattern, content, re.DOTALL)
+            addresses = ethernets[interface].get("addressses", [])
+            if not addresses:
+                raise ValueError("interface has no adrresses")
 
-        if not match:
-            print("Block not found mask")
+            ip_cidr = addresses[0]
+            ip_only = ip_cidr.split("/")[0]
+            new_ip_cidr = f"{ip_only}/{new_prefix}"
 
-        eth_block = match.group(1)
+            ethernets[interface]["addresses"][0] = new_ip_cidr
 
-        new_eth_block = re.sub(r"(^\s*netmask\s+)(\d+\.\d+\.\d+\.\d+)", rf"\g<1>{self.mask}", eth_block, flags=re.MULTILINE, count=1)
+            with open(netplan_file, "w") as f:
+                yaml.safe_dump(config, f, default_flow_style=False)
 
-        new_content = content.replace(eth_block, new_eth_block)
+            subprocess.run(["sudo", "netplan", "apply"], check=True)
 
-        with open("/tmp/interfaces", "w") as f:
-            f.write(new_content)
+        set_netmask(self.name.lower(), ipaddress.IPv4Network(f'0.0.0.0/{self.mask}').prefixlen)
 
-        subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
+        def change_netmask(interface, new_prefix, yaml_file="/usr/local/bin/interfaces_backup"):
+            subprocess.run(["sed", "-i", rf"/{interface}/,/^[^ ]/ s|\(/.*\)/[0-9]\+|\1/{new_prefix}|", yaml_file], check=True)
 
-        #reload
-        try:
-            subprocess.run(['sudo', 'ifdown', self.name.lower()], check=True)
-        except Exception:
-            print("error mask")
-        try:
-            subprocess.run(['sudo', 'ifup', self.name.lower()], check=True)
-        except Exception:
-            print("error2 mask")
+        change_netmask(self.name.lower(), ipaddress.IPv4Network(f'0.0.0.0/{self.mask}').prefixlen)
+        
+    # def set_mask(self):
+    #     with open("/etc/network/interfaces", "r") as f:
+    #         content = f.read()
+    #
+    #     pattern = rf"{re.escape(self.name.lower())}"
+    #
+    #     match = re.search(pattern, content, re.DOTALL)
+    #
+    #     if not match:
+    #         print("Block not found mask")
+    #
+    #     eth_block = match.group(1)
+    #
+    #     new_eth_block = re.sub(r"(^\s*netmask\s+)(\d+\.\d+\.\d+\.\d+)", rf"\g<1>{self.mask}", eth_block, flags=re.MULTILINE, count=1)
+    #
+    #     new_content = content.replace(eth_block, new_eth_block)
+    #
+    #     with open("/tmp/interfaces", "w") as f:
+    #         f.write(new_content)
+    #
+    #     subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
+    #
+    #     #reload
+    #     try:
+    #         subprocess.run(['sudo', 'ifdown', self.name.lower()], check=True)
+    #     except Exception:
+    #         print("error mask")
+    #     try:
+    #         subprocess.run(['sudo', 'ifup', self.name.lower()], check=True)
+    #     except Exception:
+    #         print("error2 mask")
 
-
+    #TODO:
     def set_static_ip4(self):
         # subprocess.run(["sudo", 'ifconfig', 'eth0', '192.168.1.15', 'netmask', '255.255.255.0'])
 
@@ -258,6 +291,7 @@ class Interface:
         except Exception:
             print("error2")
 
+    #TODO:
     def set_dynamic_ip4(self):
         lines = []
         in_block = False
@@ -295,7 +329,7 @@ class Interface:
         except Exception:
             print("error2")
 
-
+    #TODO:
     def get_static_or_dynamic(self):
         try:
             with open("/etc/network/interfaces", "r") as f:
@@ -314,6 +348,7 @@ class Interface:
         except Exception:
             return ""
 
+    #TODO:
     def get_static_or_dynamic_ip6(self):
         try:
             with open("/etc/network/interfaces", "r") as f:
