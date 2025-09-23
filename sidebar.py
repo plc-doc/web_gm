@@ -42,7 +42,7 @@ class Sidebar(flet.Container):
                         foreground_image_src="https://avatars.githubusercontent.com/u/_5041459?s=88&v=4",
                         bgcolor="white",  # avatar inner circle color
                         color="black",  # avatar text color
-                        content=flet.Text("AB"),
+                        content=flet.Text("sa"),
                     ),
                     controls=[
                         flet.Container(

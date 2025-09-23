@@ -21,7 +21,7 @@ class AppLayout(flet.Row):
         self.eth0 = Interface("Eth0", self, self.page)
         self.eth1 = Interface("Eth1", self, self.page)
         self.eth2 = Interface("Eth2", self, self.page)
-        self.eth3 = Interface("Eth3", self, self.page)
+        self.ecat = Interface("Ecat", self, self.page)
 
         paint = flet.Paint(stroke_width= 4, color= orange) # orange lines
 
@@ -63,7 +63,7 @@ class AppLayout(flet.Row):
                                         height=558,
                                         fit=flet.ImageFit.CONTAIN
                                     ),
-                                    self.eth3.info_structure()
+                                    self.ecat.info_structure()
                                 ]
                             )
                     ),

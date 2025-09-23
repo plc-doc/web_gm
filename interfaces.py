@@ -448,9 +448,9 @@ class Interface:
 
 
             if dropdown4.value == "Вручную":
-                self.set_static_ip4()
+                # self.set_static_ip4()
                 self.set_mask()
-                self.set_gateway()
+                # self.set_gateway()
                 # self.mask = self.get_mask()
                 # mask_field.value = self.mask
             elif dropdown4.value == "Использовать DHCP":

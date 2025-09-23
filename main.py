@@ -21,7 +21,7 @@ class AuthorizationPage:
     def __init__(self, page: flet.Page):
         self.page = page
         # self.page.favicon = "favicon.png"
-        self.page.title = "GM"
+        self.page.title = "GMB"
         self.page.vertical_alignment = flet.MainAxisAlignment.CENTER
         self.page.horizontal_alignment = flet.CrossAxisAlignment.CENTER
         self.page.bgcolor = white
