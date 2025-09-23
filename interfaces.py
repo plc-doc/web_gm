@@ -159,12 +159,20 @@ class Interface:
                 config = yaml.safe_load(f)
 
             ethernets = config.get("network", {}).get("ethernets", {})
+            print(ethernets)
             if interface not in ethernets:
                 raise ValueError(f'interface not found in netplan file')
 
-            addresses = ethernets[interface].get("addressses", [])
+            addresses = ethernets[interface].get("addresses", [])
+            print(ethernets[interface])
             if not addresses:
-                raise ValueError("interface has no adrresses")
+                raise ValueError("interface has no addresses")
+            else:
+                ethernets = config.get("network", {}).get("ethernets", {}).get("match", {})
+                if interface not in ethernets:
+                    raise ValueError(f'interface not found in netplan file')
+                addresses = ethernets[interface].get("addresses", [])
+                print(ethernets[interface])
 
             ip_cidr = addresses[0]
             ip_only = ip_cidr.split("/")[0]
