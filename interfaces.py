@@ -167,12 +167,6 @@ class Interface:
             print(ethernets[interface])
             if not addresses:
                 raise ValueError("interface has no addresses")
-            else:
-                ethernets = config.get("network", {}).get("ethernets", {}).get("match", {})
-                if interface not in ethernets:
-                    raise ValueError(f'interface not found in netplan file')
-                addresses = ethernets[interface].get("addresses", [])
-                print(ethernets[interface])
 
             ip_cidr = addresses[0]
             ip_only = ip_cidr.split("/")[0]
@@ -339,20 +333,45 @@ class Interface:
 
     #TODO:
     def get_static_or_dynamic(self):
+        global mode
         try:
-            with open("/etc/network/interfaces", "r") as f:
-                content = f.read()
+        #     with open("/etc/network/interfaces", "r") as f:
+        #         content = f.read()
+        #
+        #     pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+(static|dhcp))([\s\S]*?)(?=\niface|\Z)"
+        #     m = re.search(pattern, content, flags= re.MULTILINE)
+        #     if not m:
+        #         return None, None
+        #     mode = m.group(2)
+        #
+        #     if mode == "dhcp":
+        #         self.dynamic = True
+        #
+        #     return mode
+        # except Exception:
+        #     return ""
+            with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
+                config = yaml.safe_load(f)
 
-            pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+(static|dhcp))([\s\S]*?)(?=\niface|\Z)"
-            m = re.search(pattern, content, flags= re.MULTILINE)
-            if not m:
-                return None, None
-            mode = m.group(2)
+            ethernets = config.get("network", {}).get("ethernets", {})
 
-            if mode == "dhcp":
-                self.dynamic = True
+            for iface_name, iface_conf in ethernets.items():
+                dhcp = iface_conf.get("dhcp4", False)
+                addresses = iface_conf.get("addresses", [])
+
+                if dhcp:
+                    if iface_name == self.name.lower():
+                        self.dynamic = True
+                        mode = "dhcp"
+                    else:
+                        print("iface_name not equal self.name")
+                        self.dynamic = True
+                        mode = "dhcp"
+                else:
+                    mode = "static"
 
             return mode
+
         except Exception:
             return ""
 
