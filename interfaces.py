@@ -153,6 +153,7 @@ class Interface:
         except Exception:
             print("error2 mask")
 
+
     def set_mask(self):
         def set_netmask(interface, new_prefix, netplan_file = "/etc/netplan/50-cloud-init.yaml"):
             with open(netplan_file, "r") as f:
@@ -181,11 +182,19 @@ class Interface:
 
         set_netmask(self.name.lower(), ipaddress.IPv4Network(f'0.0.0.0/{self.mask}').prefixlen)
 
-        def change_netmask(interface, new_prefix, yaml_file="/usr/local/bin/interfaces_backup"):
-            subprocess.run(["sed", "-i", rf"/{interface}/,/^[^ ]/ s|\(/.*\)/[0-9]\+|\1/{new_prefix}|", yaml_file], check=True)
+        # def change_netmask(interface, new_prefix, yaml_file="/usr/local/bin/interfaces_backup"):
+        #     subprocess.run(["sed", "-i", rf"/{interface}/,/^[^ ]/ s|\(/.*\)/[0-9]\+|\1/{new_prefix}|", yaml_file], check=True)
+        #
+        # change_netmask(self.name.lower(), ipaddress.IPv4Network(f'0.0.0.0/{self.mask}').prefixlen, "/usr/local/bin/interfaces_backup")
 
-        change_netmask(self.name.lower(), ipaddress.IPv4Network(f'0.0.0.0/{self.mask}').prefixlen)
-        
+        with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
+            content = src_file.read()
+
+        with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
+            backup_file.write(content)
+
+        print("copied mask")
+
     # def set_mask(self):
     #     with open("/etc/network/interfaces", "r") as f:
     #         content = f.read()
@@ -295,43 +304,85 @@ class Interface:
 
     #TODO:
     def set_dynamic_ip4(self):
-        lines = []
-        in_block = False
+        # lines = []
+        # in_block = False
 
-        with open("/etc/network/interfaces", "r") as f:
-            for line in f:
-                if line.startswith(f"iface {self.name.lower()} inet"):
-                    lines.append(f"iface {self.name.lower()} inet dhcp\n")
-                    in_block = True
-                    continue
-                if in_block:
-                    if line.startswith("iface") or line.startswith("auto"):
-                        in_block = False
-                        lines.append(line)
-                    else:
-                        continue
-                else:
-                    lines.append(line)
+        # with open("/etc/network/interfaces", "r") as f:
+        #     for line in f:
+        #         if line.startswith(f"iface {self.name.lower()} inet"):
+        #             lines.append(f"iface {self.name.lower()} inet dhcp\n")
+        #             in_block = True
+        #             continue
+        #         if in_block:
+        #             if line.startswith("iface") or line.startswith("auto"):
+        #                 in_block = False
+        #                 lines.append(line)
+        #             else:
+        #                 continue
+        #         else:
+        #             lines.append(line)
+        #
+        # with open("/tmp/interfaces", "w") as f:
+        #     f.writelines(lines)
+        #
+        # # old file copy
+        # with open("/tmp/interfaces2", "w") as f:
+        #     f.writelines(lines)
+        #
+        # subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
+        #
+        # try:
+        #     subprocess.run(['sudo', 'ifdown', self.name.lower()], check=True)
+        # except Exception:
+        #     print("error")
+        # try:
+        #     subprocess.run(['sudo', 'ifup', self.name.lower()], check=True)
+        # except Exception:
+        #     print("error2")
 
-        with open("/tmp/interfaces", "w") as f:
-            f.writelines(lines)
+        with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
+            config = yaml.safe_load(f)
 
-        # old file copy
-        with open("/tmp/interfaces2", "w") as f:
-            f.writelines(lines)
+        ethernets = config.get("network", {}).get("ethernets", {})
 
-        subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
+        target_key = None
+        for key, value in ethernets.items():
+            if value.get("set_name", "").lower() == self.name.lower() or key.lower() == self.name.lower():
+                target_key = key
+                break
+        if not target_key:
+            raise ValueError(f"Interface '{self.name.lower()} not found in netplan file")
 
+        iface_conf = ethernets[target_key]
+
+        iface_conf.pop("addresses", None)
         try:
-            subprocess.run(['sudo', 'ifdown', self.name.lower()], check=True)
-        except Exception:
-            print("error")
+            iface_conf.pop("routes", None)
+        except Exception as e:
+            print(e)
+            pass
         try:
-            subprocess.run(['sudo', 'ifup', self.name.lower()], check=True)
-        except Exception:
-            print("error2")
+            iface_conf.pop("nameservers", None)
+        except Exception as e:
+            print(e)
+            pass
 
-    #TODO:
+        iface_conf["dhcp4"] = True
+
+        with open("/etc/netplan/50-cloud-init.yaml", "w") as f:
+            yaml.safe_dump(config, f, default_flow_style=False)
+
+        subprocess.run(['sudo', 'netplan', 'apply'], check = True)
+
+        print("successfully")
+
+        with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
+            content = src_file.read()
+
+        with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
+            backup_file.write(content)
+
+
     def get_static_or_dynamic(self):
         global mode
         try:
@@ -361,14 +412,19 @@ class Interface:
 
                 if dhcp:
                     if iface_name == self.name.lower():
+                        print("equal")
                         self.dynamic = True
                         mode = "dhcp"
-                    else:
-                        print("iface_name not equal self.name")
-                        self.dynamic = True
-                        mode = "dhcp"
+                        break
+                    # else:
+                    #     print("iface_name not equal self.name")
+                    #     self.dynamic = True
+                    #     mode = "dhcp"
                 else:
-                    mode = "static"
+                    if iface_name == self.name.lower():
+                        mode = "static"
+                        break
+
 
             return mode
 
