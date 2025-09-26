@@ -327,6 +327,8 @@ class Interface:
         with open("/etc/netplan/50-cloud-init", "w") as f:
             yaml.safe_dump(config, f, default_flow_style=False)
 
+        subprocess.run(['sudo', 'netplan', 'apply'], check = True)
+
         with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
             content = src_file.read()
 
@@ -334,7 +336,6 @@ class Interface:
             backup_file.write(content)
 
         print("copied static ip4")
-
 
     def set_dynamic_ip4(self):
         # lines = []
@@ -414,8 +415,6 @@ class Interface:
 
         with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
             backup_file.write(content)
-
-
 
     def get_static_or_dynamic(self):
         global mode
@@ -563,9 +562,8 @@ class Interface:
             self.mask = mask_field.value
             self.gateway = gateway_field.value
 
-
             if dropdown4.value == "Вручную":
-                # self.set_static_ip4()
+                self.set_static_ip4()
                 self.set_mask()
                 # self.set_gateway()
                 # self.mask = self.get_mask()
