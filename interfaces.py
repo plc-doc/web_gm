@@ -604,16 +604,27 @@ class Interface:
         global number
 
         def handle_button_save(e):
-            self.ip_4 = ip_address_field.value
-            self.ip_4_field.value = self.ip_4
+            if ip_address_field.value.strip() != "" or ip_address_field.value is not None:
+                self.ip_4 = ip_address_field.value
+                self.ip_4_field.value = self.ip_4
+            else:
+                ip_address_field.error_text = "Неверное значение ip"
 
-            self.mask = mask_field.value
-            self.gateway = gateway_field.value
+            if mask_field.value.strip() != "" or mask_field.value is not None:
+                self.mask = mask_field.value
+            else:
+                mask_field.error_text = "Неверное значение маски"
+
+            if gateway_field.value.strip() != "" or gateway_field.value is not None:
+                self.gateway = gateway_field.value
+            else:
+                gateway_field.error_text = "Неверное значение сетевого шлюза"
+
 
             if dropdown4.value == "Вручную":
                 self.set_static_ip4()
                 self.set_mask()
-                # self.set_gateway()
+                self.set_gateway()
                 # self.mask = self.get_mask()
                 # mask_field.value = self.mask
             elif dropdown4.value == "Использовать DHCP":
