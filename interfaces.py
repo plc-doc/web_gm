@@ -99,59 +99,105 @@ class Interface:
 
     #TODO:
     def get_gateway(self):
-        in_block = False
+        # in_block = False
+        #
+        # try:
+        #     with open("/etc/network/interfaces", "r") as f:
+        #         for line in f:
+        #             # if line.strip().startswith("gateway"):
+        #             #     return line.split()[1]
+        #
+        #             if line.startswith(f"iface {self.name.lower()} inet static"):
+        #                 in_block = True
+        #                 continue
+        #             if in_block:
+        #                 if line.strip().startswith("gateway"):
+        #                     return line.split()[1]
+        #                 else:
+        #                     continue
+        #
+        #     return None
+        # except Exception:
+        #     return ""
 
         try:
-            with open("/etc/network/interfaces", "r") as f:
-                for line in f:
-                    # if line.strip().startswith("gateway"):
-                    #     return line.split()[1]
+            with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
+                data = yaml.safe_load(f)
 
-                    if line.startswith(f"iface {self.name.lower()} inet static"):
-                        in_block = True
-                        continue
-                    if in_block:
-                        if line.strip().startswith("gateway"):
-                            return line.split()[1]
-                        else:
-                            continue
+            iface_data = data.get("network", {}).get("ethernets", {}).get(self.name.lower, {})
+            routes = iface_data.get("routes", [])
+
+            for r in routes:
+                if r.get("to") == "0.0.0.0/0":
+                    return str(r.get("via"))
 
             return None
+
         except Exception:
-            return ""
+            return None
 
     #TODO:
     def set_gateway(self):
-        with open("/etc/network/interfaces", "r") as f:
-            content = f.read()
+        # with open("/etc/network/interfaces", "r") as f:
+        #     content = f.read()
+        #
+        # pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+static.*?)(?=(?:iface\s|\Z))"
+        #
+        # match = re.search(pattern, content, re.DOTALL)
+        #
+        # if not match:
+        #     print("Block not found mask")
+        #
+        # eth_block = match.group(1)
+        #
+        # new_eth_block = re.sub(r"(^\s*gateway\s+)(\d+\.\d+\.\d+\.\d+)", rf"\g<1>{self.gateway}", eth_block, flags=re.MULTILINE, count=1)
+        #
+        # new_content = content.replace(eth_block, new_eth_block)
+        #
+        # with open("/tmp/interfaces", "w") as f:
+        #     f.write(new_content)
+        #
+        # subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
+        #
+        # #reload
+        # try:
+        #     subprocess.run(['sudo', 'ifdown', self.name.lower()], check=True)
+        # except Exception:
+        #     print("error mask")
+        # try:
+        #     subprocess.run(['sudo', 'ifup', self.name.lower()], check=True)
+        # except Exception:
+        #     print("error2 mask")
 
-        pattern = rf"(iface\s+{re.escape(self.name.lower())}\s+inet\s+static.*?)(?=(?:iface\s|\Z))"
+        with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
+            config = yaml.safe_load(f)
 
-        match = re.search(pattern, content, re.DOTALL)
+        ethernets = config.get("network", {}).get("ethernets", {})
 
-        if not match:
-            print("Block not found mask")
+        target_key = None
+        for key, value in ethernets.items():
+            if value.get("set_name", "").lower() == self.name.lower() or key.lower() == self.name.lower():
+                target_key = key
+                break
+        if not target_key:
+            raise ValueError(f"Interface '{self.name.lower()} not found in netplan file")
 
-        eth_block = match.group(1)
+        iface_conf = ethernets[target_key]
 
-        new_eth_block = re.sub(r"(^\s*gateway\s+)(\d+\.\d+\.\d+\.\d+)", rf"\g<1>{self.gateway}", eth_block, flags=re.MULTILINE, count=1)
+        iface_conf["routes"] = [{"to": "0.0.0.0/0", "via": self.gateway}]
 
-        new_content = content.replace(eth_block, new_eth_block)
+        with open("/etc/netplan/50-cloud-init.yaml", "w") as f:
+            yaml.safe_dump(config, f, default_flow_style=False)
 
-        with open("/tmp/interfaces", "w") as f:
-            f.write(new_content)
+        subprocess.run(["sudo", "netplan", "apply"], check=True)
 
-        subprocess.run(["sudo", "cp", "/tmp/interfaces", "/etc/network/interfaces"], check=True)
+        with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
+            content = src_file.read()
 
-        #reload
-        try:
-            subprocess.run(['sudo', 'ifdown', self.name.lower()], check=True)
-        except Exception:
-            print("error mask")
-        try:
-            subprocess.run(['sudo', 'ifup', self.name.lower()], check=True)
-        except Exception:
-            print("error2 mask")
+        with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
+            backup_file.write(content)
+
+        print("copied gateway")
 
 
     def set_mask(self):
@@ -227,7 +273,6 @@ class Interface:
     #     except Exception:
     #         print("error2 mask")
 
-    #TODO:
     def set_static_ip4(self):
         # subprocess.run(["sudo", 'ifconfig', 'eth0', '192.168.1.15', 'netmask', '255.255.255.0'])
 
@@ -320,20 +365,20 @@ class Interface:
         print(iface)
 
         iface["dhcp4"] = False
-
         iface["addresses"] = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}']
+        iface["routes"] = [{"to": "0.0.0.0/0", "via": self.gateway}]
+
         if self.name.lower() == "eth0":
-            iface["routes"] = [{"to": "0.0.0.0/0", "via": self.gateway}]
             iface["nameservers"] = {"addresses":["8.8.8.8", "8.8.4.4"]}
 
-        with open("/etc/netplan/50-cloud-init", "w") as f:
+        with open("/etc/netplan/50-cloud-init.yaml", "w") as f:
             yaml.safe_dump(config, f, default_flow_style=False)
 
-        print(f.read())
         subprocess.run(['sudo', 'netplan', 'apply'], check = True)
 
         with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
             content = src_file.read()
+            print(content)
 
         with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
             backup_file.write(content)
