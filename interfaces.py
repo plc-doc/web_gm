@@ -127,7 +127,10 @@ class Interface:
             iface_data = data.get("network", {}).get("ethernets", {}).get(self.name.lower, {})
             routes = iface_data.get("routes", [])
 
+            print(routes)
+
             for r in routes:
+                print(r.get("to"))
                 if r.get("to") == "0.0.0.0/0":
                     return str(r.get("via"))
 
