@@ -317,6 +317,8 @@ class Interface:
 
         iface = ethernets[target_key]
 
+        print(iface)
+
         iface["dhcp4"] = False
 
         iface["addresses"] = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}']
@@ -327,6 +329,7 @@ class Interface:
         with open("/etc/netplan/50-cloud-init", "w") as f:
             yaml.safe_dump(config, f, default_flow_style=False)
 
+        print(f.read())
         subprocess.run(['sudo', 'netplan', 'apply'], check = True)
 
         with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
