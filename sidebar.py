@@ -8,7 +8,8 @@ orange = "#F7941E"
 
 class Sidebar(flet.Container):
 
-    def __init__(self, app_layout):
+    def __init__(self, app_layout, page: flet.Page):
+        self.page = page
         self.app_layout = app_layout
         self.nav_rail_visible = True
         self.top_nav_items = [
@@ -76,14 +77,21 @@ class Sidebar(flet.Container):
             on_change=self.nav_change,
         )
 
+        self.doc_button = flet.ElevatedButton("Документация", on_click=self.open_html_documentation,
+                                                        color=white, width=15, icon=flet.Icons.FILE_OPEN_ROUNDED, icon_color=orange),
+
         super().__init__(
-            content=flet.Column(controls=[self.rail]),
+            content=flet.Column(controls=[self.rail, self.doc_button], spacing=40),
             padding=flet.padding.all(15),
             margin=flet.margin.all(0),
             width=140,
             bgcolor=white,
             visible=self.nav_rail_visible,
         )
+
+    def open_html_documentation(self, e):
+        html_file_path = "file:///usr/local/bin/web_gm/site/index.html"
+        e.page.launch_url(html_file_path)
 
     def handle_profile_button(self, x):
         def change_password(e):
