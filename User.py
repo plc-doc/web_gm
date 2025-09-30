@@ -1,5 +1,8 @@
 import hashlib
 import os
+import subprocess
+import time
+
 
 def init_file():  # Инициализация файла, если этого не сделать программа вылетит c ошибкой, что файла нет
     """Создает файл пользователей"""
@@ -50,7 +53,9 @@ def get_user_password(password):
 
     for user in users:
         args = user.split(':')
-        if password == hashlib.sha256(args[1].encode()).hexdigest():  # Если пользователь с таким логином и паролем существует
+        print(password)
+        print(hashlib.sha256(password.encode()).hexdigest())
+        if hashlib.sha256(password.encode()).hexdigest() == args[1]:  # Если пользователь с таким логином и паролем существует
             return True
     return False
 
@@ -62,24 +67,35 @@ def get_users():
     #     login = args[0]
     return users
 
-def change_password(old_password, new_password, repeat_password):
+def change_password(new_password):
     import pexpect
 
     login = "sa"
 
-    child = pexpect.spawn("passwd")
+    # child = pexpect.spawn("passwd")
+    #
+    # child.expect(".*current.*:")
+    # child.sendline(old_password)
+    # time.sleep(3)
+    #
+    # child.expect(".*New.*:")
+    # child.sendline(new_password)
+    # time.sleep(3)
+    #
+    # child.expect(".*Retype.*:")
+    # child.sendline(repeat_password)
+    # time.sleep(3)
+    #
+    # child.expect(pexpect.EOF)
+    # print(child.before.decode("utf-8"))
+    try:
+        cmd = f"echo 'sa:{new_password}' | sudo chpasswd"
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
-    child.expect(".*current.*:")
-    child.sendline(old_password)
-
-    child.expect(".*New.*:")
-    child.sendline(new_password)
-
-    child.expect(".*Retype.*:")
-    child.sendline(repeat_password)
-
-    child.expect(pexpect.EOF)
-    print(child.before.decode("utf-8"))
+        print("stdout ", result.stdout)
+        print("stderr ", result.stderr)
+    except Exception:
+        return False
 
     with open('assets/Users.txt', 'r') as f:
         users = f.read().splitlines()  # Считываем всех пользователей из файла

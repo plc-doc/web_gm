@@ -79,6 +79,9 @@ class Sidebar(flet.Container):
         )
         # my_style = flet.TextStyle(size=12)
         # my_style = flet.TextStyle(size=12)
+        self.error_text = flet.Text(value="Не удалось изменить пароль", color="red", size=15, visible=False)
+
+
         self.doc_button = flet.ElevatedButton(content=flet.Container(flet.Column([
                                                         flet.Icon(name=flet.Icons.FILE_OPEN_ROUNDED,
                                                                   color={flet.ControlState.DEFAULT:"orange",
@@ -97,9 +100,6 @@ class Sidebar(flet.Container):
                                               )
                                               # icon=flet.Icons.FILE_OPEN_ROUNDED,
                                               #icon_color=orange)
-
-
-
 
         super().__init__(
             content=flet.Column(controls=[self.rail, self.doc_button], spacing=10),
@@ -121,15 +121,19 @@ class Sidebar(flet.Container):
             repeat_password = dialog_field.controls[2].value
 
             if User.get_user_password(old_password):  # if old password is correct
-                if new_password == repeat_password and len(new_password)>8:
-                    User.change_password(old_password, new_password, repeat_password)
+                if new_password == repeat_password:
+                    if len(new_password) < 8:
+                        dialog_field.controls[1].value = ""
+                        dialog_field.controls[2].value = ""
+                        dialog_field.controls[1].error_text = "Пароль должен содержать не менее 8 символов"
+                        self.page.update()
+                        return
+
+                    if not User.change_password(new_password):
+                        self.error_text.visible = True
+                        return
+
                     print("successfully change password")
-                elif len(new_password)<8:
-                    dialog_field.controls[1].value = ""
-                    dialog_field.controls[2].value = ""
-                    dialog_field.controls[1].error_text = "Пароль должен содержать не менее 8 символов"
-                    self.page.update()
-                    return
                 elif old_password == new_password:
                     dialog_field.controls[1].value = ""
                     dialog_field.controls[2].value = ""
@@ -155,6 +159,7 @@ class Sidebar(flet.Container):
 
         def on_click(e):
             print('a')
+            self.error_text.visible = False
             dialog_field.controls[0].error_text = None
             dialog_field.controls[1].error_text = None
             dialog_field.controls[2].error_text = None

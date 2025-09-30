@@ -15,7 +15,7 @@ class AppLayout(flet.Row):
         super().__init__(*args, **kwargs) #calling Row (creating right side of page)
         self.app = app
         self.page: flet.Page = page
-        self.sidebar = Sidebar(self, self.page) # creating sidebar
+        self.sidebar = Sidebar(self) # creating sidebar
         # self.page.on_resized = self.page_resize
 
         self.eth0 = Interface("Eth0", self, self.page)
