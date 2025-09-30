@@ -1,8 +1,6 @@
 import hashlib
 import os
 
-admin_login = ""
-
 def init_file():  # Инициализация файла, если этого не сделать программа вылетит c ошибкой, что файла нет
     """Создает файл пользователей"""
     if not os.path.exists('assets/Users.txt'):
@@ -46,6 +44,16 @@ def get_user_login(login):
             return True
     return False
 
+def get_user_password(password):
+    with open('assets/Users.txt', 'r') as f:
+        users = f.read().splitlines()  # Считываем всех пользователей из файла
+
+    for user in users:
+        args = user.split(':')
+        if password == args[1]:  # Если пользователь с таким логином и паролем существует
+            return True
+    return False
+
 def get_users():
     with open('assets/Users.txt', 'r') as f:
         users = f.read().splitlines()  # Считываем всех пользователей из файла
@@ -54,20 +62,38 @@ def get_users():
     #     login = args[0]
     return users
 
-def change_password(login, password):
+def change_password(old_password, new_password, repeat_password):
+    import pexpect
+
+    login = "sa"
+
+    child = pexpect.spawn("passwd")
+
+    child.expect(".*current.*:")
+    child.sendline(old_password)
+
+    child.expect(".*New.*:")
+    child.sendline(new_password)
+
+    child.expect(".*Retype.*:")
+    child.sendline(repeat_password)
+
+    child.expect(pexpect.EOF)
+    print(child.before.decode("utf-8"))
+
     with open('assets/Users.txt', 'r') as f:
         users = f.read().splitlines()  # Считываем всех пользователей из файла
 
-        with open('assets/Users.txt', 'w') as fw:
-            for user in users:
-                args = user.split(':')
-                if login != args[0]:
-                    fw.write(f'{args[0]}:{args[1]}\n')
+    with open('assets/Users.txt', 'w') as fw:
+        for user in users:
+            args = user.split(':')
+            if login != args[0]:
+                fw.write(f'{args[0]}:{args[1]}\n')
 
     with open('assets/Users.txt', 'a') as f:
-        f.write(f'{login}:{hashlib.sha256(password.encode()).hexdigest()}\n')  # Добавляем нового пользователя
+        f.write(f'{login}:{hashlib.sha256(new_password.encode()).hexdigest()}\n')  # Добавляем нового пользователя
 
-    print("Deleted")
+    print("Changed")
 
     return True
 

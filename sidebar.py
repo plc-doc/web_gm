@@ -8,8 +8,8 @@ orange = "#F7941E"
 
 class Sidebar(flet.Container):
 
-    def __init__(self, app_layout, page: flet.Page):
-        self.page = page
+    def __init__(self, app_layout):
+        # self.page = page
         self.app_layout = app_layout
         self.nav_rail_visible = True
         self.top_nav_items = [
@@ -43,7 +43,8 @@ class Sidebar(flet.Container):
                         foreground_image_src="https://avatars.githubusercontent.com/u/_5041459?s=88&v=4",
                         bgcolor="white",  # avatar inner circle color
                         color="black",  # avatar text color
-                        content=flet.Text("sa"),
+                        # content=flet.Text("sa"),
+                        content=flet.Image("favicon.png"),
                     ),
                     controls=[
                         flet.Container(
@@ -76,12 +77,32 @@ class Sidebar(flet.Container):
             destinations=self.top_nav_items,
             on_change=self.nav_change,
         )
+        # my_style = flet.TextStyle(size=12)
+        # my_style = flet.TextStyle(size=12)
+        self.doc_button = flet.ElevatedButton(content=flet.Container(flet.Column([
+                                                        flet.Icon(name=flet.Icons.FILE_OPEN_ROUNDED,
+                                                                  color={flet.ControlState.DEFAULT:"orange",
+                                                                         flet.ControlState.HOVERED:"black"}),
+                                                        flet.Text(value="Документация\n", size=12)
+                                                        ],horizontal_alignment=flet.CrossAxisAlignment.CENTER),padding=3),
+                                              on_click=self.open_html_documentation,
+                                              # style=flet.ButtonStyle(text_style=my_style),
+                                              color={flet.ControlState.DEFAULT: "black",
+                                                     flet.ControlState.HOVERED:"black"},
+                                              bgcolor={flet.ControlState.DEFAULT: white,
+                                                       flet.ControlState.HOVERED:orange},
+                                              style=flet.ButtonStyle(shape=flet.ContinuousRectangleBorder(radius=50),
+                                                                     side={flet.ControlState.DEFAULT: flet.BorderSide(2, "orange")},),
+                                              width = 140,
+                                              )
+                                              # icon=flet.Icons.FILE_OPEN_ROUNDED,
+                                              #icon_color=orange)
 
-        self.doc_button = flet.ElevatedButton("Документация", on_click=self.open_html_documentation,
-                                                        color=white, width=15, icon=flet.Icons.FILE_OPEN_ROUNDED, icon_color=orange),
+
+
 
         super().__init__(
-            content=flet.Column(controls=[self.rail, self.doc_button], spacing=40),
+            content=flet.Column(controls=[self.rail, self.doc_button], spacing=10),
             padding=flet.padding.all(15),
             margin=flet.margin.all(0),
             width=140,
@@ -90,19 +111,23 @@ class Sidebar(flet.Container):
         )
 
     def open_html_documentation(self, e):
-        html_file_path = "file:///usr/local/bin/web_gm/site/index.html"
-        e.page.launch_url(html_file_path)
+        html_file_path = "site/index.html"
+        self.page.launch_url(html_file_path)
 
     def handle_profile_button(self, x):
         def change_password(e):
-            login = dialog_field.controls[0].value
+            old_password = dialog_field.controls[0].value
             new_password = dialog_field.controls[1].value
             repeat_password = dialog_field.controls[2].value
 
-            if User.get_user_login(login):  # if login is correct(user exists)
-                if new_password == repeat_password:
-                    User.change_password(login, new_password)
+            if User.get_user_password(old_password):  # if old password is correct
+                if new_password == repeat_password and len(new_password)>8:
+                    User.change_password(old_password, new_password, repeat_password)
                     print("successfully change password")
+                elif len(new_password)<8:
+                    dialog_field.controls[1].value = "Пароль должен содержать не менее 8 символов"
+                    self.page.update()
+                    return
                 else:
                     dialog_field.controls[1].value = ""
                     dialog_field.controls[2].value = ""
@@ -111,7 +136,7 @@ class Sidebar(flet.Container):
                     self.page.update()
                     return
             else:
-                dialog_field.controls[0].error_text = "Пользователя с таким логином не существует"
+                dialog_field.controls[0].error_text = "Неверный текущий пароль "
                 dialog_field.controls[1].value = ""
                 dialog_field.controls[2].value = ""
                 self.page.update()
@@ -129,7 +154,7 @@ class Sidebar(flet.Container):
 
         dialog_field = (
             flet.Column(
-                [flet.TextField(bgcolor=white, label="Имя пользователя:", width=350, color="black",
+                [flet.TextField(bgcolor=white, label="Текущий пароль:", width=350, color="black",
                                 selection_color=orange, on_click = on_click,
                                 focused_border_color="orange", cursor_color="orange", border_radius=14),
                  flet.TextField(bgcolor=white, label="Новый пароль:", width=350, color="black",
