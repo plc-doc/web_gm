@@ -50,7 +50,7 @@ def get_user_password(password):
 
     for user in users:
         args = user.split(':')
-        if password == args[1]:  # Если пользователь с таким логином и паролем существует
+        if password == hashlib.sha256(args[1].encode()).hexdigest():  # Если пользователь с таким логином и паролем существует
             return True
     return False
 

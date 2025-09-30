@@ -125,7 +125,15 @@ class Sidebar(flet.Container):
                     User.change_password(old_password, new_password, repeat_password)
                     print("successfully change password")
                 elif len(new_password)<8:
-                    dialog_field.controls[1].value = "Пароль должен содержать не менее 8 символов"
+                    dialog_field.controls[1].value = ""
+                    dialog_field.controls[2].value = ""
+                    dialog_field.controls[1].error_text = "Пароль должен содержать не менее 8 символов"
+                    self.page.update()
+                    return
+                elif old_password == new_password:
+                    dialog_field.controls[1].value = ""
+                    dialog_field.controls[2].value = ""
+                    dialog_field.controls[1].error_text = "Новый пароль совпадает с текущим"
                     self.page.update()
                     return
                 else:
