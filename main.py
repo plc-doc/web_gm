@@ -41,25 +41,25 @@ class AuthorizationPage:
 
         self.error_text = flet.Text(value="Не удалось войти. Неверный логин или пароль", color="red", size=15, visible=False)
 
-        # self.page.add(flet.Column(
-        #             [
-        #                     flet.Text(value="Авторизация",
-        #                               size=25,
-        #                               color= "black"),
-        #                     flet.Column(controls=[self.error_text ,
-        #                                           self.tb,
-        #                                           self.tb_password,
-        #                                           self.b,
-        #                                           ],
-        #                                 horizontal_alignment=flet.CrossAxisAlignment.CENTER,
-        #                                 spacing= 15,
-        #                                 alignment=flet.MainAxisAlignment.CENTER)
-        #                     ],
-        #                     horizontal_alignment=flet.CrossAxisAlignment.CENTER,
-        #                     alignment=flet.MainAxisAlignment.CENTER,
-        #                     spacing= 40
-        # ))
-        # self.page.update()
+        self.page.add(flet.Column(
+                    [
+                            flet.Text(value="Авторизация",
+                                      size=25,
+                                      color= "black"),
+                            flet.Column(controls=[self.error_text ,
+                                                  self.tb,
+                                                  self.tb_password,
+                                                  self.b,
+                                                  ],
+                                        horizontal_alignment=flet.CrossAxisAlignment.CENTER,
+                                        spacing= 15,
+                                        alignment=flet.MainAxisAlignment.CENTER)
+                            ],
+                            horizontal_alignment=flet.CrossAxisAlignment.CENTER,
+                            alignment=flet.MainAxisAlignment.CENTER,
+                            spacing= 40
+        ))
+        self.page.update()
 
         self.column = flet.Column(
                     [
@@ -82,13 +82,16 @@ class AuthorizationPage:
 
         self.initialize()
 
+    #routing "/" for button logout
     def initialize(self):
         self.page.views.append(
             flet.View(
                 "/",
-                [self.column, self],
+                [self.column],
                 padding=flet.padding.all(0),
                 bgcolor=white,
+                vertical_alignment=flet.MainAxisAlignment.CENTER,
+                horizontal_alignment=flet.CrossAxisAlignment.CENTER,
             )
         )
         self.page.update()
@@ -192,6 +195,9 @@ class App(AppLayout):
             self.set_clock_view()
         elif troute.match("/account"):
             print("account")
+        elif troute.match("/"):
+            AuthorizationPage(self.page)
+
         self.page.update()
 
 
