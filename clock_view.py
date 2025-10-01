@@ -204,10 +204,11 @@ class ClockView:
         self.page.update()
 
     def handle_button_cancel(self):
-        self.switcher.value = self.NTP
+        self.switcher.value = self.NTP_on_or_off()
         self.stop_time()
         self.date_field.value = self.get_date()
         self.time_zone.value = self.get_time_zone()
+
         self.get_time()
         # self.time_field.filled = False
         # self.date_field.filled = False
@@ -448,7 +449,10 @@ class ClockView:
     def close_banner(self, e):
         self.stop_time()
         self.date_field.value = self.get_date()
+        self.switcher.value = self.NTP_on_or_off()
         self.get_time()
+        # self.NTC_servers()
+
         # self.time_field.filled = False
         # self.date_field.filled = False
         # self.time_field.border= flet.InputBorder.NONE
