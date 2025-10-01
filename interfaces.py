@@ -97,7 +97,20 @@ class Interface:
         except Exception:
             return ""
 
-    #TODO:
+    def get_up_down(self):
+        try:
+            result = subprocess.run(["ip", "addr", "show", self.name.lower()], capture_output=True, text=True, check=True)
+            output = result.stdout
+
+            if "state UP" in output:
+                return True
+            else:
+                return False
+
+        except subprocess.CalledProcessError as e:
+            print(e)
+            return False
+
     def get_gateway(self):
         # in_block = False
         #
@@ -124,8 +137,8 @@ class Interface:
             with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
                 data = yaml.safe_load(f)
 
-            iface_data = data.get("network", {}).get("ethernets", {}).get(self.name.lower, {})
-            routes = iface_data.get("routes", [])
+            iface_data = data.get("network", {}).get("ethernets", {})
+            routes = iface_data[self.name.lower()].get("routes", [])
 
             print(routes)
 
@@ -136,10 +149,10 @@ class Interface:
 
             return None
 
-        except Exception:
+        except Exception as e:
+            print(e)
             return None
 
-    #TODO:
     def set_gateway(self):
         # with open("/etc/network/interfaces", "r") as f:
         #     content = f.read()
@@ -544,7 +557,10 @@ class Interface:
     # Eth (i) white clouds layout
     def info_structure(self):
         return flet.Column(
-            controls=[flet.Text(value=self.name, color="black"),
+            controls=[flet.Row(controls=[flet.Text(value=self.name, color="black"),
+                                         flet.Icon(name=flet.Icons.CIRCLE, color="#0AA557" if self.get_up_down() else "#A0A0A0")],
+                               spacing=3
+                               ),
                       flet.Card(
                           content=flet.Container(
                               content=flet.Column(

@@ -61,7 +61,7 @@ class Sidebar(flet.Container):
                             width=140,
                         ),
                         flet.Container(
-                            content=flet.ElevatedButton("Выйти", on_click=lambda e: self.app_layout.route_change(e), bgcolor="red",
+                            content=flet.ElevatedButton("Выйти", on_click=lambda _: self.page.go("/"), bgcolor="red",
                                                         color=white, width=10),
                             bgcolor="#CACACA",
                             padding=0,
@@ -155,6 +155,11 @@ class Sidebar(flet.Container):
                 return
 
             self.page.close(dialog)
+            self.page.update()
+
+            snackbar = flet.SnackBar(flet.Text("Пароль успешно изменен ;)"))
+            e.control.page.overlay.append(snackbar)
+            snackbar.open = True
             self.page.update()
 
         def on_click(e):
