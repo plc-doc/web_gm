@@ -1,7 +1,6 @@
 import flet
 
 import flet.canvas as cv
-from reportlab.lib.pdfencrypt import padding
 
 from sidebar import Sidebar
 from interfaces import Interface

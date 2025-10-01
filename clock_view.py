@@ -1,5 +1,6 @@
 import asyncio
 import re
+import time
 
 import flet
 import datetime
@@ -21,6 +22,8 @@ class ClockView:
         self.NTP = False # Ntp active or not
         self.start_NTP = self.NTP_on_or_off() #start value of ntp
         self.servers_count = 0
+
+        self.rebooting = False
 
         self.page.on_resized = self.resize
 
@@ -49,8 +52,8 @@ class ClockView:
             leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color="black", size=40),
             content=flet.Text("Для сохранения настроек необходима перезагрузка", color="black"),
             actions=[
-                flet.TextButton("Отменить", on_click=self.close_banner),
-                flet.TextButton("Перезагрузить", on_click=lambda _: self.reboot),
+                flet.TextButton("Отменить", on_click=lambda e: self.close_banner(e)),
+                flet.TextButton("Перезагрузить", on_click=lambda e: self.reboot()),
             ],
             content_padding= flet.padding.only(left=316.0, top=24.0, right=16.0, bottom=4.0)
         )
@@ -65,6 +68,8 @@ class ClockView:
                                                   color=orange,
                                                   on_click= lambda e: self.handle_button_cancel()
                                                   )
+
+        self.switcher = flet.CupertinoSwitch(value= self.NTP_on_or_off(),active_color=orange, on_change=self.switch)
 
         # Clock view layout
         self.container = flet.Container(flet.Column(
@@ -117,7 +122,7 @@ class ClockView:
                                 ]),
                             ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 45),
                             flet.Column([
-                                flet.CupertinoSwitch(value= self.NTP_on_or_off(),active_color=orange, on_change=self.switch),
+                                self.switcher,
                                 # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
                                 self.NTC_servers(),
                             ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30, scroll=flet.ScrollMode.AUTO)
@@ -199,8 +204,10 @@ class ClockView:
         self.page.update()
 
     def handle_button_cancel(self):
+        self.switcher.value = self.NTP
         self.stop_time()
         self.date_field.value = self.get_date()
+        self.time_zone.value = self.get_time_zone()
         self.get_time()
         # self.time_field.filled = False
         # self.date_field.filled = False
@@ -428,19 +435,38 @@ class ClockView:
 
     def turn_off_NTP(self):
         try:
-            subprocess.run(["sudo", "timedatectl", "set-ntp", "false"], check = True)
-            # subprocess.run(["sudo", "systemctl", "reboot"])
             self.show_banner_click() #opening banner to confirm rebooting
+            if self.rebooting:
+                subprocess.run(["sudo", "timedatectl", "set-ntp", "false"], check = True)
+                subprocess.run(["sudo", "systemctl", "reboot"])
+
+            # subprocess.run(["sudo", "systemctl", "reboot"])
+
         except Exception:
             print("")
 
     def close_banner(self, e):
+        self.stop_time()
+        self.date_field.value = self.get_date()
+        self.get_time()
+        # self.time_field.filled = False
+        # self.date_field.filled = False
+        # self.time_field.border= flet.InputBorder.NONE
+        # self.date_field.border= flet.InputBorder.NONE
+
+        self.page.update()
+
         self.banner.open = False
         self.page.update()
 
+        self.rebooting = False
+
     def reboot(self):
         print("rebooting")
-        subprocess.run(["sudo", "systemctl", "reboot"])
+        self.rebooting = True
+        self.banner.open = False
+        self.page.update()
+        time.sleep(1)
 
     def show_banner_click(self):
         self.page.overlay.append(self.banner)
