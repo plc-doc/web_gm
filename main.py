@@ -41,7 +41,27 @@ class AuthorizationPage:
 
         self.error_text = flet.Text(value="Не удалось войти. Неверный логин или пароль", color="red", size=15, visible=False)
 
-        self.page.add(flet.Column(
+        # self.page.add(flet.Column(
+        #             [
+        #                     flet.Text(value="Авторизация",
+        #                               size=25,
+        #                               color= "black"),
+        #                     flet.Column(controls=[self.error_text ,
+        #                                           self.tb,
+        #                                           self.tb_password,
+        #                                           self.b,
+        #                                           ],
+        #                                 horizontal_alignment=flet.CrossAxisAlignment.CENTER,
+        #                                 spacing= 15,
+        #                                 alignment=flet.MainAxisAlignment.CENTER)
+        #                     ],
+        #                     horizontal_alignment=flet.CrossAxisAlignment.CENTER,
+        #                     alignment=flet.MainAxisAlignment.CENTER,
+        #                     spacing= 40
+        # ))
+        # self.page.update()
+
+        self.column = flet.Column(
                     [
                             flet.Text(value="Авторизация",
                                       size=25,
@@ -58,15 +78,15 @@ class AuthorizationPage:
                             horizontal_alignment=flet.CrossAxisAlignment.CENTER,
                             alignment=flet.MainAxisAlignment.CENTER,
                             spacing= 40
-        ))
-        self.page.update()
+        )
+
         self.initialize()
 
     def initialize(self):
         self.page.views.append(
             flet.View(
                 "/",
-                [],
+                [self.column, self],
                 padding=flet.padding.all(0),
                 bgcolor=white,
             )
