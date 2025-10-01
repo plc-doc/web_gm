@@ -60,6 +60,19 @@ class AuthorizationPage:
                             spacing= 40
         ))
         self.page.update()
+        self.initialize()
+
+    def initialize(self):
+        self.page.views.append(
+            flet.View(
+                "/",
+                [],
+                padding=flet.padding.all(0),
+                bgcolor=white,
+            )
+        )
+        self.page.update()
+        self.page.go("/")
 
     # hide error texts
     def on_click(self, e):
@@ -140,18 +153,18 @@ class App(AppLayout):
     def initialize(self):
         self.page.views.append(
             flet.View(
-                "/",
+                "/start",
                 [self.appbar, self],
                 padding=flet.padding.all(0),
                 bgcolor=white,
             )
         )
         self.page.update()
-        self.page.go("/")
+        self.page.go("/start")
 
     def route_change(self, e):
         troute = flet.TemplateRoute(self.page.route)
-        if troute.match("/"):
+        if troute.match("/start"):
             self.page.go("/settings")
         elif troute.match("/settings"):
             self.set_net_settings_view()
