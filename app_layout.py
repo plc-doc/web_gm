@@ -1,6 +1,7 @@
 import flet
 
 import flet.canvas as cv
+from reportlab.lib.pdfencrypt import padding
 
 from sidebar import Sidebar
 from interfaces import Interface
@@ -27,60 +28,65 @@ class AppLayout(flet.Row):
 
         self.clock_view = ClockView(self, self.page).container
         self.net_settings_view = (
-            flet.Column(
-                [
-                flet.Text(
-                    "Настройка интерфейсов",
-                    text_align=flet.alignment.center,
-                    color=orange,
-                    size=20
-                ),
-                flet.Stack([
-                    flet.Container(
-                        bgcolor="#CACACA",
-                        width=1343,
-                        height=803,
-                        border_radius=30,
-                        padding=54,
-                        alignment=flet.alignment.center,
-                        content=
-                            flet.Row(
-                                spacing=137,
-                                alignment=flet.MainAxisAlignment.CENTER,
-                                vertical_alignment=flet.CrossAxisAlignment.CENTER, #added
-                                controls=[
-                                    flet.Column(
-                                        controls=[self.eth0.info_structure(),
-                                                  self.eth1.info_structure(),
-                                                  self.eth2.info_structure()
-                                                  ],
-                                        alignment=flet.MainAxisAlignment.CENTER,
-                                        spacing=80
-                                    ),
-                                    flet.Image(
-                                        src=f"GMB.png",
-                                        width=343,
-                                        height=558,
-                                        fit=flet.ImageFit.CONTAIN
-                                    ),
-                                    self.ecat.info_structure()
-                                ]
-                            )
+            flet.Container(
+                flet.Column(
+                    [
+                    flet.Text(
+                        "Настройка интерфейсов",
+                        text_align=flet.alignment.center,
+                        color=orange,
+                        size=20
                     ),
-                    cv.Canvas(
-                        [
-                            cv.Line(358, 213, x2=625, y2=416, paint=paint),
-                            cv.Line(358, 485, x2=625, y2=511, paint=paint),
-                            cv.Line(359, 617, x2=627, y2=579, paint=paint),
-                            cv.Line(809, 255, x2=985, y2=340, paint=paint),
-                        ],
-                    )
-                ]),
+                    flet.Stack([
+                        flet.Container(
+                            bgcolor="#CACACA",
+                            width=1343,
+                            height=803,
+                            border_radius=30,
+                            padding=54,
+                            alignment=flet.alignment.center,
+                            content=
+                                flet.Row(
+                                    spacing=137,
+                                    alignment=flet.MainAxisAlignment.CENTER,
+                                    vertical_alignment=flet.CrossAxisAlignment.CENTER, #added
+                                    controls=[
+                                        flet.Column(
+                                            controls=[self.eth0.info_structure(),
+                                                      self.eth1.info_structure(),
+                                                      self.eth2.info_structure()
+                                                      ],
+                                            alignment=flet.MainAxisAlignment.CENTER,
+                                            spacing=80
+                                        ),
+                                        flet.Image(
+                                            src=f"GMB.png",
+                                            width=343,
+                                            height=558,
+                                            fit=flet.ImageFit.CONTAIN
+                                        ),
+                                        self.ecat.info_structure()
+                                    ]
+                                )
+                        ),
+                        cv.Canvas(
+                            [
+                                cv.Line(358, 213, x2=625, y2=416, paint=paint),
+                                cv.Line(358, 485, x2=625, y2=511, paint=paint),
+                                cv.Line(359, 617, x2=627, y2=579, paint=paint),
+                                cv.Line(809, 255, x2=985, y2=340, paint=paint),
+                            ],
+                        )
+                    ]),
 
-            ],
-            horizontal_alignment=flet.CrossAxisAlignment.CENTER,
-            alignment=flet.MainAxisAlignment.CENTER,
-            spacing=20,
+                ],
+                horizontal_alignment=flet.CrossAxisAlignment.CENTER,
+                # alignment=flet.MainAxisAlignment.CENTER,
+                spacing=20,
+                # expand=True,
+            ),
+            padding=20,
+            expand=True
             )
         )
 

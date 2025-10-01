@@ -51,6 +51,27 @@ class Interface:
                 return ip
             else:
                 print("Not found")
+                if not "state UP" in output:
+                    with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
+                        config = yaml.safe_load(f)
+
+                    ethernets = config.get("network", {}).get("ethernets", {})
+
+                    for iface_name, iface_conf in ethernets.items():
+                        dhcp = iface_conf.get("dhcp4", False)
+                        addresses = iface_conf.get("addresses", [])
+
+                        if not dhcp:
+                            if iface_name == self.name.lower():
+                                print(addresses[0])
+                                ip, mask = addresses[0].split("/")
+
+                                print(f"ip, mask {self.name.lower()} ", ip, mask)
+                                return ip
+                        else:
+                            print(self.name.lower(), " is dhcp")
+
+                    return None
         except Exception:
             return ""
 
@@ -86,8 +107,27 @@ class Interface:
             output = result.stdout
 
             match = re.search(r"(/(\d+)\b)", output)
+
             if not match:
-                return None
+                if not "state UP" in output:
+                    with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
+                        config = yaml.safe_load(f)
+
+                    ethernets = config.get("network", {}).get("ethernets", {})
+
+                    for iface_name, iface_conf in ethernets.items():
+                        dhcp = iface_conf.get("dhcp4", False)
+                        addresses = iface_conf.get("addresses", [])
+
+                        if not dhcp:
+                            if iface_name == self.name.lower():
+                                print(addresses[0])
+                                ip, mask = addresses[0].split("/")
+
+                                print(f"ip, mask {self.name.lower()} ", ip, mask)
+                                return str(ipaddress.IPv4Network(f"0.0.0.0/{mask}").netmask)
+                        else:
+                            print(self.name.lower(), " is dhcp")
 
             cidr = int(match.group(1)[1:]) #cut first symbol "/"
             #Convertation - for example /24 -> 255.255.255.0
@@ -558,8 +598,10 @@ class Interface:
     def info_structure(self):
         return flet.Column(
             controls=[flet.Row(controls=[flet.Text(value=self.name, color="black"),
-                                         flet.Icon(name=flet.Icons.CIRCLE, color="#0AA557" if self.get_up_down() else "#A0A0A0")],
-                               spacing=3
+                                         flet.Icon(name=flet.Icons.CIRCLE, color="#0AA557" if self.get_up_down() else "#A0A0A0", size=15),],
+                               spacing=3,
+                               alignment=flet.MainAxisAlignment.CENTER,
+                               vertical_alignment=flet.CrossAxisAlignment.CENTER,
                                ),
                       flet.Card(
                           content=flet.Container(

@@ -47,10 +47,10 @@ class ClockView:
         self.banner = flet.Banner(
             bgcolor=flet.Colors.AMBER_100,
             leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color="black", size=40),
-            content=flet.Text("Restart", color="black"),
+            content=flet.Text("Для сохранения настроек необходима перезагрузка", color="black"),
             actions=[
                 flet.TextButton("Отменить", on_click=self.close_banner),
-                flet.TextButton("Перезагрузить", on_click=self.close_banner),
+                flet.TextButton("Перезагрузить", on_click=lambda _: self.reboot),
             ],
             content_padding= flet.padding.only(left=316.0, top=24.0, right=16.0, bottom=4.0)
         )
@@ -115,7 +115,7 @@ class ClockView:
                                     flet.Text("NTP - серверы", color= "black")
 
                                 ]),
-                            ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 30),
+                            ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 45),
                             flet.Column([
                                 flet.CupertinoSwitch(value= self.NTP_on_or_off(),active_color=orange, on_change=self.switch),
                                 # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
@@ -170,7 +170,7 @@ class ClockView:
     def handle_button_save(self):
         global task
 
-        self.show_banner_click()
+        # self.show_banner_click()
 
         if self.start_NTP != self.NTP:
             if self.NTP:
@@ -180,7 +180,7 @@ class ClockView:
                 self.set_time_zone()
                 self.set_NTP_servers()
                 print('off')
-                self.show_banner_click()
+                # self.show_banner_click()
                 self.turn_off_NTP()
 
         self.set_time_zone()
@@ -247,7 +247,8 @@ class ClockView:
             )
 
             return self.servers_column
-        except Exception:
+        except Exception as e:
+            print(e)
             return self.servers_column
 
     def delete_server(self, e):
@@ -428,13 +429,18 @@ class ClockView:
     def turn_off_NTP(self):
         try:
             subprocess.run(["sudo", "timedatectl", "set-ntp", "false"], check = True)
-            subprocess.run(["sudo", "systemctl", "reboot"])
+            # subprocess.run(["sudo", "systemctl", "reboot"])
+            self.show_banner_click() #opening banner to confirm rebooting
         except Exception:
             print("")
 
     def close_banner(self, e):
         self.banner.open = False
         self.page.update()
+
+    def reboot(self):
+        print("rebooting")
+        subprocess.run(["sudo", "systemctl", "reboot"])
 
     def show_banner_click(self):
         self.page.overlay.append(self.banner)
