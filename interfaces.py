@@ -75,6 +75,7 @@ class Interface:
         except Exception:
             return ""
 
+    #TODO:
     def get_ip6(self):
         try:
             request = subprocess.run(["ip", "-6", "addr", "show", self.name.lower()], capture_output=True, text=True, check=True)
@@ -420,8 +421,26 @@ class Interface:
 
         print(iface)
 
+        ipv4, ipv6 = [], []
+        addresses = iface.get("addresses", [])
+        for addr in addresses:
+            try:
+                ip = ipaddress.ip_interface(addr)
+                if isinstance(ip, ipaddress.IPv4Interface):
+                    ipv4.append(addr)
+                else:
+                    ipv6.append(addr)
+            except ValueError:
+                continue
+
+        if ipv4:
+            ipv4 = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}']
+        else:
+            ipv4.append(f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}')
+
         iface["dhcp4"] = False
-        iface["addresses"] = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}']
+        # iface["addresses"] = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}']
+        iface['addresses'] = ipv4 + ipv6
         iface["routes"] = [{"to": "0.0.0.0/0", "via": self.gateway}]
 
         if self.name.lower() == "eth0":
@@ -669,17 +688,17 @@ class Interface:
                 self.ip_4 = ip_address_field.value
                 self.ip_4_field.value = self.ip_4
             else:
-                ip_address_field.error_text = "Неверное значение ip"
+                ip_address_field.error_text = "Введите значение ip"
 
             if mask_field.value.strip() != "" or mask_field.value is not None:
                 self.mask = mask_field.value
             else:
-                mask_field.error_text = "Неверное значение маски"
+                mask_field.error_text = "Введите значение маски"
 
             if gateway_field.value.strip() != "" or gateway_field.value is not None:
                 self.gateway = gateway_field.value
             else:
-                gateway_field.error_text = "Неверное значение сетевого шлюза"
+                gateway_field.error_text = "Введите значение сетевого шлюза"
 
 
             if dropdown4.value == "Вручную":
@@ -711,7 +730,7 @@ class Interface:
             mask_field.value = self.mask
             mask_field.disabled = True
 
-            gateway_field.value = self.mac_address
+            gateway_field.value = self.gateway
             dropdown6.value = "Использовать DHCP"
             self.page.update()
             self.page.close(dialog)
