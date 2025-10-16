@@ -369,7 +369,7 @@ class Interface:
 
         iface["dhcp6"] = False
         # iface["addresses"] = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}']
-        iface['addresses'] = ipv4 + ipv6
+        iface['addresses'] = [self.ip_4] + ipv6
 
         for route in iface["routes"]:
             if route not in [{"to": "::/0", "via": self.gateway6}]:
@@ -772,6 +772,9 @@ class Interface:
             else:
                 gateway_field.error_text = "Введите значение сетевого шлюза"
 
+            if ip6_field.value.strip() != "" or ip_address_field is not None:
+                self.ip_6 = ip6_field.value
+                self.ip_6_field.value = self.ip_6
 
             if dropdown4.value == "Вручную":
                 self.set_static_ip4()
@@ -783,6 +786,9 @@ class Interface:
                 self.set_dynamic_ip4()
                 self.ip_4 = self.get_ip4()
                 self.ip_4_field.value = self.ip_4
+
+            if dropdown6.value == "Вручную":
+               self.set_static_ip6()
 
             self.gateway = self.get_gateway()
             gateway_field.value = self.gateway
