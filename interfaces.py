@@ -85,12 +85,51 @@ class Interface:
 
     #TODO:
     def get_ip6(self):
+        # try:
+        #     request = subprocess.run(["ip", "-6", "addr", "show", self.name.lower()], capture_output=True, text=True, check=True)
+        #     output = request.stdout
+        #
+        #     match = re.search(r"inet6\s+([0-9a-f:]+)/\d+ scope", output)
+        #     return match.group(1) if match else None
+        # except Exception:
+        #     return ""
+
         try:
-            request = subprocess.run(["ip", "-6", "addr", "show", self.name.lower()], capture_output=True, text=True, check=True)
+            request = subprocess.run(["ip","-6", "addr", "show", self.name.lower()], capture_output=True, text=True, check=True)
+
             output = request.stdout
 
             match = re.search(r"inet6\s+([0-9a-f:]+)/\d+ scope", output)
-            return match.group(1) if match else None
+            if match:
+                ip = match.group(1)
+                return ip
+            else:
+                print("Not found")
+                if not "state UP" in output:
+                    with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
+                        config = yaml.safe_load(f)
+
+                    ethernets = config.get("network", {}).get("ethernets", {})
+
+                    for iface_name, iface_conf in ethernets.items():
+                        dhcp = iface_conf.get("dhcp6", False)
+                        addresses = iface_conf.get("addresses", [])
+
+                        for address in addresses:
+                            try:
+                                if not dhcp:
+                                    if iface_name == self.name.lower():
+                                        print(address)
+                                        ip, mask = address.split("/")
+
+                                        if isinstance(ipaddress.ip_interface(address), ipaddress.IPv6Interface):
+                                            print(f"ip, mask {self.name.lower()} ", ip, mask)
+                                            return ip
+                                else:
+                                    print(self.name.lower(), " is dhcp")
+                            except ValueError:
+                                continue
+                    return None
         except Exception:
             return ""
 
