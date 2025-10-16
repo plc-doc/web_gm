@@ -26,8 +26,10 @@ class Interface:
         self.ip_4 = self.get_ip4() #active ip from ifconfig
         self.ip_6 = self.get_ip6()
         self.mask = self.get_mask()
+        self.prefix_len = "64"
         self.mac_address = self.get_mac_address()
         self.gateway = self.get_gateway()
+        self.gateway6 = "2001:db8::1"
         self.app = app
         self.page = page
         self.dynamic = False #from configration file
@@ -329,6 +331,76 @@ class Interface:
     #         subprocess.run(['sudo', 'ifup', self.name.lower()], check=True)
     #     except Exception:
     #         print("error2 mask")
+
+    def set_static_ip6(self):
+        with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
+            config = yaml.safe_load(f)
+
+        ethernets = config.get("network", {}).get("ethernets", {})
+
+        target_key = None
+        for key, value in ethernets.items():
+            if key.lower() == self.name.lower() or value.get("set_name", "").lower() == self.name.lower():
+                target_key = key
+                break
+        if not target_key:
+            raise ValueError(f"interface {self.name.lower()} not found in yaml")
+
+        iface = ethernets[target_key]
+
+        print(iface)
+
+        ipv4, ipv6 = [], []
+        addresses = iface.get("addresses", [])
+        for addr in addresses:
+            try:
+                ip = ipaddress.ip_interface(addr)
+                if isinstance(ip, ipaddress.IPv6Interface):
+                    ipv6.append(addr)
+                else:
+                    ipv6.append(addr)
+            except ValueError:
+                continue
+
+        if ipv6:
+            ipv6 = [f'{self.ip_6}/{self.prefix_len}']
+        else:
+            ipv6.append(f'{self.ip_6}/{self.prefix_len}')
+
+        iface["dhcp6"] = False
+        # iface["addresses"] = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}']
+        iface['addresses'] = ipv4 + ipv6
+
+        for route in iface["routes"]:
+            if route not in [{"to": "::/0", "via": self.gateway6}]:
+                if iface["dhcp4"]:
+                    iface["routes"].append({"to": "::/0", "via": self.gateway6})
+                else:
+                    iface["routes"] = [{"to": "::/0", "via": self.gateway6}]
+
+        if self.name.lower() == "eth0":
+            for ns in iface['nameservers'].get('addresses', []):
+                if ns not in ["8.8.8.8", "8.8.4.4", "2001:4860:4860::8888", "2001:4860:4860::8844"]:
+                    iface["nameservers"].append("2001:4860:4860::8888", "2001:4860:4860::8844")
+
+
+
+
+
+        with open("/etc/netplan/50-cloud-init.yaml", "w") as f:
+            yaml.safe_dump(config, f, default_flow_style=False)
+
+        subprocess.run(['sudo', 'netplan', 'apply'], check = True)
+
+        with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
+            content = src_file.read()
+            print(content)
+
+        with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
+            backup_file.write(content)
+
+        print("copied static ip6")
+
 
     def set_static_ip4(self):
         # subprocess.run(["sudo", 'ifconfig', 'eth0', '192.168.1.15', 'netmask', '255.255.255.0'])
@@ -744,15 +816,15 @@ class Interface:
                 container.visible = True
                 ip6_field.disabled = False
                 ip6_field.value = self.ip_6
-                mask6_field.disabled = False
-                mask6_field.value = self.mask
+                prefixlen_field.disabled = False
+                prefixlen_field.value = self.prefix_len
 
             elif selected == "Использовать DHCP":
                 container.visible = True
                 ip6_field.disabled = True
                 ip6_field.value = self.ip_6
-                mask6_field.disabled = True
-                mask6_field.value = self.mask
+                prefixlen_field.disabled = True
+                prefixlen_field.value = self.prefix_len
             else:
                 container.visible = False
             self.page.update()
@@ -830,7 +902,7 @@ class Interface:
                                           selection_color=orange, color="black",
                                           cursor_color=orange, height=40, width=250, fill_color=white, text_size=14,
                                           disabled= False if dropdown6.value == "Вручную" else True)
-        mask6_field = flet.TextField(value=self.mask, bgcolor=white, border_radius=14, focused_border_color=orange,
+        prefixlen_field = flet.TextField(value=self.prefix_len, bgcolor=white, border_radius=14, focused_border_color=orange,
                                     selection_color=orange, color="black",
                                     cursor_color=orange, height=40, width=250, fill_color=white, text_size=14,
                                     disabled= False if dropdown6.value == "Вручную" else True)
@@ -840,11 +912,11 @@ class Interface:
                                 flet.Row([
                                     flet.Column([
                                         flet.Text(value="IP-адрес", color="black"),
-                                        flet.Text(value="Маска подсети", color="black")
+                                        flet.Text(value="Длина префикса", color="black")
                                     ]),
                                     flet.Column([
                                         ip6_field,
-                                        mask6_field
+                                        prefixlen_field
                                     ])
                                 ], spacing = 55)
                             ]),
