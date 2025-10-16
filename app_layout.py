@@ -26,8 +26,8 @@ class AppLayout(flet.Row):
         paint = flet.Paint(stroke_width= 4, color= orange) # orange lines
 
         self.clock_view = ClockView(self, self.page).container
-        self.state_view = flet.Container
-        self.reset_view = flet.Container
+        self.state_view = flet.Container()
+        self.reset_view = flet.Container()
         self.net_settings_view = (
             flet.Container(
                 flet.Column(

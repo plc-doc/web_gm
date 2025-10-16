@@ -29,13 +29,13 @@ class Sidebar(flet.Container):
             flet.NavigationRailDestination(
                 icon=flet.Icon(flet.Icons.SETTINGS_BACKUP_RESTORE_ROUNDED,),
                 selected_icon=flet.Icon(flet.Icons.SETTINGS_BACKUP_RESTORE_ROUNDED,),
-                label_content=flet.Text(value="Сброс настроек", color="black"),
+                label_content=flet.Text(value="Сброс до заводских настроек", color="black", text_align=flet.TextAlign.CENTER),
                 padding = flet.padding.all(0)
             ),
             flet.NavigationRailDestination(
                 icon=flet.Icon(flet.Icons.UPLOAD_ROUNDED, ),
                 selected_icon=flet.Icon(flet.Icons.UPLOAD_ROUNDED, ),
-                label_content=flet.Text(value="Загрузка проекта", color="black"),
+                label_content=flet.Text(value="Загрузка проекта CodeSys", color="black", text_align=flet.TextAlign.CENTER),
                 padding=flet.padding.all(0)
             ),
             flet.NavigationRailDestination(
@@ -47,7 +47,7 @@ class Sidebar(flet.Container):
             flet.NavigationRailDestination(
                 icon=flet.Icon(flet.Icons.DEVICE_HUB_ROUNDED, ),
                 selected_icon=flet.Icon(flet.Icons.DEVICE_HUB_ROUNDED, ),
-                label_content=flet.Text(value="Подключенные слейвы", color="black"),
+                label_content=flet.Text(value="Подключенные слейвы", color="black", text_align=flet.TextAlign.CENTER),
                 padding=flet.padding.all(0),
             ),
         ]
