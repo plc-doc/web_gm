@@ -26,6 +26,24 @@ class Sidebar(flet.Container):
                 label_content=flet.Text(value="Системное время", color="black"),
                 padding=flet.padding.all(0)
             ),
+            flet.NavigationRailDestination(
+                icon=flet.Icon(flet.Icons.SETTINGS_BACKUP_RESTORE_ROUNDED,),
+                selected_icon=flet.Icon(flet.Icons.SETTINGS_BACKUP_RESTORE_ROUNDED,),
+                label_content=flet.Text(value="Сброс настроек", color="black"),
+                padding = flet.padding.all(0)
+            ),
+            flet.NavigationRailDestination(
+                icon=flet.Icon(flet.Icons.UPLOAD_ROUNDED, ),
+                selected_icon=flet.Icon(flet.Icons.UPLOAD_ROUNDED, ),
+                label_content=flet.Text(value="Загрузка проекта", color="black"),
+                padding=flet.padding.all(0)
+            ),
+            flet.NavigationRailDestination(
+                icon=flet.Icon(flet.Icons.INFO_ROUNDED, ),
+                selected_icon=flet.Icon(flet.Icons.INFO_ROUNDED, ),
+                label_content=flet.Text(value="Состояние", color="black"),
+                padding=flet.padding.all(0)
+            )
         ]
 
         self.rail = flet.NavigationRail(
