@@ -26,6 +26,8 @@ class AppLayout(flet.Row):
         paint = flet.Paint(stroke_width= 4, color= orange) # orange lines
 
         self.clock_view = ClockView(self, self.page).container
+        self.state_view = flet.Container
+        self.reset_view = flet.Container
         self.net_settings_view = (
             flet.Container(
                 flet.Column(
@@ -48,7 +50,7 @@ class AppLayout(flet.Row):
                                 flet.Row(
                                     spacing=137,
                                     alignment=flet.MainAxisAlignment.CENTER,
-                                    vertical_alignment=flet.CrossAxisAlignment.CENTER, #added
+                                    vertical_alignment=flet.CrossAxisAlignment.CENTER,
                                     controls=[
                                         flet.Column(
                                             controls=[self.eth0.info_structure(),
@@ -117,4 +119,15 @@ class AppLayout(flet.Row):
         self.active_view = self.clock_view
         self.sidebar.rail.selected_index = 1
         self.page.update()
+
+    def set_reset_view(self):
+        self.active_view = self.reset_view
+        self.sidebar.rail.selected_index = 2
+        self.page.update()
+
+    def set_state_view(self):
+        self.active_view = self.state_view
+        self.sidebar.rail.selected_index = 4
+        self.page.update()
+
 

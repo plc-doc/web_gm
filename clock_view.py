@@ -191,6 +191,7 @@ class ClockView:
         self.set_time_zone()
 
         self.set_NTP_servers()
+        self.start_NTP = self.NTP #?  equate start ntp status to new
         # self.date_field.value = self.get_date()
         self.time_zone.value = self.get_time_zone()
         # self.stop_time()
@@ -449,14 +450,10 @@ class ClockView:
     def close_banner(self, e):
         self.stop_time()
         self.date_field.value = self.get_date()
+        self.time_zone.value = self.get_time_zone()
         self.switcher.value = self.NTP_on_or_off()
         self.get_time()
         # self.NTC_servers()
-
-        # self.time_field.filled = False
-        # self.date_field.filled = False
-        # self.time_field.border= flet.InputBorder.NONE
-        # self.date_field.border= flet.InputBorder.NONE
 
         self.page.update()
 

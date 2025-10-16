@@ -42,8 +42,14 @@ class Sidebar(flet.Container):
                 icon=flet.Icon(flet.Icons.INFO_ROUNDED, ),
                 selected_icon=flet.Icon(flet.Icons.INFO_ROUNDED, ),
                 label_content=flet.Text(value="Состояние", color="black"),
-                padding=flet.padding.all(0)
-            )
+                padding=flet.padding.all(0),
+            ),
+            flet.NavigationRailDestination(
+                icon=flet.Icon(flet.Icons.DEVICE_HUB_ROUNDED, ),
+                selected_icon=flet.Icon(flet.Icons.DEVICE_HUB_ROUNDED, ),
+                label_content=flet.Text(value="Подключенные слейвы", color="black"),
+                padding=flet.padding.all(0),
+            ),
         ]
 
         self.rail = flet.NavigationRail(
@@ -230,4 +236,9 @@ class Sidebar(flet.Container):
             self.page.route = "/settings"
         elif index == 1:
             self.page.route = "/clock"
+        elif index == 2:
+            self.page.route = "/reset"
+
+        elif index == 4:
+            self.page.route = "/state"
         self.page.update()
