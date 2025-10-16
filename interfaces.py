@@ -751,9 +751,24 @@ class Interface:
                     #     mode = "dhcp"
                 elif "dhcp6" not in iface_conf:
                     if iface_name == self.name.lower():
-                        self.static_ip6 = False
-                        self.dynamic_ip6 = False
-                        mode6 = "off"
+
+                        try:
+                            request = subprocess.run(["ip", "-6", "addr", "show", self.name.lower()], capture_output=True, text=True, check=True)
+                            output = request.stdout
+
+                            match = re.search(r"inet6\s+([0-9a-f:]+)/\d+ scope", output)
+                            if match:
+                                self.dynamic_ip6 = True
+                                self.static_ip6 = False
+                                mode6 = "static"
+                                break
+                            else:
+                                self.static_ip6 = False
+                                self.dynamic_ip6 = False
+                                mode6 = "off"
+                                break
+                        except Exception:
+                            continue
                 else:
                     if iface_name == self.name.lower():
                         self.static_ip6 = True
