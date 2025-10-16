@@ -26,7 +26,7 @@ class Interface:
         self.ip_4 = self.get_ip4() #active ip from ifconfig
         self.ip_6 = self.get_ip6()
         self.mask = self.get_mask()
-        self.prefix_len = "64"
+        self.prefix_len = self.get_prefix_len()
         self.mac_address = self.get_mac_address()
         self.gateway = self.get_gateway()
         self.gateway6 = "2001:db8::1"
@@ -130,6 +130,44 @@ class Interface:
                             except ValueError:
                                 continue
                     return None
+        except Exception:
+            return ""
+
+    def get_prefix_len(self):
+        try:
+            result = subprocess.run(["ip", "-o", "-f", "inet", "addr", "show", self.name.lower()],
+                                    capture_output=True, text=True, check=True)
+            output = result.stdout
+
+            match = re.search(r"(/(\d+)\b)", output)
+
+            if not match:
+                if not "state UP" in output:
+                    with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
+                        config = yaml.safe_load(f)
+
+                    ethernets = config.get("network", {}).get("ethernets", {})
+
+                    for iface_name, iface_conf in ethernets.items():
+                        dhcp = iface_conf.get("dhcp6", False)
+                        addresses = iface_conf.get("addresses", [])
+
+                        for address in addresses:
+                            try:
+                                if not dhcp:
+                                    if iface_name == self.name.lower():
+                                        print(addresses[0])
+                                        ip, prefix_len = addresses[0].split("/")
+
+                                        if isinstance(ipaddress.ip_interface(address), ipaddress.IPv6Interface):
+                                            print(f"ip, prefix_len {self.name.lower()} ", ip, prefix_len)
+                                            return prefix_len
+                                else:
+                                    print(self.name.lower(), " is dhcp")
+                            except ValueError:
+                                continue
+                    return ""
+            return match
         except Exception:
             return ""
 
@@ -751,7 +789,6 @@ class Interface:
                     #     mode = "dhcp"
                 elif "dhcp6" not in iface_conf:
                     if iface_name == self.name.lower():
-
                         try:
                             request = subprocess.run(["ip", "-6", "addr", "show", self.name.lower()], capture_output=True, text=True, check=True)
                             output = request.stdout
@@ -760,7 +797,7 @@ class Interface:
                             if match:
                                 self.dynamic_ip6 = True
                                 self.static_ip6 = False
-                                mode6 = "static"
+                                mode6 = "dhcp"
                                 break
                             else:
                                 self.static_ip6 = False
