@@ -63,15 +63,20 @@ class Interface:
                         dhcp = iface_conf.get("dhcp4", False)
                         addresses = iface_conf.get("addresses", [])
 
-                        if not dhcp:
-                            if iface_name == self.name.lower():
-                                print(addresses[0])
-                                ip, mask = addresses[0].split("/")
+                        for address in addresses:
+                            try:
+                                if not dhcp:
+                                    if iface_name == self.name.lower():
+                                        print(address)
+                                        ip, mask = address.split("/")
 
-                                print(f"ip, mask {self.name.lower()} ", ip, mask)
-                                return ip
-                        else:
-                            print(self.name.lower(), " is dhcp")
+                                        if isinstance(ipaddress.ip_interface(address), ipaddress.IPv4Interface):
+                                            print(f"ip, mask {self.name.lower()} ", ip, mask)
+                                            return ip
+                                else:
+                                    print(self.name.lower(), " is dhcp")
+                            except ValueError:
+                                continue
 
                     return None
         except Exception:
@@ -369,7 +374,7 @@ class Interface:
 
         iface["dhcp6"] = False
         # iface["addresses"] = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}']
-        iface['addresses'] = [self.ip_4] + ipv6
+        iface['addresses'] = [f"{self.ip_4}/{self.mask}"] + ipv6
 
         for route in iface["routes"]:
             if route not in [{"to": "::/0", "via": self.gateway6}]:
