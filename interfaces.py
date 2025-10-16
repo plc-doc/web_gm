@@ -83,7 +83,6 @@ class Interface:
         except Exception:
             return ""
 
-    #TODO:
     def get_ip6(self):
         # try:
         #     request = subprocess.run(["ip", "-6", "addr", "show", self.name.lower()], capture_output=True, text=True, check=True)
@@ -167,7 +166,7 @@ class Interface:
                             except ValueError:
                                 continue
                     return ""
-            return match
+            return match.group(2)
         except Exception:
             return ""
 
@@ -445,17 +444,14 @@ class Interface:
             except ValueError:
                 continue
 
-        if ipv6 and not ipv4:
+        if ipv6:
             ipv6 = [f'{self.ip_6}/{self.prefix_len}']
         else:
             ipv6.append(f'{self.ip_6}/{self.prefix_len}')
 
         iface["dhcp6"] = False
         # iface["addresses"] = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}']
-        if not iface["dhcp4"]:
-            iface['addresses'] = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}'] + ipv6
-        else:
-            iface['addresses'] = ipv6
+        iface['addresses'] = ipv4 + ipv6
 
         for route in iface["routes"]:
             if route not in [{"to": "::/0", "via": self.gateway6}]:
@@ -587,7 +583,7 @@ class Interface:
             except ValueError:
                 continue
 
-        if ipv4 and not ipv6:
+        if ipv4:
             ipv4 = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}']
         else:
             ipv4.append(f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}')
@@ -693,6 +689,8 @@ class Interface:
         with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
             backup_file.write(content)
 
+    #TODO: set_dynamic_ip6(self)
+
     def get_static_or_dynamic(self):
         global mode
         try:
@@ -734,14 +732,11 @@ class Interface:
                     if iface_name == self.name.lower():
                         mode = "static"
                         break
-
-
             return mode
 
         except Exception:
             return ""
 
-    #TODO:
     def get_static_or_dynamic_ip6(self):
         # try:
         #     with open("/etc/network/interfaces", "r") as f:
@@ -893,7 +888,7 @@ class Interface:
                 self.ip_4 = ip_address_field.value
                 self.ip_4_field.value = self.ip_4
             else:
-                ip_address_field.error_text = "Введите значение ip"
+                ip_address_field.error_text = "Введите значение IP"
 
             if mask_field.value.strip() != "" or mask_field.value is not None:
                 self.mask = mask_field.value
@@ -908,6 +903,14 @@ class Interface:
             if ip6_field.value.strip() != "" or ip_address_field is not None:
                 self.ip_6 = ip6_field.value
                 self.ip_6_field.value = self.ip_6
+            else:
+                ip6_field.error_text = "Введите значение IP"
+
+            if prefixlen_field.value.strip() != "" or prefixlen_field is not None:
+                self.prefix_len = prefixlen_field.value
+            else:
+                prefixlen_field.error_text = "Введите значение длины префикса"
+
 
             if dropdown4.value == "Вручную":
                 self.set_static_ip4()
