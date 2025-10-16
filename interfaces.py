@@ -34,6 +34,7 @@ class Interface:
         self.page = page
         self.dynamic = False #from configration file
         self.dynamic_ip6 = False
+        self.static_ip6 = False
 
         self.ip_4_field = flet.Text(value=self.ip_4, color="black")
         self.mac_address_field = flet.Text(value=self.mac_address, color="black")
@@ -360,25 +361,28 @@ class Interface:
         for addr in addresses:
             try:
                 ip = ipaddress.ip_interface(addr)
-                if isinstance(ip, ipaddress.IPv6Interface):
-                    ipv6.append(addr)
+                if isinstance(ip, ipaddress.IPv4Interface):
+                    ipv4.append(addr)
                 else:
                     ipv6.append(addr)
             except ValueError:
                 continue
 
-        if ipv6:
+        if ipv6 and not ipv4:
             ipv6 = [f'{self.ip_6}/{self.prefix_len}']
         else:
             ipv6.append(f'{self.ip_6}/{self.prefix_len}')
 
         iface["dhcp6"] = False
         # iface["addresses"] = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}']
-        iface['addresses'] = [f"{self.ip_4}/{self.mask}"] + ipv6
+        if not iface["dhcp4"]:
+            iface['addresses'] = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}'] + ipv6
+        else:
+            iface['addresses'] = ipv6
 
         for route in iface["routes"]:
             if route not in [{"to": "::/0", "via": self.gateway6}]:
-                if iface["dhcp4"]:
+                if not iface["dhcp4"]:
                     iface["routes"].append({"to": "::/0", "via": self.gateway6})
                 else:
                     iface["routes"] = [{"to": "::/0", "via": self.gateway6}]
@@ -387,10 +391,6 @@ class Interface:
             for ns in iface['nameservers'].get('addresses', []):
                 if ns not in ["8.8.8.8", "8.8.4.4", "2001:4860:4860::8888", "2001:4860:4860::8844"]:
                     iface["nameservers"].append("2001:4860:4860::8888", "2001:4860:4860::8844")
-
-
-
-
 
         with open("/etc/netplan/50-cloud-init.yaml", "w") as f:
             yaml.safe_dump(config, f, default_flow_style=False)
@@ -510,7 +510,7 @@ class Interface:
             except ValueError:
                 continue
 
-        if ipv4:
+        if ipv4 and not ipv6:
             ipv4 = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}']
         else:
             ipv4.append(f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}')
@@ -666,26 +666,63 @@ class Interface:
 
     #TODO:
     def get_static_or_dynamic_ip6(self):
+        # try:
+        #     with open("/etc/network/interfaces", "r") as f:
+        #
+        #         for line in f:
+        #             if line.startswith(f"iface {self.name.lower()} inet6 static"):
+        #                 self.dynamic_ip6 = False
+        #                 return "static"
+        #
+        #     # if not m:
+        #     request = subprocess.run(["ip", "-6", "addr", "show", self.name.lower()], capture_output=True, text=True,
+        #                              check=True)
+        #     output = request.stdout
+        #
+        #     match = re.search(r"inet6\s+([0-9a-f:]+)/\d+ scope", output)
+        #
+        #     if match:
+        #         self.dynamic_ip6 = True
+        #         return "dhcp"
+        #     else:
+        #         return None
+        # except Exception:
+        #     return ""
+        global mode6
         try:
-            with open("/etc/network/interfaces", "r") as f:
+            with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
+                config = yaml.safe_load(f)
 
-                for line in f:
-                    if line.startswith(f"iface {self.name.lower()} inet6 static"):
+            ethernets = config.get("network", {}).get("ethernets", {})
+
+            for iface_name, iface_conf in ethernets.items():
+                dhcp = iface_conf.get("dhcp6", False)
+                addresses = iface_conf.get("addresses", [])
+
+                if dhcp:
+                    if iface_name == self.name.lower():
+                        print("equal")
+                        self.dynamic_ip6 = True
+                        self.static_ip6 = False
+                        mode6 = "dhcp"
+                        break
+                    # else:
+                    #     print("iface_name not equal self.name")
+                    #     self.dynamic = True
+                    #     mode = "dhcp"
+                elif "dhcp6" not in iface_conf:
+                    if iface_name == self.name.lower():
+                        self.static_ip6 = False
                         self.dynamic_ip6 = False
-                        return "static"
+                        mode6 = "off"
+                else:
+                    if iface_name == self.name.lower():
+                        self.static_ip6 = True
+                        self.dynamic_ip6 = False
+                        mode6 = "static"
+                        break
+            return mode6
 
-            # if not m:
-            request = subprocess.run(["ip", "-6", "addr", "show", self.name.lower()], capture_output=True, text=True,
-                                     check=True)
-            output = request.stdout
-
-            match = re.search(r"inet6\s+([0-9a-f:]+)/\d+ scope", output)
-
-            if match:
-                self.dynamic_ip6 = True
-                return "dhcp"
-            else:
-                return None
         except Exception:
             return ""
 
@@ -791,12 +828,15 @@ class Interface:
                 self.set_dynamic_ip4()
                 self.ip_4 = self.get_ip4()
                 self.ip_4_field.value = self.ip_4
-
             if dropdown6.value == "Вручную":
-               self.set_static_ip6()
+                self.set_static_ip6()
+                self.ip_6 = self.get_ip6()
+                self.ip_6_field.value = self.ip_6
 
             self.gateway = self.get_gateway()
             gateway_field.value = self.gateway
+
+            prefixlen_field.value = self.prefix_len
 
             self.page.close(dialog)
             self.page.update()
@@ -807,6 +847,13 @@ class Interface:
                 dropdown4.value = "Использовать DHCP"
             else:
                 dropdown4.value = "Вручную"
+
+            if self.dynamic_ip6:
+                dropdown6.value = "Использовать DHCP"
+            elif self.static_ip6:
+                dropdown6.value = "Вручную"
+            else:
+                dropdown6.value = "Отключено"
 
             ip_address_field.value = self.ip_4
             ip_address_field.disabled = True
