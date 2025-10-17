@@ -408,6 +408,65 @@ class Interface:
     #     except Exception:
     #         print("error2 mask")
 
+    def turn_off_ip6(self):
+        def is_ipv6_address(address):
+            try:
+                ip = ipaddress.ip_interface(address)
+                return isinstance(ip, ipaddress.IPv6Interface)
+            except ValueError:
+                return False
+
+        def is_ipv6_route(route):
+            try:
+                ip = ipaddress.ip_network(route['to'])
+                return ip.version == 6
+            except (KeyError, ValueError):
+                return False
+
+        def remove_ipv6_addresses(addresses):
+            return [addr for addr in addresses if not is_ipv6_address(addr)]
+
+        def remove_ipv6_routes(routes):
+            return [route for route in routes if not is_ipv6_route(route)]
+
+        # Загрузка YAML
+        with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
+            config = yaml.safe_load(f)
+
+        ethernets = config.get("network", {}).get("ethernets", {})
+
+        for iface, settings in ethernets.items():
+            if iface == self.name.lower():
+                # Отключить DHCPv6 и RA
+                settings["dhcp6"] = False
+                settings["accept-ra"] = False
+
+                # Удалить IPv6-адреса
+                if "addresses" in settings:
+                    settings["addresses"] = remove_ipv6_addresses(settings["addresses"])
+                    if not settings["addresses"]:
+                        del settings["addresses"]
+
+                # Удалить IPv6-маршруты
+                if "routes" in settings:
+                    settings["routes"] = remove_ipv6_routes(settings["routes"])
+                    if not settings["routes"]:
+                        del settings["routes"]
+
+        # Сохранение результата
+        with open("/etc/netplan/50-cloud-init.yaml", "w") as f:
+            yaml.safe_dump(config, f, default_flow_style=False)
+
+        subprocess.run(['sudo', 'netplan', 'apply'], check = True)
+
+        with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
+            content = src_file.read()
+            print(content)
+
+        with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
+            backup_file.write(content)
+
+
     def set_dynamic_ip6(self):
 
         def is_ipv6_address(address):
@@ -699,34 +758,49 @@ class Interface:
         # except Exception:
         #     print("error2")
 
+        def is_ipv4_address(address):
+            try:
+                ip = ipaddress.ip_interface(address)
+                return isinstance(ip, ipaddress.IPv4Interface)
+            except ValueError:
+                return False
+
+        def is_ipv4_route(route):
+            try:
+                ip = ipaddress.ip_network(route['to'])
+                return ip.version == 4
+            except (KeyError, ValueError):
+                return False
+
+        def filter_ipv4_addresses(addresses):
+            return [addr for addr in addresses if not is_ipv4_address(addr)]
+
+        def filter_ipv4_routes(routes):
+            return [route for route in routes if not is_ipv4_route(route)]
+
+        # Загрузка YAML
         with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
             config = yaml.safe_load(f)
 
         ethernets = config.get("network", {}).get("ethernets", {})
 
-        target_key = None
-        for key, value in ethernets.items():
-            if value.get("set_name", "").lower() == self.name.lower() or key.lower() == self.name.lower():
-                target_key = key
-                break
-        if not target_key:
-            raise ValueError(f"Interface '{self.name.lower()} not found in netplan file")
+        for iface, settings in ethernets.items():
+            if iface == self.name.lower():
 
-        iface_conf = ethernets[target_key]
+                # Включить DHCP для IPv4
+                settings["dhcp4"] = True
 
-        iface_conf.pop("addresses", None)
-        try:
-            iface_conf.pop("routes", None)
-        except Exception as e:
-            print(e)
-            pass
-        try:
-            iface_conf.pop("nameservers", None)
-        except Exception as e:
-            print(e)
-            pass
+                # Удалить только IPv4 адреса
+                if "addresses" in settings:
+                    settings["addresses"] = filter_ipv4_addresses(settings["addresses"])
+                    if not settings["addresses"]:
+                        del settings["addresses"]
 
-        iface_conf["dhcp4"] = True
+                # Удалить только IPv4 маршруты
+                if "routes" in settings:
+                    settings["routes"] = filter_ipv4_routes(settings["routes"])
+                    if not settings["routes"]:
+                        del settings["routes"]
 
         with open("/etc/netplan/50-cloud-init.yaml", "w") as f:
             yaml.safe_dump(config, f, default_flow_style=False)
@@ -740,8 +814,6 @@ class Interface:
 
         with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
             backup_file.write(content)
-
-    #TODO: set_dynamic_ip6(self)
 
     def get_static_or_dynamic(self):
         global mode
@@ -981,6 +1053,10 @@ class Interface:
                 self.ip_6_field.value = self.ip_6
             elif dropdown6.value == "Использовать DHCP":
                 self.set_dynamic_ip6()
+                self.ip_6 = self.get_ip6()
+                self.ip_6_field.value = self.ip_6
+            elif dropdown6.value == "Отключено":
+                self.turn_off_ip6()
                 self.ip_6 = self.get_ip6()
                 self.ip_6_field.value = self.ip_6
 
