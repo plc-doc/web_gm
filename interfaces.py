@@ -15,8 +15,9 @@ current_eth0_ip = "ifconfig eth0| grep 'inet' | cut -d: -f2 | awk '{print $2}'"
 #   mb put interface name inside white cloud
 
 class Interface:
-    def __init__(self, name, app, page):
+    def __init__(self, name, app, page, metric):
         self.name = name
+        self.metric =  metric
         self.ip_4 = self.get_ip4() #active ip from ifconfig
         self.ip_6 = self.get_ip6()
         self.mask = self.get_mask()
@@ -722,7 +723,7 @@ class Interface:
         iface["dhcp4"] = False
         # iface["addresses"] = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}']
         iface['addresses'] = ipv4 + ipv6
-        iface["routes"] = [{"to": "0.0.0.0/0", "via": self.gateway, }]
+        iface["routes"] = [{"to": "0.0.0.0/0", "via": self.gateway, "metric": self.metric}]
 
         if self.name.lower() == "eth0":
             iface["nameservers"] = {"addresses":["8.8.8.8", "8.8.4.4"]}

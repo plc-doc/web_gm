@@ -18,10 +18,10 @@ class AppLayout(flet.Row):
         self.sidebar = Sidebar(self) # creating sidebar
         # self.page.on_resized = self.page_resize
 
-        self.eth0 = Interface("Eth0", self, self.page)
-        self.eth1 = Interface("Eth1", self, self.page)
-        self.eth2 = Interface("Eth2", self, self.page)
-        self.ecat = Interface("Ecat", self, self.page)
+        self.eth0 = Interface("Eth0", self, self.page, 100)
+        self.eth1 = Interface("Eth1", self, self.page, 200)
+        self.eth2 = Interface("Eth2", self, self.page, 300)
+        self.ecat = Interface("Ecat", self, self.page, 400)
 
         paint = flet.Paint(stroke_width= 4, color= orange) # orange lines
 
