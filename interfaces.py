@@ -974,14 +974,20 @@ class Interface:
                 self.set_dynamic_ip4()
                 self.ip_4 = self.get_ip4()
                 self.ip_4_field.value = self.ip_4
+
             if dropdown6.value == "Вручную":
                 self.set_static_ip6()
+                self.ip_6 = self.get_ip6()
+                self.ip_6_field.value = self.ip_6
+            elif dropdown6.value == "Использовать DHCP":
+                self.set_dynamic_ip6()
                 self.ip_6 = self.get_ip6()
                 self.ip_6_field.value = self.ip_6
 
             self.gateway = self.get_gateway()
             gateway_field.value = self.gateway
 
+            self.prefix_len = self.get_prefix_len()
             prefixlen_field.value = self.prefix_len
 
             self.page.close(dialog)
