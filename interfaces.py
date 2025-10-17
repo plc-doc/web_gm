@@ -23,7 +23,7 @@ class Interface:
         self.prefix_len = self.get_prefix_len()
         self.mac_address = self.get_mac_address()
         self.gateway = self.get_gateway()
-        self.gateway6 = "2001:db8::1"
+        self.gateway6 = self.get_gateway6()
         self.app = app
         self.page = page
         self.dynamic = False #from configration file
@@ -229,6 +229,26 @@ class Interface:
         except subprocess.CalledProcessError as e:
             print(e)
             return False
+
+    def get_gateway6(self):
+        try:
+            with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
+                data = yaml.safe_load(f)
+
+            iface_data = data.get("network", {}).get("ethernets", {})
+            routes = iface_data[self.name.lower()].get("routes", [])
+
+            print(routes)
+
+            for r in routes:
+                print(r.get("to"))
+                if r.get("to") == "::/0":
+                    return str(r.get("via"))
+            return None
+
+        except Exception as e:
+            print(e)
+            return None
 
     def get_gateway(self):
         # in_block = False
@@ -925,6 +945,11 @@ class Interface:
                                 break
                         except Exception:
                             continue
+                elif not iface_conf.get("accept-ra"):
+                    self.static_ip6 = False
+                    self.dynamic_ip6 = False
+                    mode6 = "off"
+                    break
                 else:
                     if iface_name == self.name.lower():
                         self.static_ip6 = True
@@ -1008,6 +1033,10 @@ class Interface:
         global number
 
         def handle_button_save(e):
+            e.control.visible = False
+            button_cancel.visible = False
+
+
             if ip_address_field.value.strip() != "" or ip_address_field.value is not None:
                 self.ip_4 = ip_address_field.value
                 self.ip_4_field.value = self.ip_4
@@ -1034,6 +1063,11 @@ class Interface:
                 self.prefix_len = prefixlen_field.value
             else:
                 prefixlen_field.error_text = "Введите значение длины префикса"
+
+            if gateway6_field.value.strip() != "" or gateway6_field.value is not None:
+                self.gateway6 = gateway6_field.value
+            else:
+                gateway6_field.error_text = "Введите значение сетевого шлюза"
 
 
             if dropdown4.value == "Вручную":
@@ -1063,6 +1097,9 @@ class Interface:
             self.gateway = self.get_gateway()
             gateway_field.value = self.gateway
 
+            self.gateway6 = self.get_gateway6()
+            gateway6_field.value = self.gateway6
+
             self.prefix_len = self.get_prefix_len()
             prefixlen_field.value = self.prefix_len
 
@@ -1089,6 +1126,7 @@ class Interface:
             mask_field.disabled = True
 
             gateway_field.value = self.gateway
+            gateway6_field.value = self.gateway6
             dropdown6.value = "Использовать DHCP"
             self.page.update()
             self.page.close(dialog)
@@ -1104,6 +1142,8 @@ class Interface:
                 ip6_field.value = self.ip_6
                 prefixlen_field.disabled = False
                 prefixlen_field.value = self.prefix_len
+                gateway6_field.disabled = False
+                gateway6_field.value = self.gateway6
 
             elif selected == "Использовать DHCP":
                 container.visible = True
@@ -1111,6 +1151,9 @@ class Interface:
                 ip6_field.value = self.ip_6
                 prefixlen_field.disabled = True
                 prefixlen_field.value = self.prefix_len
+                gateway6_field.disabled = True
+                gateway6_field.value = self.gateway6
+
             else:
                 container.visible = False
             self.page.update()
@@ -1192,17 +1235,23 @@ class Interface:
                                     selection_color=orange, color="black",
                                     cursor_color=orange, height=40, width=250, fill_color=white, text_size=14,
                                     disabled= False if dropdown6.value == "Вручную" else True)
+        gateway6_field = flet.TextField(value=self.gateway6, bgcolor=white, border_radius=14, focused_border_color=orange,
+                                    selection_color=orange, color="black",
+                                    cursor_color=orange, height=40, width=250, fill_color=white, text_size=14,
+                                    disabled= False if dropdown6.value == "Вручную" else True)
 
         container = flet.Container(
                             flet.Column([
                                 flet.Row([
                                     flet.Column([
                                         flet.Text(value="IP-адрес", color="black"),
-                                        flet.Text(value="Длина префикса", color="black")
+                                        flet.Text(value="Длина префикса", color="black"),
+                                        flet.Text(value="Сетевой шлюз", color="black")
                                     ]),
                                     flet.Column([
                                         ip6_field,
-                                        prefixlen_field
+                                        prefixlen_field,
+                                        gateway6_field
                                     ])
                                 ], spacing = 55)
                             ]),
