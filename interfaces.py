@@ -12,13 +12,7 @@ orange = "#F7941E"
 current_eth0_ip = "ifconfig eth0| grep 'inet' | cut -d: -f2 | awk '{print $2}'"
 
 # TODO:
-#   ! IPv6 still does NOT work (can only read but no idea how to change)
-#   ↓
-#   main field must be in the center (dynamic height, width (page.height-x) )
-#   show that interface is inactive
 #   mb put interface name inside white cloud
-#   ↓
-#   class Users (ability to change username)
 
 class Interface:
     def __init__(self, name, app, page):
@@ -414,6 +408,64 @@ class Interface:
     #     except Exception:
     #         print("error2 mask")
 
+    def set_dynamic_ip6(self):
+
+        def is_ipv6_address(address):
+            try:
+                ip = ipaddress.ip_interface(address)
+                return isinstance(ip, ipaddress.IPv6Interface)
+            except ValueError:
+                return False
+
+        def is_ipv6_route(route):
+            try:
+                ip = ipaddress.ip_network(route['to'])
+                return ip.version == 6
+            except (KeyError, ValueError):
+                return False
+
+        def filter_ipv6_addresses(addresses):
+            return [addr for addr in addresses if not is_ipv6_address(addr)]
+
+        def filter_ipv6_routes(routes):
+            return [route for route in routes if not is_ipv6_route(route)]
+
+        # Загрузка YAML
+        with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
+            config = yaml.safe_load(f)
+
+        ethernets = config.get("network", {}).get("ethernets", {})
+
+        for iface, settings in ethernets.items():
+            # Включить DHCP для IPv6
+            if iface == self.name.lower():
+                settings["dhcp6"] = True
+
+                # Удалить только IPv6 адреса
+                if "addresses" in settings:
+                    settings["addresses"] = filter_ipv6_addresses(settings["addresses"])
+                    if not settings["addresses"]:
+                        del settings["addresses"]
+
+                # Удалить только IPv6 маршруты
+                if "routes" in settings:
+                    settings["routes"] = filter_ipv6_routes(settings["routes"])
+                    if not settings["routes"]:
+                        del settings["routes"]
+
+        # Сохранение результата
+        with open("/etc/netplan/50-cloud-init.yaml", "w") as f:
+            yaml.safe_dump(config, f, default_flow_style=False)
+
+        subprocess.run(['sudo', 'netplan', 'apply'], check = True)
+
+        with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
+            content = src_file.read()
+            print(content)
+
+        with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
+            backup_file.write(content)
+
     def set_static_ip6(self):
         with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
             config = yaml.safe_load(f)
@@ -591,7 +643,7 @@ class Interface:
         iface["dhcp4"] = False
         # iface["addresses"] = [f'{self.ip_4}/{ipaddress.IPv4Network(f"0.0.0.0/{self.mask}").prefixlen}']
         iface['addresses'] = ipv4 + ipv6
-        iface["routes"] = [{"to": "0.0.0.0/0", "via": self.gateway}]
+        iface["routes"] = [{"to": "0.0.0.0/0", "via": self.gateway, }]
 
         if self.name.lower() == "eth0":
             iface["nameservers"] = {"addresses":["8.8.8.8", "8.8.4.4"]}
