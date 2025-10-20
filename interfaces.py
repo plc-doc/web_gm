@@ -1037,36 +1037,55 @@ class Interface:
             e.control.visible = False
             button_cancel.visible = False
 
-
+            #checking correctness of input values
+            # (is not null and is interface parameter)
             if ip_address_field.value.strip() != "" or ip_address_field.value is not None:
-                self.ip_4 = ip_address_field.value
-                self.ip_4_field.value = self.ip_4
+                if isinstance(ipaddress.ip_interface(ip_address_field.value), ipaddress.IPv4Interface):
+                    self.ip_4 = ip_address_field.value
+                    self.ip_4_field.value = self.ip_4
+                else:
+                    ip_address_field.error_text = "Неверный IP-адрес"
             else:
                 ip_address_field.error_text = "Введите значение IP"
 
             if mask_field.value.strip() != "" or mask_field.value is not None:
-                self.mask = mask_field.value
+                if isinstance(ipaddress.ip_interface(mask_field.value), ipaddress.IPv4Interface):
+                    self.mask = mask_field.value
+                else:
+                    mask_field.error_text = "Неверное значение маски"
             else:
                 mask_field.error_text = "Введите значение маски"
 
             if gateway_field.value.strip() != "" or gateway_field.value is not None:
-                self.gateway = gateway_field.value
+                if isinstance(ipaddress.ip_interface(gateway_field.value), ipaddress.IPv4Interface):
+                    self.gateway = gateway_field.value
+                else:
+                    gateway_field.error_text = "Неверное значение сетевого шлюза"
             else:
                 gateway_field.error_text = "Введите значение сетевого шлюза"
 
             if ip6_field.value.strip() != "" or ip_address_field is not None:
-                self.ip_6 = ip6_field.value
-                self.ip_6_field.value = self.ip_6
+                if isinstance(ipaddress.ip_interface(ip6_field.value), ipaddress.IPv6Interface):
+                    self.ip_6 = ip6_field.value
+                    self.ip_6_field.value = self.ip_6
+                else:
+                    ip6_field.error_text = "Неверный IP-адрес"
             else:
                 ip6_field.error_text = "Введите значение IP"
 
             if prefixlen_field.value.strip() != "" or prefixlen_field is not None:
-                self.prefix_len = prefixlen_field.value
+                if isinstance(prefixlen_field.value, int):
+                    self.prefix_len = prefixlen_field.value
+                else:
+                    prefixlen_field.error_text = "Неверная длина префикса"
             else:
                 prefixlen_field.error_text = "Введите значение длины префикса"
 
             if gateway6_field.value.strip() != "" or gateway6_field.value is not None:
-                self.gateway6 = gateway6_field.value
+                if isinstance(ipaddress.ip_interface(gateway6_field.value), ipaddress.IPv6Interface):
+                    self.gateway6 = gateway6_field.value
+                else:
+                    gateway6_field.error_text = "Неверное значение сетевого шлюза"
             else:
                 gateway6_field.error_text = "Введите значение сетевого шлюза"
 
