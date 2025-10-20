@@ -202,6 +202,9 @@ class ClockView:
         # self.time_field.border = flet.InputBorder.NONE
         # self.date_field.border = flet.InputBorder.NONE
 
+        snackbar = flet.SnackBar(flet.Text("Изменения сохранены"))
+        self.page.overlay.append(snackbar)
+        snackbar.open = True
         self.page.update()
 
     def handle_button_cancel(self):
@@ -299,7 +302,7 @@ class ClockView:
                 for line in f:
                     if line.startswith("NTP"):
                         string = f"NTP= "
-                        string += f'{self.servers_column.controls[0].controls[0].value}'
+                        string += f'{self.servers_column.controls[0].controls[0].value} '
                         for s in self.NTP_servers:
                             string += f"{s.value} "
                         print(string)

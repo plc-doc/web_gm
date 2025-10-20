@@ -1034,8 +1034,6 @@ class Interface:
         global number
 
         def handle_button_save(e):
-            e.control.visible = False
-            button_cancel.visible = False
 
             #checking correctness of input values
             # (is not null and is interface parameter)
@@ -1064,7 +1062,7 @@ class Interface:
             else:
                 gateway_field.error_text = "Введите значение сетевого шлюза"
 
-            if ip6_field.value.strip() != "" or ip_address_field is not None:
+            if ip6_field.value.strip() != "" or ip_address_field.value is not None:
                 if isinstance(ipaddress.ip_interface(ip6_field.value), ipaddress.IPv6Interface):
                     self.ip_6 = ip6_field.value
                     self.ip_6_field.value = self.ip_6
@@ -1073,7 +1071,7 @@ class Interface:
             else:
                 ip6_field.error_text = "Введите значение IP"
 
-            if prefixlen_field.value.strip() != "" or prefixlen_field is not None:
+            if prefixlen_field.value.strip() != "" or prefixlen_field.value is not None:
                 if isinstance(prefixlen_field.value, int):
                     self.prefix_len = prefixlen_field.value
                 else:
@@ -1089,6 +1087,8 @@ class Interface:
             else:
                 gateway6_field.error_text = "Введите значение сетевого шлюза"
 
+            e.control.visible = False
+            button_cancel.visible = False
 
             if dropdown4.value == "Вручную":
                 self.set_static_ip4()
@@ -1124,6 +1124,9 @@ class Interface:
             prefixlen_field.value = self.prefix_len
 
             self.page.close(dialog)
+            snackbar = flet.SnackBar(flet.Text("Изменения сохранены"))
+            e.control.page.overlay.append(snackbar)
+            snackbar.open = True
             self.page.update()
 
         def handle_button_cancel(e):
