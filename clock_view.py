@@ -229,7 +229,7 @@ class ClockView:
                 print(server)
                 s = flet.TextField(filled=True, fill_color=white, color="black")
                 s.value = server
-                self.NTP_servers.append(s)
+                self.NTP_servers.append(server)
 
                 self.servers_column.controls.append(flet.Row(
                                                         [s,
@@ -284,7 +284,7 @@ class ClockView:
                                                           on_click=self.delete_server)
                                                       ]))
 
-        self.NTP_servers.append(s)
+        self.NTP_servers.append(s.value)
         self.servers_count += 1
 
         # if self.servers_count > 3:
