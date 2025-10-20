@@ -229,7 +229,7 @@ class ClockView:
                 print(server)
                 s = flet.TextField(filled=True, fill_color=white, color="black")
                 s.value = server
-                self.NTP_servers.append(server)
+                self.NTP_servers.append(s)
 
                 self.servers_column.controls.append(flet.Row(
                                                         [s,
@@ -254,7 +254,6 @@ class ClockView:
                                                     )
                                                     ],scroll = flet.ScrollMode.AUTO)
             )
-
             return self.servers_column
         except Exception as e:
             print(e)
@@ -284,7 +283,7 @@ class ClockView:
                                                           on_click=self.delete_server)
                                                       ]))
 
-        self.NTP_servers.append(s.value)
+        self.NTP_servers.append(s)
         self.servers_count += 1
 
         # if self.servers_count > 3:
@@ -300,6 +299,7 @@ class ClockView:
                 for line in f:
                     if line.startswith("NTP"):
                         string = f"NTP= "
+                        string += f'{self.servers_column.controls[0].controls[0].value}'
                         for s in self.NTP_servers:
                             string += f"{s.value} "
                         print(string)
