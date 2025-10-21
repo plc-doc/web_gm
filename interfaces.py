@@ -1037,55 +1037,64 @@ class Interface:
 
             #checking correctness of input values
             # (is not null and is interface parameter)
-            if ip_address_field.value.strip() != "" or ip_address_field.value is not None:
+            print(f"value='{ip_address_field.value}'")
+
+            try:
                 if isinstance(ipaddress.ip_interface(ip_address_field.value), ipaddress.IPv4Interface):
                     self.ip_4 = ip_address_field.value
                     self.ip_4_field.value = self.ip_4
                 else:
                     ip_address_field.error_text = "Неверный IP-адрес"
-            else:
+            except ValueError:
                 ip_address_field.error_text = "Введите значение IP"
+                return
 
-            if mask_field.value.strip() != "" or mask_field.value is not None:
+            try:
                 if isinstance(ipaddress.ip_interface(mask_field.value), ipaddress.IPv4Interface):
                     self.mask = mask_field.value
                 else:
                     mask_field.error_text = "Неверное значение маски"
-            else:
+            except ValueError:
                 mask_field.error_text = "Введите значение маски"
+                return
 
-            if gateway_field.value.strip() != "" or gateway_field.value is not None:
+            try:
                 if isinstance(ipaddress.ip_interface(gateway_field.value), ipaddress.IPv4Interface):
                     self.gateway = gateway_field.value
                 else:
                     gateway_field.error_text = "Неверное значение сетевого шлюза"
-            else:
+            except ValueError:
                 gateway_field.error_text = "Введите значение сетевого шлюза"
+                return
 
-            if ip6_field.value.strip() != "" or ip_address_field.value is not None:
+            try:
                 if isinstance(ipaddress.ip_interface(ip6_field.value), ipaddress.IPv6Interface):
                     self.ip_6 = ip6_field.value
                     self.ip_6_field.value = self.ip_6
                 else:
                     ip6_field.error_text = "Неверный IP-адрес"
-            else:
+            except ValueError:
                 ip6_field.error_text = "Введите значение IP"
+                return
 
-            if prefixlen_field.value.strip() != "" or prefixlen_field.value is not None:
+            try:
                 if isinstance(prefixlen_field.value, int):
                     self.prefix_len = prefixlen_field.value
                 else:
                     prefixlen_field.error_text = "Неверная длина префикса"
-            else:
+                    return
+            except ValueError:
                 prefixlen_field.error_text = "Введите значение длины префикса"
+                return
 
-            if gateway6_field.value.strip() != "" or gateway6_field.value is not None:
+            try:
                 if isinstance(ipaddress.ip_interface(gateway6_field.value), ipaddress.IPv6Interface):
                     self.gateway6 = gateway6_field.value
                 else:
                     gateway6_field.error_text = "Неверное значение сетевого шлюза"
-            else:
+            except ValueError:
                 gateway6_field.error_text = "Введите значение сетевого шлюза"
+                return
 
             e.control.visible = False
             button_cancel.visible = False
@@ -1179,6 +1188,8 @@ class Interface:
 
             else:
                 container.visible = False
+                gateway6_field.visible = False
+                fields.controls[3].controls[1].controls[0].visible = False
             self.page.update()
 
         def ipv4_changed(e):
@@ -1245,23 +1256,29 @@ class Interface:
             on_change=ipv6_changed
         )
 
+        def on_click(a):
+            a.control.error_text = None
+            self.page.update()
+
+
         ip_address_field = flet.TextField(value = self.ip_4,bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
-                                          cursor_color= orange, height=40, width=250, fill_color=white, text_size=14, disabled = False if dropdown4.value == "Вручную" else True)
+                                          cursor_color= orange, height=40, width=250, fill_color=white, text_size=14, disabled = False if dropdown4.value == "Вручную" else True, on_click=on_click)
         mask_field = flet.TextField(value = self.mask,bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
-                                    cursor_color=orange, height=40, width=250, fill_color=white, text_size=14, disabled = False if dropdown4.value == "Вручную" else True)
+                                    cursor_color=orange, height=40, width=250, fill_color=white, text_size=14, disabled = False if dropdown4.value == "Вручную" else True, on_click=on_click)
 
         ip6_field = flet.TextField(value=self.ip_6, bgcolor=white, border_radius=14, focused_border_color=orange,
                                           selection_color=orange, color="black",
                                           cursor_color=orange, height=40, width=250, fill_color=white, text_size=14,
-                                          disabled= False if dropdown6.value == "Вручную" else True)
+                                          disabled= False if dropdown6.value == "Вручную" else True, on_click=on_click)
         prefixlen_field = flet.TextField(value=self.prefix_len, bgcolor=white, border_radius=14, focused_border_color=orange,
                                     selection_color=orange, color="black",
                                     cursor_color=orange, height=40, width=250, fill_color=white, text_size=14,
-                                    disabled= False if dropdown6.value == "Вручную" else True)
+                                    disabled= False if dropdown6.value == "Вручную" else True, on_click=on_click)
         gateway6_field = flet.TextField(value=self.gateway6, bgcolor=white, border_radius=14, focused_border_color=orange,
                                     selection_color=orange, color="black",
                                     cursor_color=orange, height=40, width=250, fill_color=white, text_size=14,
-                                    disabled= False if dropdown6.value == "Вручную" else True)
+                                    disabled= False if dropdown6.value == "Вручную" else True,
+                                    visible = False if dropdown6.value == "Отключено" else True, on_click=on_click)
 
         container = flet.Container(
                             flet.Column([
@@ -1269,18 +1286,17 @@ class Interface:
                                     flet.Column([
                                         flet.Text(value="IP-адрес", color="black"),
                                         flet.Text(value="Длина префикса", color="black"),
-                                        flet.Text(value="Сетевой шлюз", color="black")
+                                        #flet.Text(value="Сетевой шлюз", color="black")
                                     ]),
                                     flet.Column([
                                         ip6_field,
                                         prefixlen_field,
-                                        gateway6_field
+                                        #gateway6_field
                                     ])
-                                ], spacing = 55)
+                                ])
                             ]),
                             visible = False if dropdown6.value == "Отключено" else True
         )
-
         container_4 = flet.Container(
                             flet.Column([
                                 flet.Row([
@@ -1297,7 +1313,7 @@ class Interface:
         )
 
         gateway_field = flet.TextField(value=self.gateway, bgcolor=white, border_radius=14, focused_border_color=orange, selection_color = orange, color="black",
-                                    cursor_color=orange, height=40, width=250, fill_color=white, text_size=14, disabled = False if dropdown4.value == "Вручную" else True)
+                                    cursor_color=orange, height=40, width=250, fill_color=white, text_size=14, disabled = False if dropdown4.value == "Вручную" else True, on_click=on_click)
         button_cancel = flet.ElevatedButton(text="Отменить изменения", color=orange, bgcolor="white", width=209,
                                             height=28, on_click=handle_button_cancel, )
         button_save = flet.ElevatedButton(text="Применить", color="black", bgcolor=orange, width=137, height=28,
@@ -1317,9 +1333,13 @@ class Interface:
                         ],alignment=flet.MainAxisAlignment.CENTER,spacing= 100),
                         flet.Row([container_4, container], alignment= flet.MainAxisAlignment.SPACE_BETWEEN, spacing= 85), #Появляющееся окно ручной настройки
                         flet.Row([
-                            flet.Text(value= "Сетевой шлюз", color= "black"),
-                            gateway_field
-                        ], alignment= flet.MainAxisAlignment.START, spacing = 60),
+                            flet.Row([
+                                flet.Text(value= "Сетевой шлюз", color= "black"),
+                                gateway_field], spacing=60),
+                            flet.Row([
+                                flet.Text(value= "Сетевой шлюз", color= "black", visible = False if dropdown6.value == "Отключено" else True),
+                                gateway6_field], spacing=27)
+                        ], alignment= flet.MainAxisAlignment.SPACE_BETWEEN, spacing = 85),
                         # flet.Row([
                         #     button_cancel,
                         #     button_save
@@ -1327,7 +1347,7 @@ class Interface:
 
         ],
         horizontal_alignment=flet.CrossAxisAlignment.CENTER,
-        # alignment= flet.MainAxisAlignment.START,
+        alignment= flet.MainAxisAlignment.SPACE_BETWEEN,
         spacing = 30,
         # width=100,
         height=270,
