@@ -31,7 +31,7 @@ class ClockView:
         self.start_NTP = self.NTP_on_or_off() #start value of ntp
         self.servers_count = 0
 
-        self.rebooting = False
+        self.rebooting = ""
 
         self.page.on_resized = self.resize
 
@@ -61,7 +61,7 @@ class ClockView:
             content=flet.Text("Для сохранения настроек необходима перезагрузка", color="black"),
             actions=[
                 flet.TextButton("Отменить", on_click=lambda e: self.close_banner(e)),
-                flet.TextButton("Перезагрузить", on_click=lambda e: self.reboot()),
+                flet.TextButton("Перезагрузить", on_click=lambda e: self.reboot(e)),
             ],
             content_padding= flet.padding.only(left=316.0, top=24.0, right=16.0, bottom=4.0)
         )
@@ -186,7 +186,7 @@ class ClockView:
         # self.show_banner_click()
 
         if self.start_NTP != self.NTP:
-            if self.NTP:
+            if self.switcher.value:
                 print('on')
                 self.turn_on_NTP()
             else:
@@ -200,6 +200,7 @@ class ClockView:
         self.set_time_zone()
 
         self.set_NTP_servers()
+        self.switcher.value = self.NTP_on_or_off()
         self.start_NTP = self.NTP #?  equate start ntp status to new
         # self.date_field.value = self.get_date()
         self.time_zone.value = self.get_time_zone()
@@ -463,10 +464,13 @@ class ClockView:
     def turn_off_NTP(self):
         try:
             self.show_banner_click() #opening banner to confirm rebooting
+            while self.rebooting == "":
+                continue
             if self.rebooting:
+                print("rebooting 2")
                 subprocess.run(["sudo", "timedatectl", "set-ntp", "false"], check = True)
                 subprocess.run(["sudo", "systemctl", "reboot"])
-
+                self.rebooting = ""
             # subprocess.run(["sudo", "systemctl", "reboot"])
 
         except Exception:
@@ -487,7 +491,7 @@ class ClockView:
 
         self.rebooting = False
 
-    def reboot(self):
+    def reboot(self, e):
         print("rebooting")
         self.rebooting = True
         self.banner.open = False
