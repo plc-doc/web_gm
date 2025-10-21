@@ -1036,65 +1036,50 @@ class Interface:
         def handle_button_save(e):
 
             #checking correctness of input values
-            # (is not null and is interface parameter)
-            print(f"value='{ip_address_field.value}'")
-
             try:
-                if isinstance(ipaddress.ip_interface(ip_address_field.value), ipaddress.IPv4Interface):
-                    self.ip_4 = ip_address_field.value
-                    self.ip_4_field.value = self.ip_4
-                else:
-                    ip_address_field.error_text = "Неверный IP-адрес"
+                isinstance(ipaddress.ip_interface(ip_address_field.value), ipaddress.IPv4Interface)
             except ValueError:
-                ip_address_field.error_text = "Введите значение IP"
+                ip_address_field.error_text = "Неверный IP-адрес"
                 return
 
             try:
-                if isinstance(ipaddress.ip_interface(mask_field.value), ipaddress.IPv4Interface):
-                    self.mask = mask_field.value
-                else:
-                    mask_field.error_text = "Неверное значение маски"
+                isinstance(ipaddress.ip_interface(mask_field.value), ipaddress.IPv4Interface)
             except ValueError:
-                mask_field.error_text = "Введите значение маски"
+                mask_field.error_text = "Неверное значение маски"
                 return
 
             try:
-                if isinstance(ipaddress.ip_interface(gateway_field.value), ipaddress.IPv4Interface):
-                    self.gateway = gateway_field.value
-                else:
-                    gateway_field.error_text = "Неверное значение сетевого шлюза"
+                isinstance(ipaddress.ip_interface(gateway_field.value), ipaddress.IPv4Interface)
             except ValueError:
-                gateway_field.error_text = "Введите значение сетевого шлюза"
+                gateway_field.error_text = "Неверное значение сетевого шлюза"
                 return
 
             try:
-                if isinstance(ipaddress.ip_interface(ip6_field.value), ipaddress.IPv6Interface):
-                    self.ip_6 = ip6_field.value
-                    self.ip_6_field.value = self.ip_6
-                else:
-                    ip6_field.error_text = "Неверный IP-адрес"
+                isinstance(ipaddress.ip_interface(ip6_field.value), ipaddress.IPv6Interface)
             except ValueError:
-                ip6_field.error_text = "Введите значение IP"
+                ip6_field.error_text = "Неверное значение IP"
                 return
 
             try:
-                if isinstance(prefixlen_field.value, int):
-                    self.prefix_len = prefixlen_field.value
-                else:
-                    prefixlen_field.error_text = "Неверная длина префикса"
-                    return
+                isinstance(prefixlen_field.value, int)
             except ValueError:
-                prefixlen_field.error_text = "Введите значение длины префикса"
+                prefixlen_field.error_text = "Неверное значение длины префикса"
                 return
 
             try:
-                if isinstance(ipaddress.ip_interface(gateway6_field.value), ipaddress.IPv6Interface):
-                    self.gateway6 = gateway6_field.value
-                else:
-                    gateway6_field.error_text = "Неверное значение сетевого шлюза"
+                isinstance(ipaddress.ip_interface(gateway6_field.value), ipaddress.IPv6Interface)
             except ValueError:
-                gateway6_field.error_text = "Введите значение сетевого шлюза"
+                gateway6_field.error_text = "Неверное значение сетевого шлюза"
                 return
+
+            self.ip_4 = ip_address_field.value
+            self.ip_4_field.value = self.ip_4
+            self.mask = mask_field.value
+            self.gateway = gateway_field.value
+            self.ip_6 = ip6_field.value
+            self.ip_6_field.value = self.ip_6
+            self.prefix_len = prefixlen_field.value
+            self.gateway6 = gateway6_field.value
 
             e.control.visible = False
             button_cancel.visible = False
@@ -1170,6 +1155,8 @@ class Interface:
 
             if selected == "Вручную":
                 container.visible = True
+                gateway6_field.visible = True
+                fields.controls[3].controls[1].controls[0].visible = True
                 ip6_field.disabled = False
                 ip6_field.value = self.ip_6
                 prefixlen_field.disabled = False
@@ -1179,6 +1166,8 @@ class Interface:
 
             elif selected == "Использовать DHCP":
                 container.visible = True
+                gateway6_field.visible = True
+                fields.controls[3].controls[1].controls[0].visible = True
                 ip6_field.disabled = True
                 ip6_field.value = self.ip_6
                 prefixlen_field.disabled = True
