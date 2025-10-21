@@ -15,8 +15,16 @@ class ClockView:
         self.app = app
         self.page = page
 
-        self.date_field = flet.Text(value= self.get_date(), color= "black")
-        self.time_field = flet.Text( color="black")
+        self.date_field = flet.TextField(value= self.get_date(), color= "black", border=flet.InputBorder.NONE,
+                                         width=90, height=10,
+                                         cursor_color=orange,
+                                         selection_color=orange)
+        # self.time_field = flet.Text( color="black")
+        self.time_field = flet.TextField( color="black", border=flet.InputBorder.NONE,
+                                          on_click=self.stop,
+                                          cursor_color=orange,
+                                          selection_color=orange,
+                                          width=70, height=10)
 
         self.NTP_servers = []
         self.NTP = False # Ntp active or not
@@ -92,9 +100,9 @@ class ClockView:
                             flet.Column([
                                 self.date_field,
                                 self.time_field
-                            ], horizontal_alignment=flet.CrossAxisAlignment.CENTER),
+                            ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing=30),
                             # self.button
-                        ], alignment=flet.MainAxisAlignment.SPACE_EVENLY),
+                        ], alignment=flet.MainAxisAlignment.CENTER, spacing=220),
                         flet.VerticalDivider(width= 946, color= "#ACACAC"),
                         flet.Row([
                             flet.Text("Часовой пояс", color="black"),
@@ -188,6 +196,7 @@ class ClockView:
                 # self.show_banner_click()
                 self.turn_off_NTP()
 
+        self.set_local_datetime()
         self.set_time_zone()
 
         self.set_NTP_servers()
@@ -195,8 +204,10 @@ class ClockView:
         # self.date_field.value = self.get_date()
         self.time_zone.value = self.get_time_zone()
         # self.stop_time()
+
         self.get_time()
         self.get_date()
+
         # self.time_field.filled = False
         # self.date_field.filled = False
         # self.time_field.border = flet.InputBorder.NONE
@@ -344,8 +355,9 @@ class ClockView:
     def stop_time(self):
         global task
 
-        task.cancel()
-        self.page.update()
+        if task:
+            task.cancel()
+            self.page.update()
 
     def get_date(self):
         # date = datetime.date.today().strftime("%d.%m.%Y")
@@ -385,17 +397,27 @@ class ClockView:
                     await asyncio.sleep(1)
             except Exception:
                 self.time_field.value = ""
+            except asyncio.CancelledError:
+                print("Task cancelled")
 
         task = self.page.run_task(update_time)
 
+    def stop(self, e):
+        global task
 
-    # def set_local_datetime(self):
-    #     date = self.date_field.value
-    #     date_obj = datetime.datetime.strptime(date, "%d.%m.%Y")
-    #     formatted_date = date_obj.strftime("%Y-%m-%d")
-    #     subprocess.run(["sudo", "date", "--set", f"{formatted_date} {self.time_field.value}"])
-    #
-    #     self.page.update()
+        if task:
+            task.cancel()
+            task = None
+
+            self.page.update()
+
+    def set_local_datetime(self):
+        date = self.date_field.value
+        date_obj = datetime.datetime.strptime(date, "%d.%m.%Y")
+        formatted_date = date_obj.strftime("%Y-%m-%d")
+        subprocess.run(["sudo", "date", "--set", f"{formatted_date} {self.time_field.value}"])
+
+        self.page.update()
 
     def set_time_zone(self):
         try:
