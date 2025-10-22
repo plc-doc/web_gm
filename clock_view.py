@@ -18,13 +18,14 @@ class ClockView:
         self.date_field = flet.TextField(value= self.get_date(), color= "black", border=flet.InputBorder.NONE,
                                          width=90, height=10,
                                          cursor_color=orange,
-                                         selection_color=orange)
+                                         selection_color=orange, on_click=self.on_click)
         # self.time_field = flet.Text( color="black")
-        self.time_field = flet.TextField( color="black", border=flet.InputBorder.NONE,
-                                          on_click=self.stop,
-                                          cursor_color=orange,
-                                          selection_color=orange,
-                                          width=70, height=10)
+        self.time_field = flet.TextField(color="black", border=flet.InputBorder.NONE,
+                                         on_click=self.stop,
+                                         cursor_color=orange,
+                                         selection_color=orange,
+                                         width=70, height=10,
+                                        )
 
         self.NTP_servers = []
         self.NTP = False # Ntp active or not
@@ -53,17 +54,20 @@ class ClockView:
                                 # on_change=ipv6_changed
                             )
 
-        # banner with reboot warning
-        # TODO: give it functionality (buttons restart and cancel)
+
         self.banner = flet.Banner(
-            bgcolor=flet.Colors.AMBER_100,
-            leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color="black", size=40),
-            content=flet.Text("Для сохранения настроек необходима перезагрузка", color="black"),
+            bgcolor=orange,
+            # leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color="white", size=40),
+            content=flet.Container(content=flet.Row([
+                                                flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color="white", size=40),
+                                                flet.Text("Для сохранения настроек необходима перезагрузка", color="white", size=18),],
+                                            spacing=20, alignment=flet.MainAxisAlignment.CENTER),
+                                   alignment=flet.alignment.center),
             actions=[
-                flet.TextButton("Отменить", on_click=lambda e: self.close_banner(e)),
-                flet.TextButton("Перезагрузить", on_click=lambda e: self.reboot(e)),
+                flet.CupertinoButton(content=flet.Text("Отменить", color="white", size=16), on_click=lambda e: self.close_banner(e), opacity_on_click=0.3),
+                flet.CupertinoButton(content=flet.Text("Перезагрузить", color="white", size=16), on_click=lambda e: self.reboot(e), opacity_on_click=0.3),
             ],
-            content_padding= flet.padding.only(left=316.0, top=24.0, right=16.0, bottom=4.0)
+            content_padding= flet.padding.only(top=24.0, bottom=4.0),
         )
 
         self.button_save = flet.ElevatedButton(text="Сохранить изменения",
@@ -151,6 +155,10 @@ class ClockView:
 
         self.get_time()
 
+    def on_click(self, a):
+        a.control.error_text = None
+        self.page.update()
+
     def NTP_on_or_off(self):
         try:
             r = subprocess.run(["timedatectl", "status"], capture_output=True, check=True, text=True)
@@ -184,6 +192,18 @@ class ClockView:
         global task
 
         # self.show_banner_click()
+        try:
+            datetime.datetime.strptime(self.date_field.value, "%d.%m.%Y")
+        except ValueError:
+            self.date_field.error_text = "Введите дату в формате DD.MM.YYYY"
+            self.page.update()
+            return
+        try:
+            datetime.datetime.strptime(self.time_field.value, "%H:%M:%S")
+        except ValueError:
+            self.time_field.error_text = "Введите время в формате hh:mm:ss"
+            self.page.update()
+            return
 
         if self.start_NTP != self.NTP:
             if self.switcher.value:
@@ -405,12 +425,13 @@ class ClockView:
 
     def stop(self, e):
         global task
+        e.control.error_text = None
 
         if task:
             task.cancel()
             task = None
 
-            self.page.update()
+        self.page.update()
 
     def set_local_datetime(self):
         date = self.date_field.value
