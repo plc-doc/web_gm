@@ -19,14 +19,13 @@ class ClockView:
                                          width=90, height=10,
                                          cursor_color=orange,
                                          selection_color=orange, on_click=self.on_click)
-        # self.time_field = flet.Text( color="black")
+
         self.time_field = flet.TextField(color="black", border=flet.InputBorder.NONE,
                                          on_click=self.stop,
                                          cursor_color=orange,
                                          selection_color=orange,
                                          width=70, height=10,
                                         )
-
         self.NTP_servers = []
         self.NTP = False # Ntp active or not
         self.start_NTP = self.NTP_on_or_off() #start value of ntp
@@ -234,7 +233,13 @@ class ClockView:
         # self.time_field.border = flet.InputBorder.NONE
         # self.date_field.border = flet.InputBorder.NONE
 
-        snackbar = flet.SnackBar(flet.Text("Изменения сохранены"))
+        snackbar = flet.SnackBar(
+                        flet.Container(
+                            content=flet.Text("✅ Изменения сохранены", color="black"),
+                            alignment=flet.alignment.center
+                        ),
+                        bgcolor=grey
+        )
         self.page.overlay.append(snackbar)
         snackbar.open = True
         self.page.update()
@@ -378,6 +383,7 @@ class ClockView:
 
         if task:
             task.cancel()
+            task=None
             self.page.update()
 
     def get_date(self):
