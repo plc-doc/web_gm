@@ -18,13 +18,17 @@ class ClockView:
         self.date_field = flet.TextField(value= self.get_date(), color= "black", border=flet.InputBorder.NONE,
                                          width=90, height=10,
                                          cursor_color=orange,
-                                         selection_color=orange, on_click=self.on_click)
+                                         selection_color=orange, on_click=self.on_click,
+                                         text_align=flet.TextAlign.CENTER, max_length=10,
+                                         error_style=flet.TextStyle(color="red", size=14))
 
         self.time_field = flet.TextField(color="black", border=flet.InputBorder.NONE,
                                          on_click=self.stop,
                                          cursor_color=orange,
-                                         selection_color=orange,
+                                         selection_color=orange,max_length=8,
+                                         text_align=flet.TextAlign.CENTER,
                                          width=70, height=10,
+                                         error_style=flet.TextStyle(color="red", size=14)
                                         )
         self.NTP_servers = []
         self.NTP = False # Ntp active or not
@@ -158,6 +162,7 @@ class ClockView:
         a.control.height = 10
         a.control.width = 90
         a.control.error_text = None
+        a.control.color = "black"
         self.page.update()
 
     def NTP_on_or_off(self):
@@ -196,14 +201,18 @@ class ClockView:
         try:
             datetime.datetime.strptime(self.date_field.value, "%d.%m.%Y")
         except ValueError:
-            self.date_field.height = None
+            self.date_field.height = 30
             self.date_field.width = None
+            self.date_field.color="red"
             self.date_field.error_text = "Введите дату в формате DD.MM.YYYY"
             self.page.update()
             return
         try:
             datetime.datetime.strptime(self.time_field.value, "%H:%M:%S")
         except ValueError:
+            self.time_field.height = 30
+            self.time_field.width = None
+            self.time_field.color = "red"
             self.time_field.error_text = "Введите время в формате hh:mm:ss"
             self.page.update()
             return
@@ -230,7 +239,8 @@ class ClockView:
         # self.stop_time()
 
         self.get_time()
-        self.get_date()
+        self.date_field.value = self.get_date()
+        self.page.update()
 
         # self.time_field.filled = False
         # self.date_field.filled = False
@@ -249,6 +259,16 @@ class ClockView:
         self.page.update()
 
     def handle_button_cancel(self):
+        self.date_field.error_text = None
+        self.date_field.width = 90
+        self.date_field.height = 10
+        self.date_field.color = "black"
+
+        self.time_field.error_text = None
+        self.time_field.width = 70
+        self.time_field.height = 10
+        self.time_field.color = "black"
+
         self.switcher.value = self.NTP_on_or_off()
         self.stop_time()
         self.date_field.value = self.get_date()
@@ -436,6 +456,9 @@ class ClockView:
     def stop(self, e):
         global task
         e.control.error_text = None
+        e.control.width = 70
+        e.control.width = 10
+        e.control.color = "black"
 
         if task:
             task.cancel()
