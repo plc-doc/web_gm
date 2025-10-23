@@ -58,13 +58,13 @@ class ClockView:
             bgcolor=orange,
             # leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color="white", size=40),
             content=flet.Container(content=flet.Row([
-                                                flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color="white", size=40),
+                                                flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color=orange, size=40),
                                                 flet.Text("Для сохранения настроек необходима перезагрузка", color="white", size=18),],
                                             spacing=20, alignment=flet.MainAxisAlignment.CENTER),
                                    alignment=flet.alignment.center),
             actions=[
                 flet.CupertinoButton(content=flet.Text("Отменить", color="white", size=16), on_click=lambda e: self.close_banner(e), opacity_on_click=0.3),
-                flet.CupertinoButton(content=flet.Text("Перезагрузить", color="white", size=16), on_click=lambda e: self.reboot(e), opacity_on_click=0.3),
+                flet.CupertinoButton(content=flet.Text("Перезагрузить", color=orange, size=16), on_click=lambda e: self.reboot(e), opacity_on_click=0.3),
             ],
             content_padding= flet.padding.only(top=24.0, bottom=4.0),
         )
@@ -155,6 +155,8 @@ class ClockView:
         self.get_time()
 
     def on_click(self, a):
+        a.control.height = 10
+        a.control.width = 90
         a.control.error_text = None
         self.page.update()
 
@@ -194,6 +196,8 @@ class ClockView:
         try:
             datetime.datetime.strptime(self.date_field.value, "%d.%m.%Y")
         except ValueError:
+            self.date_field.height = None
+            self.date_field.width = None
             self.date_field.error_text = "Введите дату в формате DD.MM.YYYY"
             self.page.update()
             return
@@ -235,7 +239,7 @@ class ClockView:
 
         snackbar = flet.SnackBar(
                         flet.Container(
-                            content=flet.Text("✅ Изменения сохранены", color="black"),
+                            content=flet.Text("✅ Изменения сохранены", color="white"),
                             alignment=flet.alignment.center
                         ),
                         bgcolor=grey
