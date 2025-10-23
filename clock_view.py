@@ -59,7 +59,7 @@ class ClockView:
 
 
         self.banner = flet.Banner(
-            bgcolor=orange,
+            bgcolor=grey,
             # leading=flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color="white", size=40),
             content=flet.Container(content=flet.Row([
                                                 flet.Icon(flet.Icons.WARNING_AMBER_ROUNDED, color=orange, size=40),
