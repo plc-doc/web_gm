@@ -457,7 +457,7 @@ class ClockView:
         global task
         e.control.error_text = None
         e.control.width = 70
-        e.control.width = 10
+        e.control.height = 10
         e.control.color = "black"
 
         if task:
