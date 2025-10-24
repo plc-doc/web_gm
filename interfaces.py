@@ -967,7 +967,10 @@ class Interface:
     def info_structure(self):
         return flet.Column(
             controls=[flet.Row(controls=[flet.Text(value=self.name, color="black"),
-                                         flet.Icon(name=flet.Icons.CIRCLE, color="#0AA557" if self.get_up_down() else "#A0A0A0", size=15),],
+                                         flet.Icon(name=flet.Icons.CIRCLE,
+                                                   color="#0AA557" if self.get_up_down() else "#A0A0A0",
+                                                   size=15,
+                                         ),],
                                spacing=3,
                                alignment=flet.MainAxisAlignment.CENTER,
                                vertical_alignment=flet.CrossAxisAlignment.CENTER,
@@ -991,8 +994,7 @@ class Interface:
                                                       self.mac_address_field,
                                                       self.ip_6_field],
                                                   alignment=flet.MainAxisAlignment.START,
-                                              )
-                                              ],
+                                              )],
                                           alignment=flet.MainAxisAlignment.CENTER,
                                           spacing=40,
                                       ),
@@ -1016,17 +1018,28 @@ class Interface:
                               height=161,
                               padding=10,
                               bgcolor=white,
-                              border_radius=20,
+                              border_radius=12,
+                              expand=True,
+                              animate_size=flet.Animation(600, flet.AnimationCurve.LINEAR),
+                              on_hover=self.on_hover,
                           ),
                           color=white,
                           shadow_color="black",
-                      ),
-                      ],
+                      ),],
             spacing=5,
             horizontal_alignment=flet.CrossAxisAlignment.CENTER,
             alignment=flet.MainAxisAlignment.CENTER,
             expand = True
         )
+
+    def on_hover(self, e):
+        e.control.shadow = flet.BoxShadow(color="#AAAAAA",
+                                          offset=flet.Offset(-1,7),
+                                          blur_radius=4, spread_radius=1) if e.data == "true" else None
+        # e.control.width = 302 if e.data == "true" else 300
+        # e.control.height = 163 if e.data == "true" else 161
+
+        e.control.update()
 
     # Eth (i) settings
     # opening dialog
