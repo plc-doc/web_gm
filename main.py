@@ -197,8 +197,6 @@ class App(AppLayout):
             self.set_reset_view()
         elif troute.match("/state"):
             self.set_state_view()
-        elif troute.match("/account"):
-            print("account")
         elif troute.match("/"):
             AuthorizationPage(self.page)
 

@@ -1020,7 +1020,7 @@ class Interface:
                               bgcolor=white,
                               border_radius=12,
                               expand=True,
-                              animate_size=flet.Animation(600, flet.AnimationCurve.LINEAR),
+                              # animate_size=flet.Animation(600, flet.AnimationCurve.LINEAR),
                               on_hover=self.on_hover,
                           ),
                           color=white,

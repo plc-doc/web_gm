@@ -5,6 +5,7 @@ import flet.canvas as cv
 from sidebar import Sidebar
 from interfaces import Interface
 from clock_view import ClockView
+from reset_view import ResetView
 
 grey = "#565759"
 white = "#EAEAEA"
@@ -27,7 +28,7 @@ class AppLayout(flet.Row):
 
         self.clock_view = ClockView(self, self.page).container
         self.state_view = flet.Container()
-        self.reset_view = flet.Container()
+        self.reset_view = ResetView(self, self.page)
         self.net_settings_view = (
             flet.Container(
                 flet.Column(
@@ -121,8 +122,8 @@ class AppLayout(flet.Row):
         self.page.update()
 
     def set_reset_view(self):
-        self.active_view = self.reset_view
-        self.sidebar.rail.selected_index = 2
+        self.page.open(self.reset_view)
+        self.reset_view.open = True
         self.page.update()
 
     def set_state_view(self):

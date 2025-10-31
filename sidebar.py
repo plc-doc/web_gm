@@ -12,10 +12,9 @@ class Sidebar(flet.Container):
         # self.page = page
         self.app_layout = app_layout
         self.nav_rail_visible = True
-
         self.top_nav_items = [
             flet.NavigationRailDestination(
-                icon=flet.Icon(flet.Icons.CAST_CONNECTED),
+                icon=flet.Icons.CAST_CONNECTED,
                 selected_icon=flet.Icons.CAST_CONNECTED,
                 label_content=flet.Text(value="Настройка сети", color="black"),
                 padding =flet.padding.all(0)
@@ -28,7 +27,7 @@ class Sidebar(flet.Container):
                 padding=flet.padding.all(0)
             ),
             flet.NavigationRailDestination(
-                icon=flet.Icon(flet.Icons.SETTINGS_BACKUP_RESTORE_ROUNDED),
+                icon=flet.Icon(flet.Icons.SETTINGS_BACKUP_RESTORE_ROUNDED,),
                 selected_icon=flet.Icon(flet.Icons.SETTINGS_BACKUP_RESTORE_ROUNDED,),
                 label_content=flet.Text(value="Сброс до заводских настроек", color="black", text_align=flet.TextAlign.CENTER),
                 padding = flet.padding.all(0)
@@ -239,7 +238,6 @@ class Sidebar(flet.Container):
             self.page.route = "/clock"
         elif index == 2:
             self.page.route = "/reset"
-
         elif index == 4:
             self.page.route = "/state"
         self.page.update()
