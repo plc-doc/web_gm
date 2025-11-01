@@ -91,6 +91,9 @@ class ClockView:
             controls=[
                 flet.Text("Настройка даты и времени", text_align=flet.alignment.center,color=orange,size=20),
                 flet.Container(
+                    shadow= flet.BoxShadow(color="#AAAAAA",
+                                          offset=flet.Offset(-1,1),
+                                          blur_radius=1, spread_radius=0),
                     padding= 20,
                     bgcolor="#CACACA",
                     width=1050,
@@ -122,7 +125,9 @@ class ClockView:
                     padding= 20,
                     width=1050,
                     height=400,
-
+                    shadow= flet.BoxShadow(color="#AAAAAA",
+                                          offset=flet.Offset(-1,1),
+                                          blur_radius=1, spread_radius=0),
                     # height=self.app.page.height,
                     border_radius=30,
                     alignment=flet.alignment.center,

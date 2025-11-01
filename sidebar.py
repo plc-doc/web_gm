@@ -12,6 +12,7 @@ class Sidebar(flet.Container):
         # self.page = page
         self.app_layout = app_layout
         self.nav_rail_visible = True
+        self.prev_nav = 0
         self.top_nav_items = [
             flet.NavigationRailDestination(
                 icon=flet.Icons.CAST_CONNECTED,
@@ -234,10 +235,16 @@ class Sidebar(flet.Container):
         print(f"index = {index}")
         if index == 0:
             self.page.route = "/settings"
+            self.prev_nav = self.rail.selected_index
         elif index == 1:
             self.page.route = "/clock"
+            self.prev_nav = self.rail.selected_index
         elif index == 2:
-            self.page.route = "/reset"
+            self.app_layout.set_reset_view()
+
+            # self.page.route = "/reset"
         elif index == 4:
             self.page.route = "/state"
+            self.prev_nav = self.rail.selected_index
+
         self.page.update()

@@ -1,4 +1,5 @@
 import flet
+import subprocess
 
 grey = "#565759"
 white = "#EAEAEA"
@@ -31,7 +32,7 @@ class ResetView(flet.AlertDialog):
                                         shape=flet.RoundedRectangleBorder(radius=13),
                                         elevation=2,
                                         click_elevation=4,
-                                        show_checkmark=False,
+                                        show_checkmark=False
                                         )
                               )
             if i == 0:
@@ -40,7 +41,6 @@ class ResetView(flet.AlertDialog):
                 self.chips[i].padding = flet.padding.Padding(26,19,26,19)
             else:
                 self.chips[i].padding = flet.padding.Padding(31,8.5,31,8.5)
-
 
         self.content = flet.Column([
                         flet.Text(value="Выберите параметры для сброса",
@@ -52,7 +52,6 @@ class ResetView(flet.AlertDialog):
                                             flet.Row([self.chips[0],
                                                               self.chips[1]], spacing=58,alignment=flet.MainAxisAlignment.CENTER,
                                                      ),
-
                                             flet.Row([self.chips[2]], alignment=flet.MainAxisAlignment.CENTER),
                                             flet.Row([self.checkbox, flet.Text(value="Bыбрать все", color="black", size=15)],
                                                      alignment=flet.MainAxisAlignment.START, spacing=5
@@ -72,7 +71,8 @@ class ResetView(flet.AlertDialog):
                         flet.Row([
                             flet.TextButton(content=flet.Text("Отменить", color="black", size=17), on_click=self.cancel),
                             flet.TextButton(content=flet.Text("Сбросить", color=orange, size=17, weight=flet.FontWeight.W_600,
-                                                              style=flet.TextStyle(letter_spacing=0.3)))
+                                                              style=flet.TextStyle(letter_spacing=0.3),),
+                                            on_click=self.reset)
                         ], alignment=flet.MainAxisAlignment.END, spacing=20)
         ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, alignment=flet.MainAxisAlignment.CENTER,
             spacing=20)
@@ -85,10 +85,11 @@ class ResetView(flet.AlertDialog):
                 border_radius=13,
                 width=549,
                 height=408,
-                expand=True
+                expand=True,
             ),
             bgcolor="white",
             content_padding=flet.padding.Padding(35, 0, 35, 0),
+            on_dismiss=self.cancel
         )
 
     def chip_selected(self, e):
@@ -104,6 +105,7 @@ class ResetView(flet.AlertDialog):
 
     def cancel(self, e):
         self.page.close(self)
+        self.app.sidebar.nav_change(self.app.sidebar.prev_nav)
         self.page.update()
 
     def click_checkbox(self, e):
@@ -112,4 +114,48 @@ class ResetView(flet.AlertDialog):
                 chip.selected = True
             else:
                 chip.selected = False
+        self.page.update()
+
+    def reset(self, e):
+        if self.checkbox.value:
+            try:
+                reset = subprocess.run(["sudo", "/usr/local/bin/factory_reset.sh", "-a"], capture_output=True, text=True)
+                print("stdout:", reset.stdout)
+                print("stderr:", reset.stderr)
+                print("return code:", reset.returncode)
+            except Exception:
+                print("error")
+                return
+        else:
+            if self.chips[0].selected:
+                try:
+                    reset = subprocess.run(["sudo", "/usr/local/bin/factory_reset.sh", "-u"], capture_output=True,
+                                           text=True)
+                    print("stdout:", reset.stdout)
+                    print("stderr:", reset.stderr)
+                    print("return code:", reset.returncode)
+                except Exception:
+                    print("error")
+                    return
+            if self.chips[1].selected:
+                try:
+                    reset = subprocess.run(["sudo", "/usr/local/bin/factory_reset.sh", "-c"], capture_output=True,
+                                           text=True)
+                    print("stdout:", reset.stdout)
+                    print("stderr:", reset.stderr)
+                    print("return code:", reset.returncode)
+                except Exception:
+                    print("error")
+                    return
+            if self.chips[2].selected:
+                try:
+                    reset = subprocess.run(["sudo", "/usr/local/bin/factory_reset.sh", "-n"], capture_output=True,
+                                           text=True)
+                    print("stdout:", reset.stdout)
+                    print("stderr:", reset.stderr)
+                    print("return code:", reset.returncode)
+                except Exception:
+                    print("error")
+                    return
+        self.page.close(self)
         self.page.update()

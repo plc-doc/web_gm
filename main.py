@@ -193,8 +193,8 @@ class App(AppLayout):
             self.set_net_settings_view()
         elif troute.match("/clock"):
             self.set_clock_view()
-        elif troute.match("/reset"):
-            self.set_reset_view()
+        # elif troute.match("/reset"):
+        #     self.set_reset_view()
         elif troute.match("/state"):
             self.set_state_view()
         elif troute.match("/"):
