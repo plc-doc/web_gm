@@ -1,6 +1,8 @@
 import flet
 import subprocess
 
+from oauthlib.uri_validate import reserved
+
 grey = "#565759"
 white = "#EAEAEA"
 orange = "#F7941E"
@@ -117,45 +119,93 @@ class ResetView(flet.AlertDialog):
         self.page.update()
 
     def reset(self, e):
+
+        self.page.close(self)
+        self.page.update()
+
+        err = ""
+        r_code = 0
+
         if self.checkbox.value:
+            self.checkbox.value = False
             try:
                 reset = subprocess.run(["sudo", "/usr/local/bin/factory_reset.sh", "-a"], capture_output=True, text=True)
                 print("stdout:", reset.stdout)
                 print("stderr:", reset.stderr)
                 print("return code:", reset.returncode)
-            except Exception:
-                print("error")
-                return
+
+                err += "\n" + reset.stderr
+                if reset.returncode != 0:
+                    r_code = reset.returncode
+
+            except Exception as e:
+                r_code = 2
+                err += "\n" + str(e)
+
         else:
             if self.chips[0].selected:
+                self.chips[0].selected = False
                 try:
                     reset = subprocess.run(["sudo", "/usr/local/bin/factory_reset.sh", "-u"], capture_output=True,
                                            text=True)
                     print("stdout:", reset.stdout)
                     print("stderr:", reset.stderr)
                     print("return code:", reset.returncode)
-                except Exception:
-                    print("error")
-                    return
+
+                    err += "\n" + reset.stderr
+                    if reset.returncode != 0:
+                        r_code = reset.returncode
+
+                except Exception as e:
+                    err += "\n" + str(e)
+
             if self.chips[1].selected:
+                self.chips[1].selected = False
                 try:
                     reset = subprocess.run(["sudo", "/usr/local/bin/factory_reset.sh", "-c"], capture_output=True,
                                            text=True)
                     print("stdout:", reset.stdout)
                     print("stderr:", reset.stderr)
                     print("return code:", reset.returncode)
-                except Exception:
-                    print("error")
-                    return
+
+                    err += "\n" + reset.stderr
+                    if reset.returncode != 0:
+                        r_code = reset.returncode
+                except Exception as e:
+                    r_code = 2
+                    err += "\n" + str(e)
+
             if self.chips[2].selected:
+                self.chips[2].selected = False
                 try:
                     reset = subprocess.run(["sudo", "/usr/local/bin/factory_reset.sh", "-n"], capture_output=True,
                                            text=True)
                     print("stdout:", reset.stdout)
                     print("stderr:", reset.stderr)
                     print("return code:", reset.returncode)
-                except Exception:
-                    print("error")
-                    return
-        self.page.close(self)
+
+                    err += "\n" +  reset.stderr
+                    if reset.returncode != 0:
+                        r_code = reset.returncode
+                except Exception as e:
+                    r_code = 2
+                    err += "\n" + str(e)
+
+        self.show_reset_info(r_code, err)
+
+    def show_reset_info(self, r_code, err):
+        if r_code == 0:
+            message = " ✅ Настройки успешно сброшены"
+        else:
+            message = " ❌ Не удалось сбросить настройки. Возникла ошибка: " + err
+
+        snackbar = flet.SnackBar(
+            flet.Container(
+                content=flet.Text(message, color="white"),
+                alignment=flet.alignment.center
+            ),
+            bgcolor=grey
+        )
+        self.page.overlay.append(snackbar)
+        snackbar.open = True
         self.page.update()
