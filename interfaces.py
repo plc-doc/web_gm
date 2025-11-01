@@ -1049,41 +1049,43 @@ class Interface:
         def handle_button_save(e):
 
             #checking correctness of input values
-            try:
-                isinstance(ipaddress.ip_interface(ip_address_field.value), ipaddress.IPv4Interface)
-            except ValueError:
-                ip_address_field.error_text = "Неверный IP-адрес"
-                return
+            if dropdown4.value == "Вручную":
+                try:
+                    isinstance(ipaddress.ip_interface(ip_address_field.value), ipaddress.IPv4Interface)
+                except ValueError:
+                    ip_address_field.error_text = "Неверный IP-адрес"
+                    return
 
-            try:
-                isinstance(ipaddress.ip_interface(mask_field.value), ipaddress.IPv4Interface)
-            except ValueError:
-                mask_field.error_text = "Неверное значение маски"
-                return
+                try:
+                    isinstance(ipaddress.ip_interface(mask_field.value), ipaddress.IPv4Interface)
+                except ValueError:
+                    mask_field.error_text = "Неверное значение маски"
+                    return
 
-            try:
-                isinstance(ipaddress.ip_interface(gateway_field.value), ipaddress.IPv4Interface)
-            except ValueError:
-                gateway_field.error_text = "Неверное значение сетевого шлюза"
-                return
+                try:
+                    isinstance(ipaddress.ip_interface(gateway_field.value), ipaddress.IPv4Interface)
+                except ValueError:
+                    gateway_field.error_text = "Неверное значение сетевого шлюза"
+                    return
 
-            try:
-                isinstance(ipaddress.ip_interface(ip6_field.value), ipaddress.IPv6Interface)
-            except ValueError:
-                ip6_field.error_text = "Неверное значение IP"
-                return
+            if dropdown6.value == "Вручную":
+                try:
+                    isinstance(ipaddress.ip_interface(ip6_field.value), ipaddress.IPv6Interface)
+                except ValueError:
+                    ip6_field.error_text = "Неверное значение IP"
+                    return
 
-            try:
-                isinstance(prefixlen_field.value, int)
-            except ValueError:
-                prefixlen_field.error_text = "Неверное значение длины префикса"
-                return
+                try:
+                    isinstance(prefixlen_field.value, int)
+                except ValueError:
+                    prefixlen_field.error_text = "Неверное значение длины префикса"
+                    return
 
-            try:
-                isinstance(ipaddress.ip_interface(gateway6_field.value), ipaddress.IPv6Interface)
-            except ValueError:
-                gateway6_field.error_text = "Неверное значение сетевого шлюза"
-                return
+                try:
+                    isinstance(ipaddress.ip_interface(gateway6_field.value), ipaddress.IPv6Interface)
+                except ValueError:
+                    gateway6_field.error_text = "Неверное значение сетевого шлюза"
+                    return
 
             self.ip_4 = ip_address_field.value
             self.ip_4_field.value = self.ip_4
