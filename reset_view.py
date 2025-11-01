@@ -3,6 +3,8 @@ import subprocess
 
 from oauthlib.uri_validate import reserved
 
+import User
+
 grey = "#565759"
 white = "#EAEAEA"
 orange = "#F7941E"
@@ -106,6 +108,10 @@ class ResetView(flet.AlertDialog):
         e.control.update()
 
     def cancel(self, e):
+        for chip in self.chips:
+            chip.selected = False
+        self.checkbox.value = False
+
         self.page.close(self)
         self.app.sidebar.nav_change(self.app.sidebar.prev_nav)
         self.page.update()
@@ -129,10 +135,13 @@ class ResetView(flet.AlertDialog):
         if self.checkbox.value:
             self.checkbox.value = False
             try:
+
                 reset = subprocess.run(["sudo", "/usr/local/bin/factory_reset.sh", "-a"], capture_output=True, text=True)
                 print("stdout:", reset.stdout)
                 print("stderr:", reset.stderr)
                 print("return code:", reset.returncode)
+
+                User.change_password("sa")
 
                 err += "\n" + reset.stderr
                 if reset.returncode != 0:
@@ -151,6 +160,8 @@ class ResetView(flet.AlertDialog):
                     print("stdout:", reset.stdout)
                     print("stderr:", reset.stderr)
                     print("return code:", reset.returncode)
+
+                    User.change_password("sa")
 
                     err += "\n" + reset.stderr
                     if reset.returncode != 0:
