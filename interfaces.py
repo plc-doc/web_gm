@@ -347,11 +347,6 @@ class Interface:
 
         subprocess.run(["sudo", "netplan", "apply"], check=True)
 
-        with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
-            content = src_file.read()
-
-        with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
-            backup_file.write(content)
 
         print("copied gateway")
 
@@ -388,12 +383,6 @@ class Interface:
         #     subprocess.run(["sed", "-i", rf"/{interface}/,/^[^ ]/ s|\(/.*\)/[0-9]\+|\1/{new_prefix}|", yaml_file], check=True)
         #
         # change_netmask(self.name.lower(), ipaddress.IPv4Network(f'0.0.0.0/{self.mask}').prefixlen, "/usr/local/bin/interfaces_backup")
-
-        with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
-            content = src_file.read()
-
-        with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
-            backup_file.write(content)
 
         print("copied mask")
 
@@ -480,13 +469,6 @@ class Interface:
 
         subprocess.run(['sudo', 'netplan', 'apply'], check = True)
 
-        with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
-            content = src_file.read()
-            print(content)
-
-        with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
-            backup_file.write(content)
-
 
     def set_dynamic_ip6(self):
 
@@ -539,12 +521,6 @@ class Interface:
 
         subprocess.run(['sudo', 'netplan', 'apply'], check = True)
 
-        with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
-            content = src_file.read()
-            print(content)
-
-        with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
-            backup_file.write(content)
 
     def set_static_ip6(self):
         with open("/etc/netplan/50-cloud-init.yaml", "r") as f:
@@ -601,13 +577,6 @@ class Interface:
             yaml.safe_dump(config, f, default_flow_style=False)
 
         subprocess.run(['sudo', 'netplan', 'apply'], check = True)
-
-        with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
-            content = src_file.read()
-            print(content)
-
-        with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
-            backup_file.write(content)
 
         print("copied static ip6")
 
@@ -733,12 +702,6 @@ class Interface:
 
         subprocess.run(['sudo', 'netplan', 'apply'], check = True)
 
-        with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
-            content = src_file.read()
-            print(content)
-
-        with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
-            backup_file.write(content)
 
         print("copied static ip4")
 
@@ -830,11 +793,6 @@ class Interface:
 
         print("successfully")
 
-        with open("/etc/netplan/50-cloud-init.yaml", "r") as src_file:
-            content = src_file.read()
-
-        with open("/usr/local/bin/interfaces_backup", "w") as backup_file:
-            backup_file.write(content)
 
     def get_static_or_dynamic(self):
         global mode
@@ -1133,7 +1091,14 @@ class Interface:
             prefixlen_field.value = self.prefix_len
 
             self.page.close(dialog)
-            snackbar = flet.SnackBar(flet.Text("Изменения сохранены"))
+
+            snackbar = flet.SnackBar(
+                flet.Container(
+                    content=flet.Text("✅ Изменения сохранены", color="white"),
+                    alignment=flet.alignment.center
+                ),
+                bgcolor=grey
+            )
             e.control.page.overlay.append(snackbar)
             snackbar.open = True
             self.page.update()
