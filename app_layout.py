@@ -6,6 +6,7 @@ from sidebar import Sidebar
 from interfaces import Interface
 from clock_view import ClockView
 from reset_view import ResetView
+from system_info_view import InfoView
 
 grey = "#565759"
 white = "#EAEAEA"
@@ -27,8 +28,8 @@ class AppLayout(flet.Row):
         paint = flet.Paint(stroke_width= 4, color= orange) # orange lines
 
         self.clock_view = ClockView(self, self.page).container
-        self.state_view = flet.Container()
         self.reset_view = ResetView(self, self.page)
+        self.info_view = InfoView(self, self.page).layout
         self.net_settings_view = (
             flet.Container(
                 flet.Column(
@@ -107,6 +108,11 @@ class AppLayout(flet.Row):
         self.controls[-1] = self._active_view
         self.page.update()
 
+    def set_info_view(self):
+        self.active_view = self.info_view
+        self.sidebar.rail.selected_index = 4
+        self.page.update()
+
     def set_net_settings_view(self):
         self.active_view = self.net_settings_view
         self.sidebar.rail.selected_index = 0
@@ -124,11 +130,6 @@ class AppLayout(flet.Row):
     def set_reset_view(self):
         self.page.open(self.reset_view)
         self.reset_view.open = True
-        self.page.update()
-
-    def set_state_view(self):
-        self.active_view = self.state_view
-        self.sidebar.rail.selected_index = 4
         self.page.update()
 
 

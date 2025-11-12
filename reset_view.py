@@ -208,7 +208,7 @@ class ResetView(flet.AlertDialog):
         if r_code == 0:
             message = " ✅ Настройки успешно сброшены"
         else:
-            message = " ❌ Не удалось сбросить настройки. Возникла ошибка: " + err
+            message = " ❌ Не удалось сбросить настройки. Возникла ошибка:\n" + err
 
         snackbar = flet.SnackBar(
             flet.Container(

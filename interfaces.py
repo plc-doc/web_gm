@@ -11,9 +11,6 @@ orange = "#F7941E"
 
 current_eth0_ip = "ifconfig eth0| grep 'inet' | cut -d: -f2 | awk '{print $2}'"
 
-# TODO:
-#   mb put interface name inside white cloud
-
 class Interface:
     def __init__(self, name, app, page, metric):
         self.name = name
@@ -928,7 +925,13 @@ class Interface:
                                          flet.Icon(name=flet.Icons.CIRCLE,
                                                    color="#0AA557" if self.get_up_down() else "#A0A0A0",
                                                    size=15,
-                                         ),],
+                                                   tooltip=flet.Tooltip(
+                                                        message="Сетевой интефейс активен" if self.get_up_down() else "Сетевой интерфейс НЕ активен",
+                                                        border_radius = 5,
+                                                       margin = 20,
+                                                       vertical_offset = 7,
+                                                       wait_duration = 300),
+                                                   ),],
                                spacing=3,
                                alignment=flet.MainAxisAlignment.CENTER,
                                vertical_alignment=flet.CrossAxisAlignment.CENTER,
