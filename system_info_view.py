@@ -1,4 +1,5 @@
 import flet
+from setuptools.command.upload_docs import upload_docs
 
 from charts import BarChart, Curve
 
@@ -19,11 +20,11 @@ class InfoView:
         self.work_time = "0 дней 15 ч 37 мин"
         self.RAM = "184 МиБ/\n1,92 ГиБ"
         self.ROM = "184 МиБ/\n1,92 ГиБ"
-        self.run_out = 100.0
-        self.battery = 3000
+        self.run_out = 0.0
+        self.battery_voltage = 3000
         # self.bar = BarChart(self.battery, self.page)
         # self.battery_chart = self.bar.chart
-        self.battery_chart = BarChart(self.battery).chart
+        self.battery_chart = BarChart(self.battery_voltage).chart
         self.RAM_perc = 95
         self.RAM_chart = Curve(orange, self.RAM_perc).chart
         self.ROM_perc = 43
@@ -94,13 +95,13 @@ class InfoView:
                                               blur_radius=2,
                                               spread_radius=1
                                               ),
-                        animate_scale=flet.Animation(200, flet.AnimationCurve.LINEAR),
+                        animate_scale=flet.Animation(300, flet.AnimationCurve.LINEAR),
                         scale=flet.Scale(scale=1),
                         on_hover=self.animate,
                         padding=flet.padding.Padding(24, 0,0,0)
                         ),
                         flet.Container(content=flet.Image("favicon.png", width=124, height=81),width=304,height=84,
-                                       animate_scale=flet.Animation(200, flet.AnimationCurve.LINEAR),
+                                       animate_scale=flet.Animation(300, flet.AnimationCurve.LINEAR),
                                        scale=flet.Scale(scale=1),
                                        on_hover=self.animate
                                        )
@@ -126,7 +127,7 @@ class InfoView:
                                                  blur_radius=2,
                                                  spread_radius=1
                                                  ),
-                            animate_scale=flet.Animation(200, flet.AnimationCurve.LINEAR),
+                            animate_scale=flet.Animation(300, flet.AnimationCurve.LINEAR),
                             scale = flet.Scale(scale=1),
                             on_hover = self.animate
                         ),
@@ -142,7 +143,7 @@ class InfoView:
                                                  blur_radius=2,
                                                  spread_radius=1
                                                  ),
-                            animate_scale=flet.Animation(200, flet.AnimationCurve.LINEAR),
+                            animate_scale=flet.Animation(300, flet.AnimationCurve.LINEAR),
                             scale=flet.Scale(scale=1),
                             on_hover=self.animate
                        )
@@ -168,14 +169,14 @@ class InfoView:
                                                 blur_radius=2,
                                                 spread_radius=1
                                                 ),
-                            animate_scale=flet.Animation(200, flet.AnimationCurve.LINEAR),
+                            animate_scale=flet.Animation(300, flet.AnimationCurve.LINEAR),
                             scale=flet.Scale(scale=1),
                             on_hover=self.animate
                         ),
                         flet.Container(
                             flet.Column([
                                 flet.Text("Износ ПЗУ", color="black", size=18),
-                                flet.Text(f"{str(self.run_out)} %", color=green if self.run_out > 80.0 else "red",
+                                flet.Text(f"{str(self.run_out)} %", color="red" if self.run_out > 70.0 else green,
                                           weight=flet.FontWeight.W_600, size=21)
                             ], horizontal_alignment=flet.CrossAxisAlignment.START, alignment=flet.MainAxisAlignment.SPACE_BETWEEN),
                             padding=flet.padding.Padding(29, 17, 14, 15),
@@ -185,7 +186,7 @@ class InfoView:
                                                 blur_radius=2,
                                                 spread_radius=1
                                                 ),
-                            animate_scale=flet.Animation(200, flet.AnimationCurve.LINEAR),
+                            animate_scale=flet.Animation(300, flet.AnimationCurve.LINEAR),
                             scale=flet.Scale(scale=1),
                             on_hover=self.animate,
                             expand=True
@@ -205,7 +206,7 @@ class InfoView:
                                             blur_radius=2,
                                             spread_radius=1
                                             ),
-                        animate_scale=flet.Animation(200, flet.AnimationCurve.LINEAR),
+                        animate_scale=flet.Animation(300, flet.AnimationCurve.LINEAR),
                         scale=flet.Scale(scale=1),
                         on_hover=self.animate
                     ),
@@ -228,7 +229,7 @@ class InfoView:
                                               blur_radius=2,
                                               spread_radius=1
                                               ),
-                        animate_scale=flet.Animation(200, flet.AnimationCurve.LINEAR),
+                        animate_scale=flet.Animation(300, flet.AnimationCurve.LINEAR),
                         scale=flet.Scale(scale=1),
                         on_hover=self.animate
                         ),
@@ -252,7 +253,7 @@ class InfoView:
                                              blur_radius=2,
                                              spread_radius=1
                                              ),
-                        animate_scale=flet.Animation(200, flet.AnimationCurve.LINEAR),
+                        animate_scale=flet.Animation(300, flet.AnimationCurve.LINEAR),
                         scale=flet.Scale(scale=1),
                         on_hover=self.animate
                     )
@@ -267,10 +268,10 @@ class InfoView:
                     flet.Column([
                         self.upper_row,
                         self.info_containers
-                    ],spacing=51),
+                    ],spacing=51, horizontal_alignment=flet.CrossAxisAlignment.CENTER),
                     ],
-                    spacing=51,alignment=flet.MainAxisAlignment.CENTER, horizontal_alignment=flet.CrossAxisAlignment.CENTER
-                )
+                    spacing=51,alignment=flet.MainAxisAlignment.START, horizontal_alignment=flet.CrossAxisAlignment.CENTER,
+                ),expand=True, padding=20
             )
         )
 
@@ -317,10 +318,19 @@ class InfoView:
         else:
             tx_union = "б"
 
+        if name == "eth0":
+            up_down = self.app.eth0.get_up_down()
+        elif name == "eth1":
+            up_down  = self.app.eth1.get_up_down()
+        elif name == "eth2":
+            up_down = self.app.eth2.get_up_down()
+        else:
+            up_down = self.app.ecat.get_up_down()
+
         return flet.Container(
                     flet.Column([
                         flet.Row([
-                            flet.Text(name, color=green if self.app else "#333333", size=20),
+                            flet.Text(name, color=green if up_down else "#333333", size=20),
                             flet.Text(f"{str(speed)} Мбит/c", color="black", size=15)
                         ]),
                         flet.Row([
@@ -345,7 +355,7 @@ class InfoView:
                                          blur_radius=2,
                                          spread_radius=1
                                          ),
-                    animate_scale=flet.Animation(200, flet.AnimationCurve.LINEAR),
+                    animate_scale=flet.Animation(300, flet.AnimationCurve.LINEAR),
                     scale=flet.Scale(scale=1),
                     on_hover=self.animate
                 )

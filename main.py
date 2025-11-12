@@ -193,7 +193,7 @@ class App(AppLayout):
             self.set_net_settings_view()
         elif troute.match("/clock"):
             self.set_clock_view()
-        elif troute.match("/state"):
+        elif troute.match("/info"):
             self.set_info_view()
         elif troute.match("/"):
             AuthorizationPage(self.page)

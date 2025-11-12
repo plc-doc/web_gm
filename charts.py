@@ -13,7 +13,16 @@ green = "#59A343"
 class BarChart:
     def __init__(self, value):
         # self.page = page
-        self.color = green
+
+        if value >= 2500:
+            self.color = green
+        if 2400 <= value < 2500:
+            self.color = "yellow"
+        elif 2000 <= value < 2400:
+             self.color = "red"
+        else:
+            self.color = "#333333"
+
         self.bg_color = "white"
         self.max_value = 3100
         self.border_radius = 28
@@ -35,7 +44,7 @@ class BarChart:
                     bgcolor=self.color,
                     border_radius=28,
                     animate=flet.Animation(300, flet.AnimationCurve.LINEAR),
-                    on_hover=self.animate
+                    # on_hover=self.animate
                 ),
                 flet.Text(f"{self.value}/{self.max_value} мВ",
                           color=white if self.value > 1800 else "#333333",
@@ -46,7 +55,6 @@ class BarChart:
         )
 
     def animate(self, e):
-        # if self.chart.controls[1].width == self.width * self.value / self.max_value:
         self.chart.controls[1].width = self.width * self.value / self.max_value -20 \
             if self.chart.controls[1].width == self.width * self.value / self.max_value\
             else self.width * self.value / self.max_value

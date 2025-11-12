@@ -244,7 +244,7 @@ class Sidebar(flet.Container):
 
             # self.page.route = "/reset"
         elif index == 4:
-            self.page.route = "/state"
+            self.page.route = "/info"
             self.prev_nav = self.rail.selected_index
 
         self.page.update()
