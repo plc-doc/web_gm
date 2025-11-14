@@ -1,8 +1,6 @@
-import asyncio
-import os
+
 import subprocess
-import re
-from datetime import datetime
+
 
 import flet
 
@@ -19,7 +17,7 @@ class InfoView:
         self.app = app
         self.page = page
 
-        self.local_ip = self.app.get_user_ip()
+        self.local_ip = self.app.user_ip
         self.temperature = self.get_temperature()
         self.date = "24.10.2025"
         self.time = "13:33:33"

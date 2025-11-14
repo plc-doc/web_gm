@@ -1,9 +1,7 @@
-import asyncio
 import re
 import subprocess
 from collections import defaultdict
-from datetime import datetime
-from multiprocessing.reduction import duplicate
+
 
 import flet
 import os
@@ -237,30 +235,30 @@ class App(AppLayout):
         groups = defaultdict(list)
 
         for line in lines:
-            match = re.search(r'\s+\d+\.\d+\.\d+\.\d+:\d+\s+(\d+\.\d+\.\d+\.\d+):\d+', line)
+            match = re.search(r'\s(\d+\.\d+\.\d+\.\d+):\d+\s+users', line)
             m = re.search(r'fd=(\d+)', line)
-            if match:
+            if match and m:
                 ip = match.group(1)
-                if m:
-                    fd = int(m.group(1))
-                    # for key, value in ip_dict.items():
-                    # if key == fd and value == ip:
-                    #     continue
-                    # else:
-                    #     del ip_dict[key]
-                    for key, value in list(self.ip_dict.items()):
-                        if fd in self.ip_dict:
-                            if value != ip:
-                                del self.ip_dict[fd]
+                # if m:
+                fd = int(m.group(1))
+                # for key, value in ip_dict.items():
+                # if key == fd and value == ip:
+                #     continue
+                # else:
+                #     del ip_dict[key]
+                for key, value in list(self.ip_dict.items()):
+                    if fd in self.ip_dict:
+                        if value != ip:
+                            del self.ip_dict[fd]
 
-                    # Группируем ключи по значениям, пропуская ключи из self.used_ip_dict
-                    # for key, value in self.ip_dict.items():
-                    if fd not in self.ip_dict:  # <-- пропускаем
-                        groups[ip].append(fd)
-                        self.ip_dict[fd] = ip
+                # Группируем ключи по значениям, пропуская ключи из self.used_ip_dict
+                # for key, value in self.ip_dict.items():
+                if fd not in self.ip_dict:  # <-- пропускаем
+                    groups[ip].append(fd)
+                    self.ip_dict[fd] = ip
 
-                else:
-                    return "False"
+                # else:
+                #     return "False"
             else:
                 return " - "
             # Берём максимальные ключи для каждого значения
