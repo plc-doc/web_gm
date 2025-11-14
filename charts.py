@@ -16,7 +16,7 @@ class BarChart:
 
         if value >= 2500:
             self.color = green
-        if 2400 <= value < 2500:
+        elif 2400 <= value < 2500:
             self.color = "yellow"
         elif 2000 <= value < 2400:
              self.color = "red"
