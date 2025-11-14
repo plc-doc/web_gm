@@ -1,3 +1,10 @@
+import asyncio
+import re
+import subprocess
+from collections import defaultdict
+from datetime import datetime
+from multiprocessing.reduction import duplicate
+
 import flet
 import os
 import hashlib
@@ -132,6 +139,10 @@ class App(AppLayout):
     def __init__(self, page: flet.Page):
         self.page = page
         self.page.on_route_change = self.route_change
+        self.DEFAULT_FLET_PORT = DEFAULT_FLET_PORT
+        self.ip_dict = {} #{fd : "ip"}
+        self.used_ip_dict = {}
+        self.user_ip = self.get_user_ip()
 
         self.appbar_items = [  # menu
             # self.login_profile_button,
@@ -200,5 +211,62 @@ class App(AppLayout):
 
         self.page.update()
 
+    # def get_user_ip(self):
+    #     cmd = f"sudo ss -tnp | grep {DEFAULT_FLET_PORT}"
+    #     result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
+    #
+    #     lines = result.stdout.strip().splitlines()
+    #     if not lines:
+    #         return " - "
+    #
+    #     first_line = lines[0]
+    #
+    #
+    #     match = re.search(r'\s+\d+\.\d+\.\d+\.\d+:\d+\s+(\d+\.\d+\.\d+\.\d+):\d+', first_line)
+    #     if match:
+    #         ip = match.group(1)
+    #         return ip
+    #     else:
+    #         return " x "
+
+    def get_user_ip(self):
+        cmd = f"sudo ss -tnp | grep {DEFAULT_FLET_PORT}"
+        result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
+
+        lines = result.stdout.strip().splitlines()
+        groups = defaultdict(list)
+
+        for line in lines:
+            match = re.search(r'\s+\d+\.\d+\.\d+\.\d+:\d+\s+(\d+\.\d+\.\d+\.\d+):\d+', line)
+            m = re.search(r'fd=(\d+)', line)
+            if match:
+                ip = match.group(1)
+                if m:
+                    fd = int(m.group(1))
+                    # for key, value in ip_dict.items():
+                    # if key == fd and value == ip:
+                    #     continue
+                    # else:
+                    #     del ip_dict[key]
+                    for key, value in list(self.ip_dict.items()):
+                        if fd in self.ip_dict:
+                            if value != ip:
+                                del self.ip_dict[fd]
+
+                    # Группируем ключи по значениям, пропуская ключи из self.used_ip_dict
+                    # for key, value in self.ip_dict.items():
+                    if fd not in self.ip_dict:  # <-- пропускаем
+                        groups[ip].append(fd)
+                        self.ip_dict[fd] = ip
+
+                else:
+                    return "False"
+            else:
+                return " - "
+            # Берём максимальные ключи для каждого значения
+        max_v = {value: max(keys) for value, keys in groups.items()}
+        self.used_ip_dict.update(max_v)
+
+        return next(iter(max_v))
 
 flet.app(target=AuthorizationPage, view=flet.WEB_BROWSER, host= "0.0.0.0", port=flet_port, assets_dir="assets")
