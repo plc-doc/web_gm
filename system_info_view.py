@@ -1,7 +1,13 @@
+import asyncio
+import os
+import subprocess
+import re
+from datetime import datetime
+
 import flet
-from setuptools.command.upload_docs import upload_docs
 
 from charts import BarChart, Curve
+# from main import DEFAULT_FLET_PORT
 
 grey = "#565759"
 white = "#EAEAEA"
@@ -13,8 +19,8 @@ class InfoView:
         self.app = app
         self.page = page
 
-        self.local_ip = "192.168.1.58"
-        self.temperature = "51.1"
+        self.local_ip = self.app.get_user_ip()
+        self.temperature = self.get_temperature()
         self.date = "24.10.2025"
         self.time = "13:33:33"
         self.work_time = "0 дней 15 ч 37 мин"
@@ -31,6 +37,9 @@ class InfoView:
         self.ROM_chart = Curve("#8BBAE0", self.ROM_perc).chart
         self.cpu = {"1 мин" : 0.37, "5 мин" : 0.26, "15 мин" : 0.25}
 
+        # self.ip = ""
+        # asyncio.run(self.monitor_ips())
+
         self.upper_row = (
             flet.Container(
                 flet.Row(
@@ -46,7 +55,7 @@ class InfoView:
                                                        alignment=flet.alignment.center,),
                                         flet.Icon(flet.Icons.THERMOSTAT_ROUNDED, color="#333333", size=28)
                                     ], alignment=flet.alignment.center),
-                                     flet.Column([flet.Text(self.temperature + "˚С", size=23, weight=flet.FontWeight.W_600, color="#333333"),
+                                     flet.Column([flet.Text(self.temperature, size=23, weight=flet.FontWeight.W_600, color="#333333"),
                                                   flet.Text("Температура", size=15, color="black")],
                                                  spacing=0),
                                  ], vertical_alignment=flet.CrossAxisAlignment.END),
@@ -366,3 +375,69 @@ class InfoView:
         else:
             e.control.scale = 1
         self.page.update()
+
+    def get_temperature(self):
+        cmd = "vcgencmd measure_temp"
+        result = subprocess.run(cmd, shell=True, text=True, capture_output=True)
+
+        temp = result.stdout.split("=")[1].strip()
+        return temp
+
+
+    # async def monitor_ips(self):
+    #     connections = {} #{"ip": datetime}
+    #
+    #     async def get_connections(port: int):
+    #         """Асинхронное получение активных подключений"""
+    #         proc = await asyncio.create_subprocess_shell(
+    #             f"sudo ss -tnp | grep ':{port} '",
+    #             stdout=asyncio.subprocess.PIPE,
+    #             stderr=asyncio.subprocess.PIPE
+    #         )
+    #         stdout, stderr = await proc.communicate()
+    #         if stderr:
+    #             return []
+    #
+    #         lines = stdout.decode().strip().splitlines()
+    #         active_ips = []
+    #         for line in lines:
+    #             parts = line.split()
+    #             if len(parts) >= 5:
+    #                 remote_addr = parts[4]  # например "192.157.13.0:53245"
+    #                 if ":" in remote_addr:
+    #                     ip, _ = remote_addr.rsplit(":", 1)  # оставляем только IP
+    #                     active_ips.append(ip)
+    #         return active_ips
+    #
+    #     async def monitor_connections():
+    #         """Асинхронный мониторинг только по IP"""
+    #         while True:
+    #             active_ips = await get_connections(self.app.DEFAULT_FLET_PORT)
+    #
+    #             # Добавляем новые IP
+    #             for ip in active_ips:
+    #                 if ip not in connections:
+    #                     connections[ip] = datetime.now()
+    #
+    #             # Удаляем неактивные IP
+    #             for ip in list(connections.keys()):
+    #                 if ip not in active_ips:
+    #                     del connections[ip]
+    #
+    #             # Очистка экрана
+    #             os.system("clear")
+    #
+    #             # Вывод таблицы
+    #             print("-" * 50)
+    #             print(f"{'IP-адрес':30} {'Время подключения'}")
+    #             print("-" * 50)
+    #
+    #             sorted_conns = sorted(connections.items(), key=lambda x: x[1], reverse=True)
+    #             self.local_ip = next(iter(sorted_conns))
+    #
+    #             for ip, ts in sorted_conns:
+    #                 print(f"{ip:30} {ts.strftime('%H:%M:%S')}")
+    #
+    #             await asyncio.sleep(2)
+    #
+    #     await monitor_connections()
