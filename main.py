@@ -141,6 +141,7 @@ class App(AppLayout):
         self.ip_dict = {} #{fd : "ip"}
         self.used_ip_dict = {}
         self.user_ip = self.get_user_ip()
+        self.local_ip = self.read_ip()
 
         self.appbar_items = [  # menu
             # self.login_profile_button,
@@ -259,12 +260,37 @@ class App(AppLayout):
 
                 # else:
                 #     return "False"
-            else:
-                return " - "
+
             # Берём максимальные ключи для каждого значения
         max_v = {value: max(keys) for value, keys in groups.items()}
         self.used_ip_dict.update(max_v)
 
-        return next(iter(max_v))
+        self.write_ip(next(iter(max_v)))
+
+        return next(iter(max_v)) if max_v else " - "
+
+    def read_ip(self):
+        # Проверяем, пустой ли файл
+        with open("ip.txt", "r", encoding="utf-8") as f:
+            ip = f.readline().strip()
+
+        # Если пустой — записываем None
+        if not ip:
+            return " - "
+        else:
+            return ip
+
+    def write_ip(self, ip):
+        with open("ip.txt", "r", encoding="utf-8") as f:
+            content = f.read()
+
+        if not content.strip():
+            # файл пустой → только новая строка
+            with open("ip.txt", "w", encoding="utf-8") as f:
+                f.write(ip)
+        else:
+            # файл НЕ пустой → дописать сверху
+            with open("ip.txt", "w", encoding="utf-8") as f:
+                f.write(ip + "\n" + content)
 
 flet.app(target=AuthorizationPage, view=flet.WEB_BROWSER, host= "0.0.0.0", port=flet_port, assets_dir="assets")
