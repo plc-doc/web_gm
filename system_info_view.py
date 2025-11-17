@@ -392,7 +392,7 @@ class InfoView:
 
     def get_ROM(self):
         result = subprocess.run(
-            ["df", "-b", "--output=size,used", "/dev/mmcblk0p2"],
+            ["df", "-B1", "--output=size,used", "/dev/mmcblk0p2"],
             capture_output=True,
             text=True
         )
@@ -400,19 +400,17 @@ class InfoView:
         lines = result.stdout.strip().splitlines()
         size, used = lines[1].split()  # строка 0 — заголовки
 
-        self.ROM_perc = float(used[:-1]) / float(size[:-1]) * 100
+        ROM_perc = float(used[:-1]) / float(size[:-1]) * 100
 
-        used = convert(used)[0]
-        used_union = convert(used)[1]
-        size = convert(size)[0]
-        size_union = convert(size)[1]
+        used, used_union = convert(float(used))
+        size, size_union = convert(float(size))
 
-        self.ROM = f"{used} {used_union}/\n{size} {size_union}"
+        ROM = f"{used} {used_union}/\n{size} {size_union}"
 
-        return self.ROM, self.ROM_perc
+        return ROM, round(ROM_perc, 2)
 
     def get_RAM(self):
-        cmd = "free -b"
+        cmd = "free -h"
         result = subprocess.run(
             cmd,
             shell=True,
@@ -429,14 +427,12 @@ class InfoView:
                 used = parts[2]  # 208Mi
                 break
 
-        self.ROM_perc = float(used[:-1]) / float(total[:-1]) * 100
+        self.RAM_perc = float(used[:-1]) / float(total[:-1]) * 100
 
-        used = convert(used)[0]
-        used_union = convert(used)[1]
-        total = convert(total)[0]
-        total_union = convert(total)[1]
+        used, used_union = convert(float(used))
+        total, total_union = convert(float(total))
 
-        self.ROM = f"{used} {used_union}/\n{total} {total_union}"
+        self.RAM = f"{used} {used_union}/\n{total} {total_union}"
 
         return self.RAM, round(self.RAM_perc, 2)
 
@@ -532,10 +528,12 @@ class InfoView:
 
 def ru_unit(value: str) -> str:
     units = {
-        "T": " Тб ",
         "G": " Гб ",
+        "Gi": " Гб ",
         "M": " Мб ",
+        "Mi": " Мб ",
         "K": " Кб ",
+        "Ki": " Кб ",
         "B": " байт "
     }
 
