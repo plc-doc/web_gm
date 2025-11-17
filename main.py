@@ -137,11 +137,11 @@ class App(AppLayout):
     def __init__(self, page: flet.Page):
         self.page = page
         self.page.on_route_change = self.route_change
-        self.DEFAULT_FLET_PORT = DEFAULT_FLET_PORT
-        self.ip_dict = {} #{fd : "ip"}
-        self.used_ip_dict = {}
-        self.user_ip = self.get_user_ip()
-        self.local_ip = self.read_ip()
+
+        # Словарь со значениями ip и fd на момент открытия веб-интерфейса
+        self.ip_dict = {} # {fd : "ip"}
+        self.get_user_ip()
+        self.local_ip = self.read_ip() # local computer ip
 
         self.appbar_items = [  # menu
             # self.login_profile_button,
@@ -210,87 +210,81 @@ class App(AppLayout):
 
         self.page.update()
 
-    # def get_user_ip(self):
-    #     cmd = f"sudo ss -tnp | grep {DEFAULT_FLET_PORT}"
-    #     result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
-    #
-    #     lines = result.stdout.strip().splitlines()
-    #     if not lines:
-    #         return " - "
-    #
-    #     first_line = lines[0]
-    #
-    #
-    #     match = re.search(r'\s+\d+\.\d+\.\d+\.\d+:\d+\s+(\d+\.\d+\.\d+\.\d+):\d+', first_line)
-    #     if match:
-    #         ip = match.group(1)
-    #         return ip
-    #     else:
-    #         return " x "
+    # Вызывается при каждом открытии веб-интерфейса
+    # Записывает в текстовый файл фактическое значение последнего добавленного ip адреса в список подключенных устройств
+
+    # Используется команда sudo ss -tnp для отображения информации о всех соединениях.
+    # Поиск выполняется с применением фильтра в виде номера порта (80)
+    # Пример строки:
+    # ESTAB 0   0   192.168.*.*:80   192.168.*.*:51059 users:(("python3",pid=2621099,fd=10))
+
+    # В каждой строке вывода находятся значения ip адреса и номер fd (не может повторяться).
+    # В методе находятся ip адреса, которых не было во время предыдущего соединения, и берется максимальное значение fd
 
     def get_user_ip(self):
+
+        # get the list of ip addresses from command line:
         cmd = f"sudo ss -tnp | grep {DEFAULT_FLET_PORT}"
         result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
 
         lines = result.stdout.strip().splitlines()
+
+        # dictionary for saving identical values in order to get correct
         groups = defaultdict(list)
 
         for line in lines:
-            match = re.search(r'\s(\d+\.\d+\.\d+\.\d+):\d+\s+users', line)
-            m = re.search(r'fd=(\d+)', line)
+            match = re.search(r'\s(\d+\.\d+\.\d+\.\d+):\d+\s+users', line) # getting ip
+            m = re.search(r'fd=(\d+)', line) # getting fd
             if match and m:
                 ip = match.group(1)
-                # if m:
                 fd = int(m.group(1))
-                # for key, value in ip_dict.items():
-                # if key == fd and value == ip:
-                #     continue
-                # else:
-                #     del ip_dict[key]
+
+                # if ip was in the list but now it is not, then delete it
                 for key, value in list(self.ip_dict.items()):
                     if fd in self.ip_dict:
-                        if value != ip:
+                        if value != ip: #fd may appear but ip may be changed
                             del self.ip_dict[fd]
 
-                # Группируем ключи по значениям, пропуская ключи из self.used_ip_dict
-                # for key, value in self.ip_dict.items():
+                # Группируем ключи по значениям, пропуская ключи из groups
                 if fd not in self.ip_dict:  # <-- пропускаем
                     groups[ip].append(fd)
-                    self.ip_dict[fd] = ip
+                    self.ip_dict[fd] = ip # adding new identical values to the list
 
-                # else:
-                #     return "False"
-
-            # Берём максимальные ключи для каждого значения
+        # Берём максимальные ключи для каждого значения
         max_v = {value: max(keys) for value, keys in groups.items()}
-        self.used_ip_dict.update(max_v)
 
+        # write new founded ip to txt file
         self.write_ip(next(iter(max_v)))
 
-        return next(iter(max_v)) if max_v else " - "
+        # return next(iter(max_v)) if max_v else " - "
 
+    # getting last added ip from txt file
     def read_ip(self):
         # Проверяем, пустой ли файл
-        with open("ip.txt", "r", encoding="utf-8") as f:
-            ip = f.readline().strip()
+        with open("assets/ip.txt", "r", encoding="utf-8") as f:
+            ip = f.readline().strip()   # get the first string in file
 
-        # Если пустой — записываем None
+        # Если пустой — записываем " - "
         if not ip:
             return " - "
         else:
             return ip
 
     def write_ip(self, ip):
-        with open("ip.txt", "r", encoding="utf-8") as f:
+        with open("assets/ip.txt", "r", encoding="utf-8") as f:
             content = f.read()
 
         if not content.strip():
             # файл пустой → только новая строка
-            with open("ip.txt", "w", encoding="utf-8") as f:
+            with open("assets/ip.txt", "w", encoding="utf-8") as f:
                 f.write(ip)
         else:
             # файл НЕ пустой → дописать сверху
-            with open("ip.txt", "w", encoding="utf-8") as f:
+            with open("assets/ip.txt", "w", encoding="utf-8") as f:
                 f.write(ip + "\n" + content)
+
+# def clear_file():
+#     with open("assets/ip.txt", "w") as f:
+#         f.write("")
 
 flet.app(target=AuthorizationPage, view=flet.WEB_BROWSER, host= "0.0.0.0", port=flet_port, assets_dir="assets")

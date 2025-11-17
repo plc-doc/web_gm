@@ -248,7 +248,9 @@ class InfoView:
                         flet.Row([
                             flet.Column([
                                 flet.Text("ПЗУ", color="black", size=18),
-                                flet.Text(self.get_ROM()[0], color="#333333", size=21, weight=flet.FontWeight.W_600)
+                                flet.Column(
+                                    [flet.Text("Используется:", color="black", size=15),
+                                    flet.Text(self.get_ROM()[0], color="#333333", size=21, weight=flet.FontWeight.W_600)])
                             ], alignment=flet.MainAxisAlignment.SPACE_BETWEEN, expand=True),
                             flet.Stack([
                                 self.ROM_chart,
@@ -297,7 +299,7 @@ class InfoView:
                     ],alignment=flet.MainAxisAlignment.SPACE_BETWEEN),
                     bgcolor=white,
                     width=91, height=91, border_radius=17,
-                    padding=flet.padding.Padding(12,18,38,15),
+                    padding=flet.padding.Padding(12,18,21,15),
                     animate_scale=flet.Animation(200, flet.AnimationCurve.LINEAR),
                     scale=flet.Scale(scale=1),
                     on_hover=self.animate
@@ -307,27 +309,30 @@ class InfoView:
         return row
 
     def port_info(self, name, speed, rx, tx, pack_rx, pack_tx):
-        if 1024 < rx <= 2**20:
-            rx_union = "Kб"
-            rx /= 1024
-            rx = str(round(rx, 2))
-        elif rx > 2**20:
-            rx_union = "Mб"
-            rx = rx/1024/1024
-            rx = str(round(rx, 2))
-        else:
-            rx_union = "б"
+        # if 1024 < rx <= 2**20:
+        #     rx_union = "Kб"
+        #     rx /= 1024
+        #     rx = str(round(rx, 2))
+        # elif rx > 2**20:
+        #     rx_union = "Mб"
+        #     rx = rx/1024/1024
+        #     rx = str(round(rx, 2))
+        # else:
+        #     rx_union = "б"
+        #
+        # if 1024 < tx <= 2**20:
+        #     tx_union = "Kб"
+        #     tx /= 1024
+        #     tx = str(round(tx, 2))
+        # elif tx > 2**20:
+        #     tx_union = "Mб"
+        #     tx = tx/1024/1024
+        #     tx = str(round(tx, 2))
+        # else:
+        #     tx_union = "б"
 
-        if 1024 < tx <= 2**20:
-            tx_union = "Kб"
-            tx /= 1024
-            tx = str(round(tx, 2))
-        elif tx > 2**20:
-            tx_union = "Mб"
-            tx = tx/1024/1024
-            tx = str(round(tx, 2))
-        else:
-            tx_union = "б"
+        rx, rx_union = convert(rx)
+        tx, tx_union = convert(tx)
 
         if name == "eth0":
             up_down = self.app.eth0.get_up_down()
@@ -387,7 +392,7 @@ class InfoView:
 
     def get_ROM(self):
         result = subprocess.run(
-            ["df", "-h", "--output=size,used", "/dev/mmcblk0p2"],
+            ["df", "-b", "--output=size,used", "/dev/mmcblk0p2"],
             capture_output=True,
             text=True
         )
@@ -395,15 +400,22 @@ class InfoView:
         lines = result.stdout.strip().splitlines()
         size, used = lines[1].split()  # строка 0 — заголовки
 
-        self.ROM = f"{ru_unit(used)}/\n{ru_unit(size)}"
         self.ROM_perc = float(used[:-1]) / float(size[:-1]) * 100
+
+        used = convert(used)[0]
+        used_union = convert(used)[1]
+        size = convert(size)[0]
+        size_union = convert(size)[1]
+
+        self.ROM = f"{used} {used_union}/\n{size} {size_union}"
 
         return self.ROM, self.ROM_perc
 
     def get_RAM(self):
-        cmd = "free -h"
+        cmd = "free -b"
         result = subprocess.run(
             cmd,
+            shell=True,
             capture_output=True,
             text=True
         )
@@ -417,10 +429,16 @@ class InfoView:
                 used = parts[2]  # 208Mi
                 break
 
-        self.RAM = f"{ru_unit(used)}/\n{ru_unit(total)}"
-        self.RAM_perc = float(used[:-1]) / float(total[:-1]) * 100
+        self.ROM_perc = float(used[:-1]) / float(total[:-1]) * 100
 
-        return self.RAM, self.RAM_perc
+        used = convert(used)[0]
+        used_union = convert(used)[1]
+        total = convert(total)[0]
+        total_union = convert(total)[1]
+
+        self.ROM = f"{used} {used_union}/\n{total} {total_union}"
+
+        return self.RAM, round(self.RAM_perc, 2)
 
     def read_cpu_stats(self):
         stats = {}
@@ -514,14 +532,28 @@ class InfoView:
 
 def ru_unit(value: str) -> str:
     units = {
-        "T": "Тб",
-        "G": "Гб",
-        "M": "Мб",
-        "K": "Кб",
-        "B": "байт"
+        "T": " Тб ",
+        "G": " Гб ",
+        "M": " Мб ",
+        "K": " Кб ",
+        "B": " байт "
     }
 
     unit = value[-1]     # последний символ
     number = value[:-1]  # всё перед ним
 
     return number + units.get(unit, unit)
+
+def convert(value):
+    if 1024 < value <= 2 ** 20:
+        union = "Kб"
+        value /= 1024
+        value = str(round(value, 2))
+    elif value > 2 ** 20:
+        union = "Mб"
+        value = value / 1024 / 1024
+        value = str(round(value, 2))
+    else:
+        union = "б"
+
+    return value, union
