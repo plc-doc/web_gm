@@ -1,6 +1,6 @@
-
 import subprocess
-
+import time
+import re
 
 import flet
 
@@ -21,19 +21,20 @@ class InfoView:
         self.temperature = self.get_temperature()
         self.date = "24.10.2025"
         self.time = "13:33:33"
-        self.work_time = "0 дней 15 ч 37 мин"
-        self.RAM = "184 МиБ/\n1,92 ГиБ"
-        self.ROM = "184 МиБ/\n1,92 ГиБ"
+        self.work_time = self.get_time_of_working()
+        self.RAM = self.get_RAM()[0]
+        self.ROM = self.get_ROM()[0]
         self.run_out = 0.0
         self.battery_voltage = 3000
         # self.bar = BarChart(self.battery, self.page)
         # self.battery_chart = self.bar.chart
         self.battery_chart = BarChart(self.battery_voltage).chart
-        self.RAM_perc = 95
+        self.RAM_perc = self.get_RAM()[1]
         self.RAM_chart = Curve(orange, self.RAM_perc).chart
-        self.ROM_perc = 43
-        self.ROM_chart = Curve("#8BBAE0", self.ROM_perc).chart
-        self.cpu = {"1 мин" : 0.37, "5 мин" : 0.26, "15 мин" : 0.25}
+        self.ROM_perc = self.get_ROM()[1]
+        self.ROM_chart = Curve("#8BBAE0",  self.ROM_perc).chart
+        # self.cpu = {"1 мин" : 0.37, "5 мин" : 0.26, "15 мин" : 0.25}
+        self.cpu = self.cpu_usage_per_core()
 
         # self.ip = ""
         # asyncio.run(self.monitor_ips())
@@ -53,7 +54,7 @@ class InfoView:
                                                        alignment=flet.alignment.center,),
                                         flet.Icon(flet.Icons.THERMOSTAT_ROUNDED, color="#333333", size=28)
                                     ], alignment=flet.alignment.center),
-                                     flet.Column([flet.Text(self.temperature, size=23, weight=flet.FontWeight.W_600, color="#333333"),
+                                     flet.Column([flet.Text(self.get_temperature(), size=23, weight=flet.FontWeight.W_600, color="#333333"),
                                                   flet.Text("Температура", size=15, color="black")],
                                                  spacing=0),
                                  ], vertical_alignment=flet.CrossAxisAlignment.END),
@@ -203,7 +204,7 @@ class InfoView:
                 flet.Column([
                     flet.Container(
                         flet.Column([
-                            flet.Text("Средняя загрузка процессора", color="black", size=18),
+                            flet.Text("Нагрузка по ядрам", color="black", size=18),
                             self._cpu()
                         ],alignment=flet.MainAxisAlignment.SPACE_BETWEEN),
                         bgcolor="#D9D9D9",width=436,height=194,border_radius=35,
@@ -221,7 +222,10 @@ class InfoView:
                         flet.Row([
                             flet.Column([
                                 flet.Text("ОЗУ", color="black", size=18),
-                                flet.Text(self.RAM,color="#333333", size=21, weight=flet.FontWeight.W_600)
+                                flet.Column(
+                                    [flet.Text("Используется:", color="black", size=15),
+                                    flet.Text(self.RAM,color="#333333", size=21, weight=flet.FontWeight.W_600)],
+                                )
                             ],alignment=flet.MainAxisAlignment.SPACE_BETWEEN, expand=True),
                             flet.Stack([
                                 self.RAM_chart,
@@ -244,11 +248,11 @@ class InfoView:
                         flet.Row([
                             flet.Column([
                                 flet.Text("ПЗУ", color="black", size=18),
-                                flet.Text(self.ROM, color="#333333", size=21, weight=flet.FontWeight.W_600)
+                                flet.Text(self.get_ROM()[0], color="#333333", size=21, weight=flet.FontWeight.W_600)
                             ], alignment=flet.MainAxisAlignment.SPACE_BETWEEN, expand=True),
                             flet.Stack([
                                 self.ROM_chart,
-                                flet.Text(f"{self.ROM_perc} %", color="#333333", size=21, weight=flet.FontWeight.W_600,
+                                flet.Text(f"{self.get_ROM()[1]} %", color="#333333", size=21, weight=flet.FontWeight.W_600,
                                           left=80)
                             ], alignment=flet.alignment.bottom_center)
                         ], vertical_alignment=flet.CrossAxisAlignment.END,
@@ -284,16 +288,16 @@ class InfoView:
 
     def _cpu(self):
         row = flet.Row(spacing=8)
-        for minute, cpu in self.cpu.items():
+        for core, cpu in self.cpu.items():
             row.controls.append (
                 flet.Container(
                     flet.Column([
-                        flet.Text(minute, color=orange, size=15),
-                        flet.Text(str(cpu), color="#333333", size=21, weight=flet.FontWeight.W_600)
+                        flet.Text(core, color=orange, size=15),
+                        flet.Text(str(cpu) + " %", color="#333333", size=21, weight=flet.FontWeight.W_600)
                     ],alignment=flet.MainAxisAlignment.SPACE_BETWEEN),
                     bgcolor=white,
-                    width=129, height=101.53, border_radius=17,
-                    padding=flet.padding.Padding(16,18,38,15),
+                    width=91, height=91, border_radius=17,
+                    padding=flet.padding.Padding(12,18,38,15),
                     animate_scale=flet.Animation(200, flet.AnimationCurve.LINEAR),
                     scale=flet.Scale(scale=1),
                     on_hover=self.animate
@@ -381,61 +385,143 @@ class InfoView:
         temp = result.stdout.split("=")[1].strip()
         return temp
 
+    def get_ROM(self):
+        result = subprocess.run(
+            ["df", "-h", "--output=size,used", "/dev/mmcblk0p2"],
+            capture_output=True,
+            text=True
+        )
 
-    # async def monitor_ips(self):
-    #     connections = {} #{"ip": datetime}
-    #
-    #     async def get_connections(port: int):
-    #         """Асинхронное получение активных подключений"""
-    #         proc = await asyncio.create_subprocess_shell(
-    #             f"sudo ss -tnp | grep ':{port} '",
-    #             stdout=asyncio.subprocess.PIPE,
-    #             stderr=asyncio.subprocess.PIPE
-    #         )
-    #         stdout, stderr = await proc.communicate()
-    #         if stderr:
-    #             return []
-    #
-    #         lines = stdout.decode().strip().splitlines()
-    #         active_ips = []
-    #         for line in lines:
-    #             parts = line.split()
-    #             if len(parts) >= 5:
-    #                 remote_addr = parts[4]  # например "192.157.13.0:53245"
-    #                 if ":" in remote_addr:
-    #                     ip, _ = remote_addr.rsplit(":", 1)  # оставляем только IP
-    #                     active_ips.append(ip)
-    #         return active_ips
-    #
-    #     async def monitor_connections():
-    #         """Асинхронный мониторинг только по IP"""
-    #         while True:
-    #             active_ips = await get_connections(self.app.DEFAULT_FLET_PORT)
-    #
-    #             # Добавляем новые IP
-    #             for ip in active_ips:
-    #                 if ip not in connections:
-    #                     connections[ip] = datetime.now()
-    #
-    #             # Удаляем неактивные IP
-    #             for ip in list(connections.keys()):
-    #                 if ip not in active_ips:
-    #                     del connections[ip]
-    #
-    #             # Очистка экрана
-    #             os.system("clear")
-    #
-    #             # Вывод таблицы
-    #             print("-" * 50)
-    #             print(f"{'IP-адрес':30} {'Время подключения'}")
-    #             print("-" * 50)
-    #
-    #             sorted_conns = sorted(connections.items(), key=lambda x: x[1], reverse=True)
-    #             self.local_ip = next(iter(sorted_conns))
-    #
-    #             for ip, ts in sorted_conns:
-    #                 print(f"{ip:30} {ts.strftime('%H:%M:%S')}")
-    #
-    #             await asyncio.sleep(2)
-    #
-    #     await monitor_connections()
+        lines = result.stdout.strip().splitlines()
+        size, used = lines[1].split()  # строка 0 — заголовки
+
+        self.ROM = f"{ru_unit(used)}/\n{ru_unit(size)}"
+        self.ROM_perc = float(used[:-1]) / float(size[:-1]) * 100
+
+        return self.ROM, self.ROM_perc
+
+    def get_RAM(self):
+        cmd = "free -h"
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True
+        )
+
+        lines = result.stdout.strip().splitlines()
+
+        for line in lines:
+            if line.startswith("Mem:"):
+                parts = line.split()
+                total = parts[1]  # 3.7Gi
+                used = parts[2]  # 208Mi
+                break
+
+        self.RAM = f"{ru_unit(used)}/\n{ru_unit(total)}"
+        self.RAM_perc = float(used[:-1]) / float(total[:-1]) * 100
+
+        return self.RAM, self.RAM_perc
+
+    def read_cpu_stats(self):
+        stats = {}
+        with open("/proc/stat", "r") as f:
+            for line in f:
+                if line.startswith("cpu") and line[3].isdigit():  # cpu0, cpu1, ...
+                    parts = line.split()
+                    cpu = parts[0]
+                    values = list(map(int, parts[1:]))
+
+                    total = sum(values)
+                    idle = values[3] + values[4]  # idle + iowait
+
+                    stats[cpu] = (total, idle)
+        return stats
+
+    def cpu_usage_per_core(self, interval=1.0):
+        before = self.read_cpu_stats()
+        time.sleep(interval)
+        after = self.read_cpu_stats()
+
+        usage = {}
+        for cpu in before:
+            total_diff = after[cpu][0] - before[cpu][0]
+            idle_diff = after[cpu][1] - before[cpu][1]
+
+            if total_diff == 0:
+                percent = 0.0
+            else:
+                percent = (1 - idle_diff / total_diff) * 100
+
+            usage[cpu] = round(percent, 2)
+
+        return usage
+
+    def russian_plural(self, number, forms):
+        if 11 <= (number % 100) <= 19:
+            return forms[2]
+        elif number % 10 == 1:
+            return forms[0]
+        elif 2 <= (number % 10) <= 4:
+            return forms[1]
+        else:
+            return forms[2]
+
+    def get_time_of_working(self):
+        # получаем вывод uptime
+        result = subprocess.run(["uptime"], capture_output=True, text=True)
+        text = result.stdout.strip()
+
+        # достаем часть после "up" и до ",  <число> user"
+        match = re.search(r"up (.*?),\s+\d+ user", text)
+        if not match:
+            return "Не удалось распознать uptime"
+
+        up_str = match.group(1).strip()
+
+        days = hours = minutes = 0
+
+        # проверяем разные форматы
+        # 1) "X days, HH:MM"
+        match1 = re.match(r"(\d+)\s+days?,\s+(\d+):(\d+)", up_str)
+        if match1:
+            days = int(match1.group(1))
+            hours = int(match1.group(2))
+            minutes = int(match1.group(3))
+        else:
+            # 2) "X days, Y min"
+            match2 = re.match(r"(\d+)\s+days?,\s+(\d+)\s+min", up_str)
+            if match2:
+                days = int(match2.group(1))
+                minutes = int(match2.group(2))
+            else:
+                # 3) "HH:MM"
+                match3 = re.match(r"(\d+):(\d+)", up_str)
+                if match3:
+                    hours = int(match3.group(1))
+                    minutes = int(match3.group(2))
+                else:
+                    # 4) "Y min"
+                    match4 = re.match(r"(\d+)\s+min", up_str)
+                    if match4:
+                        minutes = int(match4.group(1))
+
+        # склонение
+        days_str = self.russian_plural(days, ("день", "дня", "дней"))
+        hours_str = self.russian_plural(hours, ("час", "часа", "часов"))
+        minutes_str = self.russian_plural(minutes, ("минута", "минуты", "минут"))
+
+        return f"{days} {days_str} {hours} {hours_str} {minutes} {minutes_str}"
+
+def ru_unit(value: str) -> str:
+    units = {
+        "T": "Тб",
+        "G": "Гб",
+        "M": "Мб",
+        "K": "Кб",
+        "B": "байт"
+    }
+
+    unit = value[-1]     # последний символ
+    number = value[:-1]  # всё перед ним
+
+    return number + units.get(unit, unit)
