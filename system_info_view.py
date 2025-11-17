@@ -142,7 +142,7 @@ class InfoView:
                         flet.Container(
                             flet.Column([
                                 flet.Text("Время работы", color="black", size=18),
-                                flet.Text(self.work_time, color="#333333", size=21, weight=flet.FontWeight.W_600)
+                                flet.Text(self.work_time, color="#333333", size=20, weight=flet.FontWeight.W_600)
                             ]),
                             bgcolor="#D9D9D9",width=304,height=94,border_radius=35,
                             padding=flet.padding.Padding(29,17,16,15),
@@ -400,7 +400,7 @@ class InfoView:
         lines = result.stdout.strip().splitlines()
         size, used = lines[1].split()  # строка 0 — заголовки
 
-        ROM_perc = float(used[:-1]) / float(size[:-1]) * 100
+        ROM_perc = float(used) / float(size) * 100
 
         used, used_union = convert(float(used))
         size, size_union = convert(float(size))
@@ -423,17 +423,16 @@ class InfoView:
         for line in lines:
             if line.startswith("Mem:"):
                 parts = line.split()
-                total = parts[1]  # 3.7Gi
-                used = parts[2]  # 208Mi
+                total = parts[1]
+                used = parts[2]  
                 break
 
-
+        self.RAM_perc = float(used) / float(total) * 100
 
         used, used_union = convert(float(used))
         total, total_union = convert(float(total))
 
         self.RAM = f"{used} {used_union}/\n{total} {total_union}"
-        self.RAM_perc = float(used[:-1]) / float(total[:-1]) * 100
 
         return self.RAM, round(self.RAM_perc, 2)
 
