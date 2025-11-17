@@ -410,7 +410,7 @@ class InfoView:
         return ROM, round(ROM_perc, 2)
 
     def get_RAM(self):
-        cmd = "free -h"
+        cmd = "free -b"
         result = subprocess.run(
             cmd,
             shell=True,
@@ -427,12 +427,13 @@ class InfoView:
                 used = parts[2]  # 208Mi
                 break
 
-        self.RAM_perc = float(used[:-1]) / float(total[:-1]) * 100
+
 
         used, used_union = convert(float(used))
         total, total_union = convert(float(total))
 
         self.RAM = f"{used} {used_union}/\n{total} {total_union}"
+        self.RAM_perc = float(used[:-1]) / float(total[:-1]) * 100
 
         return self.RAM, round(self.RAM_perc, 2)
 
@@ -466,7 +467,7 @@ class InfoView:
             else:
                 percent = (1 - idle_diff / total_diff) * 100
 
-            usage[cpu] = round(percent, 2)
+            usage[cpu] = round(percent, 1)
 
         return usage
 
@@ -534,7 +535,7 @@ def ru_unit(value: str) -> str:
         "Mi": " Мб ",
         "K": " Кб ",
         "Ki": " Кб ",
-        "B": " байт "
+        "B": " б "
     }
 
     unit = value[-1]     # последний символ
@@ -543,13 +544,17 @@ def ru_unit(value: str) -> str:
     return number + units.get(unit, unit)
 
 def convert(value):
-    if 1024 < value <= 2 ** 20:
+    if 1024 <= value < 2 ** 20:
         union = "Kб"
         value /= 1024
         value = str(round(value, 2))
-    elif value > 2 ** 20:
+    elif 2 ** 20 <= value < 2**30 :
         union = "Mб"
         value = value / 1024 / 1024
+        value = str(round(value, 2))
+    elif value >= 2 ** 30:
+        union = "Гб"
+        value = value / 1024 / 1024 / 1024
         value = str(round(value, 2))
     else:
         union = "б"
