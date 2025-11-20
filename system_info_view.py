@@ -67,10 +67,12 @@ class InfoView:
 
                             flet.IconButton(icon=flet.Icons.REFRESH_ROUNDED, style=flet.ButtonStyle(color=orange), icon_size=25)
                     ],
-                    vertical_alignment=flet.CrossAxisAlignment.END, alignment=flet.MainAxisAlignment.CENTER,spacing=279
+                    vertical_alignment=flet.CrossAxisAlignment.END, alignment=flet.MainAxisAlignment.CENTER,spacing=249
                 ),
             )
         )
+
+        self.iface_data = self.get_iface_data()
 
         self.info_containers=(
             flet.Row([
@@ -151,12 +153,20 @@ class InfoView:
                        )
                     ],spacing=15,vertical_alignment=flet.CrossAxisAlignment.CENTER),
                     flet.Row([
-                        self.port_info("eth0", 1000, 82392467, 42.1, 1086867, 150934),
-                        self.port_info("eth1", 100, 0,0,0,0)
+                        self.port_info("eth0", 1000,
+                                       self.iface_data["eth0"]["rx_bytes"],self.iface_data["eth0"]["tx_bytes"],
+                                       self.iface_data["eth0"]["rx_packets"], self.iface_data["eth0"]["tx_packets"]),
+                        self.port_info("eth1", 100,
+                                       self.iface_data["eth1"]["rx_bytes"],self.iface_data["eth1"]["tx_bytes"],
+                                       self.iface_data["eth1"]["rx_packets"], self.iface_data["eth1"]["tx_packets"])
                     ], spacing=15),
                     flet.Row([
-                        self.port_info("eth2", 100, 0,0, 0,0),
-                        self.port_info("ecat", 100, 0,0,0,0)
+                        self.port_info("eth2", 100,
+                                       self.iface_data["eth2"]["rx_bytes"],self.iface_data["eth2"]["tx_bytes"],
+                                       self.iface_data["eth2"]["rx_packets"], self.iface_data["eth2"]["tx_packets"]),
+                        self.port_info("ecat", 100,
+                                       self.iface_data["ecat"]["rx_bytes"],self.iface_data["ecat"]["tx_bytes"],
+                                       self.iface_data["ecat"]["rx_packets"], self.iface_data["ecat"]["tx_packets"])
                     ],spacing=15),
                     flet.Row([
                         flet.Container(
@@ -316,8 +326,6 @@ class InfoView:
         else:
             up_down = self.app.ecat.get_up_down()
 
-
-
         return flet.Container(
                     flet.Column([
                         flet.Row([
@@ -416,7 +424,7 @@ class InfoView:
         cmd = 'date "+%d.%m.%Y %T"'
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
-        return result.stdout # 18.11.2025 12:43:49
+        return result.stdout.strip() # 18.11.2025 12:43:49
 
 
     def read_cpu_stats(self):
@@ -509,33 +517,63 @@ class InfoView:
 
         return f"{days} {days_str} {hours} {hours_str} {minutes} {minutes_str}"
 
-    def get_all_net_stats(self, iface):
+    # def get_all_net_stats(self, iface):
+    #
+    #     def read_stat(iface, stat):
+    #         try:
+    #             with open(f"/sys/class/net/{iface}/statistics/{stat}") as f:
+    #                 return int(f.read().strip())
+    #         except FileNotFoundError:
+    #             return None
+    #
+    #     stats = {iface: {
+    #         "rx_bytes": read_stat(iface, "rx_bytes"),
+    #         "rx_packets": read_stat(iface, "rx_packets"),
+    #         "tx_bytes": read_stat(iface, "tx_bytes"),
+    #         "tx_packets": read_stat(iface, "tx_packets"),
+    #     }}
+    #
+    #     return stats
+    #
+    # async def get_network(self, iface, interval=3):
+    #     """Асинхронный монитор сетевых интерфейсов с обновлением каждые interval секунд."""
+    #     while True:
+    #         stats = self.get_all_net_stats(iface)
+    #
+    #         for iface, s in stats.items():
+    #             return s['rx_bytes'], s['rx_packets'], s['tx_bytes'], s['tx_packets']
+    #
+    #         await asyncio.sleep(interval)
 
-        def read_stat(iface, stat):
-            try:
-                with open(f"/sys/class/net/{iface}/statistics/{stat}") as f:
-                    return int(f.read().strip())
-            except FileNotFoundError:
-                return None
+    def get_iface_data(self):
 
-        stats = {iface: {
-            "rx_bytes": read_stat(iface, "rx_bytes"),
-            "rx_packets": read_stat(iface, "rx_packets"),
-            "tx_bytes": read_stat(iface, "tx_bytes"),
-            "tx_packets": read_stat(iface, "tx_packets"),
-        }}
+        cmd = "ip -s link"
+        r = subprocess.run(cmd, shell=True, text=True, capture_output=True)
 
-        return stats
+        text = r.stdout
+        result = {}
+        interfaces = ["eth0", "eth1", "eth2", "ecat"]
 
-    async def get_network(self, iface, interval=3):
-        """Асинхронный монитор сетевых интерфейсов с обновлением каждые interval секунд."""
-        while True:
-            stats = self.get_all_net_stats(iface)
+        for iface in interfaces:
+            # Находим блок интерфейса
+            pattern = rf"{iface}:[\s\S]*?RX:[\s\S]*?TX:[\s\S]*?(?=\n\d+:|\Z)"
+            match = re.search(pattern, text)
+            if not match:
+                continue
+            block = match.group()
 
-            for iface, s in stats.items():
-                return s['rx_bytes'], s['rx_packets'], s['tx_bytes'], s['tx_packets']
+            # Извлекаем RX и TX
+            rx = re.search(r"RX:\s+bytes\s+packets.*?\n\s*([\d]+)\s+([\d]+)", block)
+            tx = re.search(r"TX:\s+bytes\s+packets.*?\n\s*([\d]+)\s+([\d]+)", block)
 
-            await asyncio.sleep(interval)
+            result[iface] = {
+                "rx_bytes": int(rx.group(1)) if rx else 0,
+                "rx_packets": int(rx.group(2)) if rx else 0,
+                "tx_bytes": int(tx.group(1)) if tx else 0,
+                "tx_packets": int(tx.group(2)) if tx else 0,
+            }
+
+        return result
 
 def convert(value):
     if 1024 <= value < 2 ** 20:
