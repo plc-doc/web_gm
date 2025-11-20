@@ -1,3 +1,4 @@
+import asyncio
 import subprocess
 import time
 import re
@@ -19,25 +20,17 @@ class InfoView:
 
         self.local_ip = self.app.local_ip
         self.temperature = self.get_temperature()
-        self.date = "24.10.2025"
-        self.time = "13:33:33"
+        self.date_time = self.get_date_time()
         self.work_time = self.get_time_of_working()
-        self.RAM = self.get_RAM()[0]
-        self.ROM = self.get_ROM()[0]
+        self.RAM, self.RAM_perc = self.get_RAM()
+        self.ROM, self.ROM_perc = self.get_ROM()
         self.run_out = 0.0
         self.battery_voltage = 3000
-        # self.bar = BarChart(self.battery, self.page)
-        # self.battery_chart = self.bar.chart
-        self.battery_chart = BarChart(self.battery_voltage).chart
-        self.RAM_perc = self.get_RAM()[1]
-        self.RAM_chart = Curve(orange, self.RAM_perc).chart
-        self.ROM_perc = self.get_ROM()[1]
-        self.ROM_chart = Curve("#8BBAE0",  self.ROM_perc).chart
-        # self.cpu = {"1 мин" : 0.37, "5 мин" : 0.26, "15 мин" : 0.25}
-        self.cpu = self.cpu_usage_per_core()
 
-        # self.ip = ""
-        # asyncio.run(self.monitor_ips())
+        self.battery_chart = BarChart(self.battery_voltage).chart
+        self.RAM_chart = Curve(orange, self.RAM_perc).chart
+        self.ROM_chart = Curve("#8BBAE0", self.ROM_perc).chart
+        self.cpu = self.cpu_usage_per_core() # {"core": percentage}
 
         self.upper_row = (
             flet.Container(
@@ -65,7 +58,7 @@ class InfoView:
                                          flet.Icon(flet.Icons.CALENDAR_MONTH_ROUNDED, color="#333333", size=23)
                                      ], alignment=flet.alignment.center),
                                      flet.Column([
-                                         flet.Text(f"{self.date}\n{self.time}", size=23, weight=flet.FontWeight.W_600, color="#333333"),
+                                         flet.Text(self.date_time, size=23, weight=flet.FontWeight.W_600, color="#333333"),
                                          flet.Text("Дата и время", size=15, color="black")
                                      ],spacing=0),
                                 ],
@@ -92,7 +85,8 @@ class InfoView:
                                 ], alignment=flet.alignment.center),
                                 flet.Column([
                                     flet.Text("Имя хоста", color=orange, size=15),
-                                    flet.Text("sa.local", color="#333333", size=21, weight=flet.FontWeight.W_600)
+                                    flet.Text(f"{subprocess.run('hostname', shell=True, text=True, capture_output=True).stdout.strip()}.local",
+                                              color="#333333", size=21, weight=flet.FontWeight.W_600)
                                 ], alignment=flet.MainAxisAlignment.CENTER
                                 )
                             ],vertical_alignment=flet.CrossAxisAlignment.CENTER, spacing=40),
@@ -309,27 +303,6 @@ class InfoView:
         return row
 
     def port_info(self, name, speed, rx, tx, pack_rx, pack_tx):
-        # if 1024 < rx <= 2**20:
-        #     rx_union = "Kб"
-        #     rx /= 1024
-        #     rx = str(round(rx, 2))
-        # elif rx > 2**20:
-        #     rx_union = "Mб"
-        #     rx = rx/1024/1024
-        #     rx = str(round(rx, 2))
-        # else:
-        #     rx_union = "б"
-        #
-        # if 1024 < tx <= 2**20:
-        #     tx_union = "Kб"
-        #     tx /= 1024
-        #     tx = str(round(tx, 2))
-        # elif tx > 2**20:
-        #     tx_union = "Mб"
-        #     tx = tx/1024/1024
-        #     tx = str(round(tx, 2))
-        # else:
-        #     tx_union = "б"
 
         rx, rx_union = convert(rx)
         tx, tx_union = convert(tx)
@@ -342,6 +315,8 @@ class InfoView:
             up_down = self.app.eth2.get_up_down()
         else:
             up_down = self.app.ecat.get_up_down()
+
+
 
         return flet.Container(
                     flet.Column([
@@ -424,7 +399,7 @@ class InfoView:
             if line.startswith("Mem:"):
                 parts = line.split()
                 total = parts[1]
-                used = parts[2]  
+                used = parts[2]
                 break
 
         self.RAM_perc = float(used) / float(total) * 100
@@ -435,6 +410,14 @@ class InfoView:
         self.RAM = f"{used} {used_union}/\n{total} {total_union}"
 
         return self.RAM, round(self.RAM_perc, 2)
+
+    def get_date_time(self):
+        # cmd w/out seconds: date "+%d.%m.%Y %H:%M"
+        cmd = 'date "+%d.%m.%Y %T"'
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
+        return result.stdout # 18.11.2025 12:43:49
+
 
     def read_cpu_stats(self):
         stats = {}
@@ -526,21 +509,33 @@ class InfoView:
 
         return f"{days} {days_str} {hours} {hours_str} {minutes} {minutes_str}"
 
-def ru_unit(value: str) -> str:
-    units = {
-        "G": " Гб ",
-        "Gi": " Гб ",
-        "M": " Мб ",
-        "Mi": " Мб ",
-        "K": " Кб ",
-        "Ki": " Кб ",
-        "B": " б "
-    }
+    def get_all_net_stats(self, iface):
 
-    unit = value[-1]     # последний символ
-    number = value[:-1]  # всё перед ним
+        def read_stat(iface, stat):
+            try:
+                with open(f"/sys/class/net/{iface}/statistics/{stat}") as f:
+                    return int(f.read().strip())
+            except FileNotFoundError:
+                return None
 
-    return number + units.get(unit, unit)
+        stats = {iface: {
+            "rx_bytes": read_stat(iface, "rx_bytes"),
+            "rx_packets": read_stat(iface, "rx_packets"),
+            "tx_bytes": read_stat(iface, "tx_bytes"),
+            "tx_packets": read_stat(iface, "tx_packets"),
+        }}
+
+        return stats
+
+    async def get_network(self, iface, interval=3):
+        """Асинхронный монитор сетевых интерфейсов с обновлением каждые interval секунд."""
+        while True:
+            stats = self.get_all_net_stats(iface)
+
+            for iface, s in stats.items():
+                return s['rx_bytes'], s['rx_packets'], s['tx_bytes'], s['tx_packets']
+
+            await asyncio.sleep(interval)
 
 def convert(value):
     if 1024 <= value < 2 ** 20:
