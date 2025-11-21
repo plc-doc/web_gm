@@ -34,7 +34,6 @@ class InfoView:
         self.cpu = None # {"core": percentage}
 
         self.get_values() # set values to parameters
-        self.get_updating_values()
 
         self.upper_row = (
             flet.Container(
@@ -296,6 +295,9 @@ class InfoView:
             )
         )
 
+        self.update_values()
+
+
     def get_values(self):
         self.local_ip = self.app.local_ip
 
@@ -308,7 +310,13 @@ class InfoView:
         self.RAM_chart = Curve(orange, self.RAM_perc).chart
         self.ROM_chart = Curve("#8BBAE0", self.ROM_perc).chart
 
-    def get_updating_values(self):
+        self.date_time = self.get_date_time()
+        self.temperature = self.get_temperature()
+        self.work_time = self.get_time_of_working()
+        self.cpu = self.cpu_usage_per_core()  # {"core": percentage}
+        self.iface_data = self.get_iface_data()
+
+    def update_values(self):
         global task
 
         async def update_values():
@@ -382,7 +390,7 @@ class InfoView:
 
         self.info_containers.controls[0].controls[4].controls[0].content.controls[1] = self.battery_chart
 
-        self.get_updating_values() # run continuous updating values
+        self.update_values() # run continuous updating values
 
         e.control.icon = flet.Icons.REFRESH_ROUNDED
         e.control.content = None
