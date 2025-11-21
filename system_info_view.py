@@ -15,22 +15,26 @@ green = "#59A343"
 
 class InfoView:
     def __init__(self, app, page):
+
         self.app = app
         self.page = page
 
-        self.local_ip = self.app.local_ip
-        self.temperature = self.get_temperature()
-        self.date_time = self.get_date_time()
-        self.work_time = self.get_time_of_working()
-        self.RAM, self.RAM_perc = self.get_RAM()
-        self.ROM, self.ROM_perc = self.get_ROM()
-        self.run_out = 0.0
-        self.battery_voltage = 3000
+        self.local_ip = None
+        self.temperature = None
+        self.date_time = None
+        self.work_time = None
+        self.ROM, self.ROM_perc = None, None
+        self.RAM, self.RAM_perc = None, None
+        self.run_out = None
+        self.battery_voltage = None
+        self.iface_data = {}
+        self.battery_chart = None
+        self.RAM_chart = None
+        self.ROM_chart = None
+        self.cpu = None # {"core": percentage}
 
-        self.battery_chart = BarChart(self.battery_voltage).chart
-        self.RAM_chart = Curve(orange, self.RAM_perc).chart
-        self.ROM_chart = Curve("#8BBAE0", self.ROM_perc).chart
-        self.cpu = self.cpu_usage_per_core() # {"core": percentage}
+        self.get_values() # set values to parameters
+        self.get_updating_values()
 
         self.upper_row = (
             flet.Container(
@@ -42,16 +46,17 @@ class InfoView:
                             ),
                             flet.Row([
                                  flet.Row(
-                                     [flet.Stack([
-                                        flet.Container(content=flet.CircleAvatar(bgcolor="#D9D9D9", radius=26),
-                                                       alignment=flet.alignment.center,),
-                                        flet.Icon(flet.Icons.THERMOSTAT_ROUNDED, color="#333333", size=28)
+                                [flet.Stack([
+                                            flet.Container(content=flet.CircleAvatar(bgcolor="#D9D9D9", radius=26),
+                                                           alignment=flet.alignment.center,),
+                                            flet.Icon(flet.Icons.THERMOSTAT_ROUNDED, color="#333333", size=28)
                                     ], alignment=flet.alignment.center),
-                                     flet.Column([flet.Text(self.get_temperature(), size=23, weight=flet.FontWeight.W_600, color="#333333"),
-                                                  flet.Text("Температура", size=15, color="black")],
-                                                 spacing=0),
-                                 ], vertical_alignment=flet.CrossAxisAlignment.END),
-                                 flet.Row([
+                                     flet.Column([
+                                        flet.Text(self.temperature, size=23, weight=flet.FontWeight.W_600, color="#333333"),
+                                        flet.Text("Температура", size=15, color="black")],
+                                        spacing=0),
+                                ], vertical_alignment=flet.CrossAxisAlignment.END),
+                                flet.Row([
                                      flet.Stack([
                                          flet.Container(content=flet.CircleAvatar(bgcolor="#D9D9D9", radius=26),
                                                        alignment=flet.alignment.center, ),
@@ -65,14 +70,13 @@ class InfoView:
                                  vertical_alignment=flet.CrossAxisAlignment.END),
                             ], vertical_alignment=flet.CrossAxisAlignment.END, spacing=82),
 
-                            flet.IconButton(icon=flet.Icons.REFRESH_ROUNDED, style=flet.ButtonStyle(color=orange), icon_size=25)
+                            flet.IconButton(icon=flet.Icons.REFRESH_ROUNDED, style=flet.ButtonStyle(color=orange), icon_size=25,
+                                            on_click=lambda e: self.update_data(e))
                     ],
                     vertical_alignment=flet.CrossAxisAlignment.END, alignment=flet.MainAxisAlignment.CENTER,spacing=249
                 ),
             )
         )
-
-        self.iface_data = self.get_iface_data()
 
         self.info_containers=(
             flet.Row([
@@ -254,11 +258,11 @@ class InfoView:
                                 flet.Text("ПЗУ", color="black", size=18),
                                 flet.Column(
                                     [flet.Text("Используется:", color="black", size=15),
-                                    flet.Text(self.get_ROM()[0], color="#333333", size=21, weight=flet.FontWeight.W_600)])
+                                    flet.Text(self.ROM, color="#333333", size=21, weight=flet.FontWeight.W_600)])
                             ], alignment=flet.MainAxisAlignment.SPACE_BETWEEN, expand=True),
                             flet.Stack([
                                 self.ROM_chart,
-                                flet.Text(f"{self.get_ROM()[1]} %", color="#333333", size=21, weight=flet.FontWeight.W_600,
+                                flet.Text(f"{self.ROM_perc} %", color="#333333", size=21, weight=flet.FontWeight.W_600,
                                           left=80)
                             ], alignment=flet.alignment.bottom_center)
                         ], vertical_alignment=flet.CrossAxisAlignment.END,
@@ -291,6 +295,114 @@ class InfoView:
                 ),expand=True, padding=20
             )
         )
+
+    def get_values(self):
+        self.local_ip = self.app.local_ip
+
+        self.RAM, self.RAM_perc = self.get_RAM()
+        self.ROM, self.ROM_perc = self.get_ROM()
+        self.run_out = 0.0
+
+        self.battery_voltage = 3000
+        self.battery_chart = BarChart(self.battery_voltage).chart
+        self.RAM_chart = Curve(orange, self.RAM_perc).chart
+        self.ROM_chart = Curve("#8BBAE0", self.ROM_perc).chart
+
+    def get_updating_values(self):
+        global task
+
+        async def update_values():
+            try:
+                while True:
+                    self.date_time = self.get_date_time()
+                    self.upper_row.content.controls[1].controls[1].controls[1].controls[0].value = self.date_time
+
+                    self.temperature = self.get_temperature()
+                    self.upper_row.content.controls[1].controls[0].controls[1].controls[0].value = self.temperature  # temperature
+
+                    self.work_time = self.get_time_of_working()
+                    self.info_containers.controls[0].controls[1].controls[1].content.controls[1].value = self.work_time
+
+                    self.cpu = self.cpu_usage_per_core()  # {"core": percentage}
+
+                    self.iface_data = self.get_iface_data()
+                    self.info_containers.controls[0].controls[2].controls[0] = (
+                        self.port_info("eth0", 1000,
+                                       self.iface_data["eth0"]["rx_bytes"],self.iface_data["eth0"]["tx_bytes"],
+                                       self.iface_data["eth0"]["rx_packets"], self.iface_data["eth0"]["tx_packets"]),)
+                    self.info_containers.controls[0].controls[2].controls[1] = (
+                        self.port_info("eth1", 100,
+                                       self.iface_data["eth1"]["rx_bytes"],self.iface_data["eth1"]["tx_bytes"],
+                                       self.iface_data["eth1"]["rx_packets"], self.iface_data["eth1"]["tx_packets"]))
+                    self.info_containers.controls[0].controls[3].controls[0] = (
+                        self.port_info("eth2", 100,
+                                        self.iface_data["eth2"]["rx_bytes"],self.iface_data["eth2"]["tx_bytes"],
+                                        self.iface_data["eth2"]["rx_packets"], self.iface_data["eth2"]["tx_packets"]),)
+                    self.info_containers.controls[0].controls[3].controls[1] = (
+                        self.port_info("ecat", 100,
+                                        self.iface_data["ecat"]["rx_bytes"],self.iface_data["ecat"]["tx_bytes"],
+                                        self.iface_data["ecat"]["rx_packets"], self.iface_data["ecat"]["tx_packets"]))
+
+                    self.page.update()
+
+                    await asyncio.sleep(3)
+            except Exception:
+                self.date_time.value = ""
+            except asyncio.CancelledError:
+                print("Task cancelled")
+
+        task = self.page.run_task(update_values)
+
+    def stop(self):
+        global task
+
+        if task:
+            task.cancel()
+            task = None
+
+    def update_data(self, e):
+        e.control.icon = None
+        e.control.content = flet.ProgressRing(width=22, height=22, color="orange", stroke_cap=flet.StrokeCap.ROUND, stroke_width=3)
+        e.control.on_click = None
+
+        self.page.update()
+
+        self.stop() # stop updating values in order not to overload console
+        self.get_values()
+
+        self.info_containers.controls[1].controls[1].content.controls[0].controls[1].controls[1].value = self.ROM
+        self.info_containers.controls[1].controls[1].content.controls[1].controls[1].value = f"{self.ROM_perc} %"
+        self.info_containers.controls[1].controls[1].content.controls[1].controls[0] = self.ROM_chart
+
+        self.info_containers.controls[1].controls[1].content.controls[0].controls[1].controls[1].value = self.RAM
+        self.info_containers.controls[1].controls[1].content.controls[1].controls[1] = f"{self.RAM_perc} %"
+        self.info_containers.controls[1].controls[1].content.controls[1].controls[0] = self.RAM_chart
+
+        self.info_containers.controls[0].controls[4].controls[1].content.controls[1].value = f"{str(self.run_out)} %"
+
+        self.info_containers.controls[0].controls[4].controls[0].content.controls[1] = self.battery_chart
+
+        self.get_updating_values() # run continuous updating values
+
+        e.control.icon = flet.Icons.REFRESH_ROUNDED
+        e.control.content = None
+        e.control.on_click = lambda e: self.update_data(e)
+
+        self.page.update()
+
+        # self.info_containers.controls[0].controls[2].controls[0] = self.port_info("eth0", 1000,
+        #                                self.iface_data["eth0"]["rx_bytes"],self.iface_data["eth0"]["tx_bytes"],
+        #                                self.iface_data["eth0"]["rx_packets"], self.iface_data["eth0"]["tx_packets"]),
+        # self.info_containers.controls[0].controls[2].controls[1] = self.port_info("eth1", 100,
+        #                                self.iface_data["eth1"]["rx_bytes"],self.iface_data["eth1"]["tx_bytes"],
+        #                                self.iface_data["eth1"]["rx_packets"], self.iface_data["eth1"]["tx_packets"])
+        # self.info_containers.controls[0].controls[3].controls[0] = self.port_info("eth2", 100,
+        #                                self.iface_data["eth2"]["rx_bytes"],self.iface_data["eth2"]["tx_bytes"],
+        #                                self.iface_data["eth2"]["rx_packets"], self.iface_data["eth2"]["tx_packets"]),
+        # self.info_containers.controls[0].controls[3].controls[1] = self.port_info("ecat", 100,
+        #                                self.iface_data["ecat"]["rx_bytes"],self.iface_data["ecat"]["tx_bytes"],
+        #                                self.iface_data["ecat"]["rx_packets"], self.iface_data["ecat"]["tx_packets"])
+
 
     def _cpu(self):
         row = flet.Row(spacing=8)
@@ -420,11 +532,11 @@ class InfoView:
         return self.RAM, round(self.RAM_perc, 2)
 
     def get_date_time(self):
-        # cmd w/out seconds: date "+%d.%m.%Y %H:%M"
-        cmd = 'date "+%d.%m.%Y %T"'
+        # cmd w/ seconds: date "+%d.%m.%Y %T"
+        cmd = 'date "+%d.%m.%Y %H:%M"'
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
-        return result.stdout.strip() # 18.11.2025 12:43:49
+        return result.stdout.strip() # 18.11.2025 12:43
 
 
     def read_cpu_stats(self):
