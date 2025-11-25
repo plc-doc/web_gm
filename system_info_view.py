@@ -6,15 +6,16 @@ import re
 import flet
 
 from charts import BarChart, Curve
-# from main import DEFAULT_FLET_PORT
 
 grey = "#565759"
 white = "#EAEAEA"
 orange = "#F7941E"
 green = "#59A343"
 
+task = None
+
 class InfoView:
-    def __init__(self, app, page):
+    def __init__(self, app, page: flet.Page):
 
         self.app = app
         self.page = page
@@ -23,8 +24,10 @@ class InfoView:
         self.temperature = None
         self.date_time = None
         self.work_time = None
-        self.ROM, self.ROM_perc = None, None
-        self.RAM, self.RAM_perc = None, None
+        self.ROM = None
+        self.ROM_perc = None
+        self.RAM = None
+        self.RAM_perc = None
         self.run_out = None
         self.battery_voltage = None
         self.iface_data = {}
@@ -332,30 +335,32 @@ class InfoView:
                     self.info_containers.controls[0].controls[1].controls[1].content.controls[1].value = self.work_time
 
                     self.cpu = self.cpu_usage_per_core()  # {"core": percentage}
+                    self.info_containers.controls[1].controls[0].content.controls[1] = self._cpu()
 
                     self.iface_data = self.get_iface_data()
-                    self.info_containers.controls[0].controls[2].controls[0] = (
+                    self.info_containers.controls[0].controls[2].controls = [
                         self.port_info("eth0", 1000,
                                        self.iface_data["eth0"]["rx_bytes"],self.iface_data["eth0"]["tx_bytes"],
-                                       self.iface_data["eth0"]["rx_packets"], self.iface_data["eth0"]["tx_packets"]),)
-                    self.info_containers.controls[0].controls[2].controls[1] = (
+                                       self.iface_data["eth0"]["rx_packets"], self.iface_data["eth0"]["tx_packets"]),
                         self.port_info("eth1", 100,
                                        self.iface_data["eth1"]["rx_bytes"],self.iface_data["eth1"]["tx_bytes"],
-                                       self.iface_data["eth1"]["rx_packets"], self.iface_data["eth1"]["tx_packets"]))
-                    self.info_containers.controls[0].controls[3].controls[0] = (
+                                       self.iface_data["eth1"]["rx_packets"], self.iface_data["eth1"]["tx_packets"])
+                    ]
+
+                    self.info_containers.controls[0].controls[3].controls = [
                         self.port_info("eth2", 100,
                                         self.iface_data["eth2"]["rx_bytes"],self.iface_data["eth2"]["tx_bytes"],
-                                        self.iface_data["eth2"]["rx_packets"], self.iface_data["eth2"]["tx_packets"]),)
-                    self.info_containers.controls[0].controls[3].controls[1] = (
+                                        self.iface_data["eth2"]["rx_packets"], self.iface_data["eth2"]["tx_packets"]),
                         self.port_info("ecat", 100,
                                         self.iface_data["ecat"]["rx_bytes"],self.iface_data["ecat"]["tx_bytes"],
-                                        self.iface_data["ecat"]["rx_packets"], self.iface_data["ecat"]["tx_packets"]))
+                                        self.iface_data["ecat"]["rx_packets"], self.iface_data["ecat"]["tx_packets"])
+                    ]
 
                     self.page.update()
 
-                    await asyncio.sleep(3)
+                    await asyncio.sleep(5)
             except Exception:
-                self.date_time.value = ""
+                self.date_time = ""
             except asyncio.CancelledError:
                 print("Task cancelled")
 
@@ -369,21 +374,24 @@ class InfoView:
             task = None
 
     def update_data(self, e):
+        global task
+
         e.control.icon = None
         e.control.content = flet.ProgressRing(width=22, height=22, color="orange", stroke_cap=flet.StrokeCap.ROUND, stroke_width=3)
         e.control.on_click = None
 
         self.page.update()
 
-        self.stop() # stop updating values in order not to overload console
+        if task:
+            self.stop() # stop updating values in order not to overload console
         self.get_values()
 
-        self.info_containers.controls[1].controls[1].content.controls[0].controls[1].controls[1].value = self.ROM
-        self.info_containers.controls[1].controls[1].content.controls[1].controls[1].value = f"{self.ROM_perc} %"
-        self.info_containers.controls[1].controls[1].content.controls[1].controls[0] = self.ROM_chart
+        self.info_containers.controls[1].controls[2].content.controls[0].controls[1].controls[1].value = self.ROM
+        self.info_containers.controls[1].controls[2].content.controls[1].controls[1].value = f"{self.ROM_perc} %"
+        self.info_containers.controls[1].controls[2].content.controls[1].controls[0] = self.ROM_chart
 
         self.info_containers.controls[1].controls[1].content.controls[0].controls[1].controls[1].value = self.RAM
-        self.info_containers.controls[1].controls[1].content.controls[1].controls[1] = f"{self.RAM_perc} %"
+        self.info_containers.controls[1].controls[1].content.controls[1].controls[1].value = f"{self.RAM_perc} %"
         self.info_containers.controls[1].controls[1].content.controls[1].controls[0] = self.RAM_chart
 
         self.info_containers.controls[0].controls[4].controls[1].content.controls[1].value = f"{str(self.run_out)} %"
@@ -394,23 +402,9 @@ class InfoView:
 
         e.control.icon = flet.Icons.REFRESH_ROUNDED
         e.control.content = None
-        e.control.on_click = lambda e: self.update_data(e)
+        e.control.on_click = lambda a: self.update_data(a)
 
         self.page.update()
-
-        # self.info_containers.controls[0].controls[2].controls[0] = self.port_info("eth0", 1000,
-        #                                self.iface_data["eth0"]["rx_bytes"],self.iface_data["eth0"]["tx_bytes"],
-        #                                self.iface_data["eth0"]["rx_packets"], self.iface_data["eth0"]["tx_packets"]),
-        # self.info_containers.controls[0].controls[2].controls[1] = self.port_info("eth1", 100,
-        #                                self.iface_data["eth1"]["rx_bytes"],self.iface_data["eth1"]["tx_bytes"],
-        #                                self.iface_data["eth1"]["rx_packets"], self.iface_data["eth1"]["tx_packets"])
-        # self.info_containers.controls[0].controls[3].controls[0] = self.port_info("eth2", 100,
-        #                                self.iface_data["eth2"]["rx_bytes"],self.iface_data["eth2"]["tx_bytes"],
-        #                                self.iface_data["eth2"]["rx_packets"], self.iface_data["eth2"]["tx_packets"]),
-        # self.info_containers.controls[0].controls[3].controls[1] = self.port_info("ecat", 100,
-        #                                self.iface_data["ecat"]["rx_bytes"],self.iface_data["ecat"]["tx_bytes"],
-        #                                self.iface_data["ecat"]["rx_packets"], self.iface_data["ecat"]["tx_packets"])
-
 
     def _cpu(self):
         row = flet.Row(spacing=8)
@@ -423,7 +417,7 @@ class InfoView:
                     ],alignment=flet.MainAxisAlignment.SPACE_BETWEEN),
                     bgcolor=white,
                     width=91, height=91, border_radius=17,
-                    padding=flet.padding.Padding(12,18,21,15),
+                    padding=flet.padding.Padding(12,18,0,15),
                     animate_scale=flet.Animation(200, flet.AnimationCurve.LINEAR),
                     scale=flet.Scale(scale=1),
                     on_hover=self.animate
@@ -636,34 +630,6 @@ class InfoView:
         minutes_str = self.russian_plural(minutes, ("минута", "минуты", "минут"))
 
         return f"{days} {days_str} {hours} {hours_str} {minutes} {minutes_str}"
-
-    # def get_all_net_stats(self, iface):
-    #
-    #     def read_stat(iface, stat):
-    #         try:
-    #             with open(f"/sys/class/net/{iface}/statistics/{stat}") as f:
-    #                 return int(f.read().strip())
-    #         except FileNotFoundError:
-    #             return None
-    #
-    #     stats = {iface: {
-    #         "rx_bytes": read_stat(iface, "rx_bytes"),
-    #         "rx_packets": read_stat(iface, "rx_packets"),
-    #         "tx_bytes": read_stat(iface, "tx_bytes"),
-    #         "tx_packets": read_stat(iface, "tx_packets"),
-    #     }}
-    #
-    #     return stats
-    #
-    # async def get_network(self, iface, interval=3):
-    #     """Асинхронный монитор сетевых интерфейсов с обновлением каждые interval секунд."""
-    #     while True:
-    #         stats = self.get_all_net_stats(iface)
-    #
-    #         for iface, s in stats.items():
-    #             return s['rx_bytes'], s['rx_packets'], s['tx_bytes'], s['tx_packets']
-    #
-    #         await asyncio.sleep(interval)
 
     def get_iface_data(self):
 

@@ -2,6 +2,7 @@ import flet
 
 import flet.canvas as cv
 
+import system_info_view
 from sidebar import Sidebar
 from interfaces import Interface
 from clock_view import ClockView
@@ -11,6 +12,8 @@ from system_info_view import InfoView
 grey = "#565759"
 white = "#EAEAEA"
 orange = "#F7941E"
+
+task = system_info_view.task
 
 class AppLayout(flet.Row):
     def __init__(self, app, page: flet.Page, *args, **kwargs):
@@ -29,7 +32,8 @@ class AppLayout(flet.Row):
 
         self.clock_view = ClockView(self, self.page).container
         self.reset_view = ResetView(self, self.page)
-        self.info_view = InfoView(self, self.page).layout
+        self._info_view = InfoView(self, self.page)
+        self.info_view = self._info_view.layout
         self.net_settings_view = (
             flet.Container(
                 flet.Column(
@@ -110,12 +114,17 @@ class AppLayout(flet.Row):
 
     def set_info_view(self):
         self.active_view = self.info_view
+        self._info_view.update_values() #start updating
         self.sidebar.rail.selected_index = 4
         self.page.update()
 
     def set_net_settings_view(self):
         self.active_view = self.net_settings_view
         self.sidebar.rail.selected_index = 0
+        # stop updating info_view
+        if system_info_view.task:
+            system_info_view.task.cancel()
+            system_info_view.task = None
         self.page.update()
 
     # def update_net_settings(self):
@@ -125,9 +134,18 @@ class AppLayout(flet.Row):
     def set_clock_view(self):
         self.active_view = self.clock_view
         self.sidebar.rail.selected_index = 1
+        # stop updating info_view
+        if system_info_view.task:
+            system_info_view.task.cancel()
+            system_info_view.task = None
         self.page.update()
 
     def set_reset_view(self):
+        # stop updating info_view
+        if system_info_view.task:
+            system_info_view.task.cancel()
+            system_info_view.task = None
+
         self.page.open(self.reset_view)
         self.reset_view.open = True
         self.page.update()
