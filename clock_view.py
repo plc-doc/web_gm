@@ -3,8 +3,11 @@ import re
 import time
 
 import flet
+import flet.canvas as cv
 import datetime
 import subprocess
+
+from PIL.ImageOps import expand
 
 grey = "#565759"
 white = "#EAEAEA"
@@ -46,10 +49,10 @@ class ClockView:
                                 width=240,
                                 menu_height = 400,
                                 options=self.get_time_zones_list(),
-                                border_radius=10,
+                                border_radius=30,
                                 color="black",
                                 text_size=14,
-                                bgcolor=grey,
+                                bgcolor="#C3C3C4",
                                 border_color="black",
                                 focused_border_color=white,
                                 filled =True,
@@ -73,95 +76,226 @@ class ClockView:
             content_padding= flet.padding.only(top=24.0, bottom=4.0),
         )
 
-        self.button_save = flet.ElevatedButton(text="Сохранить изменения",
-                                             bgcolor=orange,
-                                             color="black",
-                                             on_click= lambda e: self.handle_button_save()
-                                             )
-        self.button_cancel = flet.ElevatedButton(text="Отменить изменения",
+        self.button_save = flet.ElevatedButton(content=flet.Text("Сохранить", size=16),
+                                                bgcolor=orange,
+                                                width=202, height=41,
+                                                color="black",
+                                                on_click= lambda e: self.handle_button_save()
+                                                )
+        self.button_cancel = flet.ElevatedButton(content=flet.Text("Отменить", size=16),
                                                   bgcolor=white,
                                                   color=orange,
+                                                 style=flet.ButtonStyle(side=flet.BorderSide(2, orange)),
+                                                 width=202, height=41,
                                                   on_click= lambda e: self.handle_button_cancel()
                                                   )
 
-        self.switcher = flet.CupertinoSwitch(value= self.NTP_on_or_off(),active_color=orange, on_change=self.switch)
+        self.switcher = flet.CupertinoSwitch(value= self.NTP_on_or_off(),active_color="#59A343", on_change=self.switch)
 
         # Clock view layout
-        self.container = flet.Container(flet.Column(
-            controls=[
-                flet.Text("Настройка даты и времени", text_align=flet.alignment.center,color=orange,size=20),
-                flet.Container(
-                    shadow= flet.BoxShadow(color="#AAAAAA",
-                                          offset=flet.Offset(-1,1),
-                                          blur_radius=1, spread_radius=0),
-                    padding= 20,
-                    bgcolor="#CACACA",
-                    width=1050,
-                    height=293,
-                    border_radius=30,
-                    alignment=flet.alignment.center,
-                    content=flet.Column([
-                        flet.Text("Настройки локального времени", color= "black", size= 18),
-                        flet.Row([
-                            flet.Column([
-                                flet.Text("Дата", color="black"),
-                                flet.Text("Время", color="black")
-                            ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30),
-                            flet.Column([
-                                self.date_field,
-                                self.time_field
-                            ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing=30),
-                            # self.button
-                        ], alignment=flet.MainAxisAlignment.CENTER, spacing=220),
-                        flet.VerticalDivider(width= 946, color= "#ACACAC"),
-                        flet.Row([
-                            flet.Text("Часовой пояс", color="black"),
-                            self.time_zone
-                        ], alignment=flet.MainAxisAlignment.CENTER, spacing= 30)
-                    ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
-                ),
-                flet.Container(
-                    bgcolor="#CACACA",
-                    padding= 20,
-                    width=1050,
-                    height=400,
-                    shadow= flet.BoxShadow(color="#AAAAAA",
-                                          offset=flet.Offset(-1,1),
-                                          blur_radius=1, spread_radius=0),
-                    # height=self.app.page.height,
-                    border_radius=30,
-                    alignment=flet.alignment.center,
-                    content=flet.Column([
-                        flet.Text("Синхронизация времени", color="black", size=18),
-                        flet.Row([
-                            flet.Column([
-                                flet.Text("Синхронизация времени при помощи NTP", color="black"),
-                                flet.Row([
-                                    flet.Text("NTP - серверы", color= "black")
+        # self.container = (
+        #     flet.Container(flet.Column(
+        #     controls=[
+        #         flet.Text("Настройка даты и времени", text_align=flet.alignment.center,color=orange,size=20),
+        #         flet.Container(
+        #             shadow= flet.BoxShadow(color="#AAAAAA",
+        #                                   offset=flet.Offset(-1,1),
+        #                                   blur_radius=1, spread_radius=0),
+        #             padding= 20,
+        #             bgcolor="#CACACA",
+        #             width=1050,
+        #             height=293,
+        #             border_radius=30,
+        #             alignment=flet.alignment.center,
+        #             content=flet.Column([
+        #                 flet.Text("Настройки локального времени", color= "black", size= 18),
+        #                 flet.Row([
+        #                     flet.Column([
+        #                         flet.Text("Дата", color="black"),
+        #                         flet.Text("Время", color="black")
+        #                     ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30),
+        #                     flet.Column([
+        #                         self.date_field,
+        #                         self.time_field
+        #                     ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing=30),
+        #                     # self.button
+        #                 ], alignment=flet.MainAxisAlignment.CENTER, spacing=220),
+        #                 flet.VerticalDivider(width= 946, color= "#ACACAC"),
+        #                 flet.Row([
+        #                     flet.Text("Часовой пояс", color="black"),
+        #                     self.time_zone
+        #                 ], alignment=flet.MainAxisAlignment.CENTER, spacing= 30)
+        #             ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
+        #         ),
+        #         flet.Container(
+        #             bgcolor="#CACACA",
+        #             padding= 20,
+        #             width=1050,
+        #             height=400,
+        #             shadow= flet.BoxShadow(color="#AAAAAA",
+        #                                   offset=flet.Offset(-1,1),
+        #                                   blur_radius=1, spread_radius=0),
+        #             # height=self.app.page.height,
+        #             border_radius=30,
+        #             alignment=flet.alignment.center,
+        #             content=flet.Column([
+        #                 flet.Text("Синхронизация времени", color="black", size=18),
+        #                 flet.Row([
+        #                     flet.Column([
+        #                         flet.Text("Синхронизация времени при помощи NTP", color="black"),
+        #                         flet.Row([
+        #                             flet.Text("NTP - серверы", color= "black")
+        #
+        #                         ]),
+        #                     ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 45),
+        #                     flet.Column([
+        #                         self.switcher,
+        #                         # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
+        #                         self.NTC_servers(),
+        #                     ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30, scroll=flet.ScrollMode.AUTO)
+        #                 ], alignment=flet.MainAxisAlignment.SPACE_EVENLY, vertical_alignment=flet.CrossAxisAlignment.START)
+        #             ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
+        #         ),
+        #         flet.Row([
+        #             self.button_cancel,
+        #             self.button_save
+        #         ], alignment=flet.MainAxisAlignment.CENTER, vertical_alignment=flet.CrossAxisAlignment.CENTER, spacing = 40)
+        #     ],
+        #     horizontal_alignment=flet.CrossAxisAlignment.CENTER, scroll=flet.ScrollMode.AUTO,
+        #     ),
+        #     expand=True,
+        #     padding=20
+        # ))
 
-                                ]),
-                            ], horizontal_alignment=flet.CrossAxisAlignment.END, spacing= 45),
-                            flet.Column([
-                                self.switcher,
-                                # flet.Column(controls=[self.ntp_servers, flet.Row(controls=[self.option_textbox, self.add])])
-                                self.NTC_servers(),
-                            ], horizontal_alignment=flet.CrossAxisAlignment.START, spacing= 30, scroll=flet.ScrollMode.AUTO)
-                        ], alignment=flet.MainAxisAlignment.SPACE_EVENLY, vertical_alignment=flet.CrossAxisAlignment.START)
-                    ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, spacing= 30)
+        # Clock view layout
+        self.container = (
+            flet.Container(
+                flet.Column([
+                    flet.Text("Настройка даты и времени", text_align=flet.alignment.center,color=orange,size=18),
+                    flet.Container(
+                        flet.Column([
+                            flet.Row([
+                                flet.Column([
+                                    flet.Text("Локальное время", color="black", size=19),
+                                    flet.Container(
+                                        flet.Column([
+                                            flet.Row([
+                                                flet.Text("Дата", color="black", size=18),
+                                                self.date_field
+                                            ]),
+                                            #TODO: Calendar
+                                        ]),
+                                        width=371, height=382,border_radius=30,bgcolor="#D9D9D9",
+                                        shadow=flet.BoxShadow(color="#C8C8C8",
+                                                              offset=flet.Offset(1, 3),
+                                                              blur_radius=2,
+                                                              spread_radius=1
+                                                              ),
+                                        animate_scale=flet.Animation(300, flet.AnimationCurve.LINEAR),
+                                        scale=flet.Scale(scale=1),
+                                        on_hover=self.animate
+                                    ),
+                                    flet.Container(
+                                        flet.Row([
+                                            flet.Text("Время", color="black", size=18),
+                                            self.time_field
+                                        ]),
+                                        width=371, height=68, border_radius=30, bgcolor="#D9D9D9",
+                                        shadow=flet.BoxShadow(color="#C8C8C8",
+                                                              offset=flet.Offset(1, 3),
+                                                              blur_radius=2,
+                                                              spread_radius=1
+                                                              ),
+                                        animate_scale=flet.Animation(300, flet.AnimationCurve.LINEAR),
+                                        scale=flet.Scale(scale=1),
+                                        on_hover=self.animate
+                                    ),
+                                    flet.Container(
+                                        flet.Row([
+                                            flet.Text("Часовой пояс", color="black", size=18),
+                                            self.time_zone
+                                        ]),
+                                        width=371, height=68, border_radius=30, bgcolor="#D9D9D9",
+                                        shadow=flet.BoxShadow(color="#C8C8C8",
+                                                              offset=flet.Offset(1, 3),
+                                                              blur_radius=2,
+                                                              spread_radius=1
+                                                              ),
+                                        animate_scale=flet.Animation(300, flet.AnimationCurve.LINEAR),
+                                        scale=flet.Scale(scale=1),
+                                        on_hover=self.animate
+                                    )
+                                ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, alignment=flet.MainAxisAlignment.CENTER),
+                                flet.VerticalDivider(width=2),
+                                flet.Column([
+                                    flet.Text("Синхронизация времени", color="black", size=19),
+                                    flet.Container(
+                                        flet.Column([
+                                            flet.Container(
+                                                flet.Row([
+                                                    flet.Text("NTP", color="black", size=18),
+                                                    self.switcher
+                                                ], spacing=56,alignment=flet.MainAxisAlignment.CENTER),
+                                                width=243, height=72, border_radius=24, bgcolor="#DEDEDE",
+                                                shadow=flet.BoxShadow(color="#C8C8C8",
+                                                                      offset=flet.Offset(1, 3),
+                                                                      blur_radius=2,
+                                                                      spread_radius=1
+                                                                      ),
+                                                animate_scale=flet.Animation(300, flet.AnimationCurve.LINEAR),
+                                                scale=flet.Scale(scale=1),
+                                                on_hover=self.animate,
+                                            ),
+                                            flet.Column([
+                                                flet.Text("NTP - серверы", color="black", size=18),
+                                                self.NTC_servers()
+                                            ], scroll=flet.ScrollMode.AUTO, alignment=flet.MainAxisAlignment.CENTER)
+                                        ], spacing=63, alignment=flet.MainAxisAlignment.CENTER, horizontal_alignment=flet.CrossAxisAlignment.CENTER),
+                                        width=372, height=382, border_radius=30, bgcolor="#D9D9D9",
+                                        padding=flet.Padding(0,18,0,0),
+                                        shadow=flet.BoxShadow(color="#C8C8C8",
+                                                              offset=flet.Offset(1, 3),
+                                                              blur_radius=2,
+                                                              spread_radius=1
+                                                              ),
+                                        animate_scale=flet.Animation(300, flet.AnimationCurve.LINEAR),
+                                        scale=flet.Scale(scale=1),
+                                        on_hover=self.animate
+                                    )
+                                ], horizontal_alignment=flet.CrossAxisAlignment.CENTER, alignment=flet.MainAxisAlignment.CENTER)
+                            ], spacing=63, alignment=flet.MainAxisAlignment.CENTER, vertical_alignment=flet.CrossAxisAlignment.START),
+                            flet.Row([
+                                self.button_cancel,
+                                self.button_save
+                            ], spacing=35, alignment=flet.MainAxisAlignment.CENTER)
+                        ],spacing=50),
+                    padding=flet.Padding(0,52, 0, 40),
+                    width=1159, height=774, border_radius=36, bgcolor="#EAEAEA",
+                    shadow=flet.BoxShadow(color="#C8C8C8",
+                                          offset=flet.Offset(0, 2),
+                                          blur_radius=2,
+                                          spread_radius=1
+                                          ),
+                    )
+                ],
+                horizontal_alignment=flet.CrossAxisAlignment.CENTER,
+                spacing=39
                 ),
-                flet.Row([
-                    self.button_cancel,
-                    self.button_save
-                ], alignment=flet.MainAxisAlignment.CENTER, vertical_alignment=flet.CrossAxisAlignment.CENTER, spacing = 40)
-            ],
-            horizontal_alignment=flet.CrossAxisAlignment.CENTER, scroll=flet.ScrollMode.AUTO,
-            ),
             expand=True,
             padding=20
+            )
         )
+
         self.page.update()
 
         self.get_time()
+
+    def animate(self, e):
+        if e.data == "true":
+            e.control.scale = 1.01
+        else:
+            e.control.scale = 1
+        self.page.update()
 
     def on_click(self, a):
         a.control.height = 10
@@ -296,7 +430,7 @@ class ClockView:
 
             for server in servers:
                 print(server)
-                s = flet.TextField(filled=True, fill_color=white, color="black")
+                s = flet.TextField(filled=True, fill_color="#F0F0F0", color="black", border_radius=15)
                 s.value = server
                 self.NTP_servers.append(s)
 
@@ -314,7 +448,7 @@ class ClockView:
 
             self.servers_column.controls.append(flet.Row(
                                             [
-                                                     flet.TextField(filled=True, fill_color=white, color="black"),
+                                                     flet.TextField(filled=True, fill_color="#F0F0F0", color="black", border_radius=15),
                                                      flet.IconButton(
                                                         icon=flet.Icons.ADD_BOX,
                                                         icon_color="green",
