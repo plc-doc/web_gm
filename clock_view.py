@@ -7,6 +7,8 @@ import flet.canvas as cv
 import datetime
 import subprocess
 
+from charts import Calendar
+
 from PIL.ImageOps import expand
 
 grey = "#565759"
@@ -17,6 +19,8 @@ class ClockView:
     def __init__(self, app, page):
         self.app = app
         self.page = page
+
+
 
         self.date_field = flet.TextField(value= self.get_date(), color= "black", border=flet.InputBorder.NONE,
                                          width=90, height=10,
@@ -33,6 +37,10 @@ class ClockView:
                                          width=70, height=10,
                                          error_style=flet.TextStyle(color="red", size=14)
                                         )
+
+        self._calendar = Calendar(self, self.page, self.date_field)
+        self.calendar = self._calendar.layout
+
         self.NTP_servers = []
         self.NTP = False # Ntp active or not
         self.start_NTP = self.NTP_on_or_off() #start value of ntp
@@ -46,7 +54,7 @@ class ClockView:
 
         self.time_zone = flet.Dropdown(
                                 value= self.get_time_zone().strip(),
-                                width=240,
+                                width=150,
                                 menu_height = 400,
                                 options=self.get_time_zones_list(),
                                 border_radius=30,
@@ -249,7 +257,8 @@ class ClockView:
                                             flet.Column([
                                                 flet.Text("NTP - серверы", color="black", size=18),
                                                 self.NTC_servers()
-                                            ], scroll=flet.ScrollMode.AUTO, alignment=flet.MainAxisAlignment.CENTER)
+                                            ], scroll=flet.ScrollMode.AUTO, alignment=flet.MainAxisAlignment.CENTER,
+                                                horizontal_alignment=flet.CrossAxisAlignment.CENTER)
                                         ], spacing=63, alignment=flet.MainAxisAlignment.CENTER, horizontal_alignment=flet.CrossAxisAlignment.CENTER),
                                         width=372, height=382, border_radius=30, bgcolor="#D9D9D9",
                                         padding=flet.Padding(0,18,0,0),
@@ -430,7 +439,7 @@ class ClockView:
 
             for server in servers:
                 print(server)
-                s = flet.TextField(filled=True, fill_color="#F0F0F0", color="black", border_radius=15)
+                s = flet.TextField(filled=True, fill_color="#F0F0F0", color="black", border_radius=15, width=214, height=42)
                 s.value = server
                 self.NTP_servers.append(s)
 
@@ -448,7 +457,8 @@ class ClockView:
 
             self.servers_column.controls.append(flet.Row(
                                             [
-                                                     flet.TextField(filled=True, fill_color="#F0F0F0", color="black", border_radius=15),
+                                                     flet.TextField(filled=True, fill_color="#F0F0F0", color="black", border_radius=15,
+                                                                    width=214, height=42),
                                                      flet.IconButton(
                                                         icon=flet.Icons.ADD_BOX,
                                                         icon_color="green",

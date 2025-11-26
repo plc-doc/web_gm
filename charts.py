@@ -2,7 +2,11 @@ import math
 
 import flet
 from flet import canvas
-from flet.core.map.polyline_layer import DashedStrokePattern
+
+from datetime import datetime
+import calendar
+
+from reportlab.lib.pdfencrypt import padding
 
 grey = "#565759"
 white = "#EAEAEA"
@@ -113,3 +117,317 @@ class Curve:
             # expand=True
             )
         )
+
+class Calendar:
+
+    month = {1 : "Январь",
+             2 : "Февраль",
+             3 : "Март",
+             4 : "Апрель",
+             5 : "Май",
+             6 : "Июнь",
+             7 : "Июль",
+             8 : "Август",
+             9 : "Сентябрь",
+             10 : "Октябрь",
+             11 : "Ноябрь",
+             12 : "Декабрь"}
+
+    def __init__(self,app, page, date_field):
+        self.app = app
+        self.page = page
+        self.date_field = date_field
+        # Контейнер для дней
+        self.days_grid = flet.GridView(
+            expand=True,
+            max_extent=50,
+            child_aspect_ratio=1.0,
+            padding=4,
+            spacing=1,
+            run_spacing=1,
+            width=338,
+            height=233,
+            # auto_scroll=False
+        )
+
+        # self.today = datetime.today()
+        self.today = datetime.strptime(self.date_field.value, "%d.%m.%Y")
+
+        self.selected_date = flet.Ref()
+        self.current_month = flet.Ref()
+        self.current_year = flet.Ref()
+
+        self.selected_date_label = flet.Text(color="black", size=15) # -> to ClockView
+
+        # Метка текущего месяца
+        self.month_label = flet.Text(f"{Calendar.month[self.today.month]} {self.today.year}", color="black",
+                                     weight=flet.FontWeight.W_600, size=15)
+
+        self.nav_row = self.calendar()
+
+        self.layout = ( # -> to ClockView
+            flet.Container(
+                flet.Column([
+                    # self.selected_date_label,
+                    self.nav_row,
+                    self.days_grid,
+                ],spacing=-10),
+                width=370,
+                height=316,
+                bgcolor="#D9D9D9",
+                # alignment=flet.alignment.top_left,
+                padding = flet.Padding(18,0,18,0)
+            )
+        )
+        self.update_calendar(self.today.year, self.today.month)
+
+
+    def calendar(self):
+        self.today = datetime.today()
+        # self.selected_date = flet.Ref()
+        self.selected_date.current = self.today  # выбранная дата
+
+        # Label для отображения выбранной даты
+        self.selected_date_label.value = self.today.strftime('%d.%m.%Y')
+        self.date_field.value = self.selected_date_label.value
+
+        # # Обновление сетки календаря для выбранного месяца
+        # def update_calendar(year, month):
+        #     self.days_grid.controls.clear()
+        #     # заголовки дней недели
+        #     for day_name in ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]:
+        #         self.days_grid.controls.append(flet.Container(
+        #             content=flet.Text(day_name, weight=flet.FontWeight.BOLD),
+        #             alignment=flet.alignment.center,
+        #
+        #         ))
+        #
+        #     month_calendar = calendar.Calendar(firstweekday=0).monthdayscalendar(year, month)
+        #     for week in month_calendar:
+        #         for day in week:
+        #             if day == 0:
+        #                 # пустые дни
+        #                 self.days_grid.controls.append(flet.Container())
+        #             else:
+        #                 day_date = datetime(year, month, day)
+        #                 # подсветка выбранного дня
+        #                 # is_today = day_date.date() == today.date()
+        #                 btn = flet.ElevatedButton(
+        #                     text=str(day),
+        #                     # bgcolor={ft.ControlState.DEFAULT:None,
+        #                     #          ft.ControlState.PRESSED:"green"},
+        #                     bgcolor="green" if self.selected_date.current.strftime('%d') == day_date.strftime(
+        #                         '%d') else None,
+        #                     on_click=lambda e, d=day_date: select_day(d)
+        #                 )
+        #                 self.days_grid.controls.append(btn)
+        #     self.page.update()
+
+        # # Функция выбора дня
+        # def select_day(day_date):
+        #     self.selected_date.current = day_date
+        #     self.selected_date_label.value = day_date.strftime('%d.%m.%Y')
+        #     # btn.bgcolor = "green" if  day_date.date() == today.date() else None
+        #
+        #     self.update_calendar(int(day_date.strftime('%Y')), int(day_date.strftime('%m')))
+        #
+        #     self.page.update()
+
+        # Навигация по месяцам
+        # current_month = flet.Ref()
+        self.current_month.current = self.today.month
+        # current_year = flet.Ref()
+        self.current_year.current = self.today.year
+
+        def prev_month(e):
+            if self.current_month.current == 1:
+                self.current_month.current = 12
+                self.current_year.current -= 1
+            else:
+                self.current_month.current -= 1
+            self.update_calendar(self.current_year.current, self.current_month.current)
+            self.month_label.value = f"{Calendar.month[self.current_month.current]} {self.current_year.current}"
+            self.page.update()
+
+        def next_month(e):
+            if self.current_month.current == 12:
+                self.current_month.current = 1
+                self.current_year.current += 1
+            else:
+                self.current_month.current += 1
+            self.update_calendar(self.current_year.current, self.current_month.current)
+            self.month_label.value = f"{Calendar.month[self.current_month.current]} {self.current_year.current}"
+            self.page.update()
+
+        # Метка текущего месяца
+        # month_label = flet.Text(f"{today.year}-{today.month:02d}", size=18)
+
+        # # Кнопки навигации
+        # self.nav_row = flet.Row([
+        #     flet.IconButton(flet.Icons.ARROW_BACK, on_click=prev_month),
+        #     month_label,
+        #     flet.IconButton(flet.Icons.ARROW_FORWARD, on_click=next_month)
+        # ], alignment=flet.MainAxisAlignment.CENTER, spacing=20)
+
+        # page.add(
+        #     selected_label,
+        #     self.nav_row,
+        #     self.days_grid
+        # )
+
+        # Инициализация календаря
+        # self.update_calendar(self.today.year, self.today.month)
+
+        return (
+            flet.Row([
+                self.month_label,
+                flet.Row([
+                    flet.IconButton(flet.Icons.ARROW_BACK_IOS_ROUNDED, on_click=prev_month, icon_color=orange),
+                    flet.IconButton(flet.Icons.ARROW_FORWARD_IOS_ROUNDED, on_click=next_month, icon_color=orange)
+                ])
+            ], alignment=flet.MainAxisAlignment.SPACE_BETWEEN,)
+        )
+
+
+    # Функция выбора дня
+    def select_day(self,day_date):
+        self.selected_date.current = day_date
+        self.selected_date_label.value = day_date.strftime('%d.%m.%Y')
+        self.date_field.value = self.selected_date_label.value
+
+        self.update_calendar(int(day_date.strftime('%Y')), int(day_date.strftime('%m')))
+
+        self.page.update()
+
+    # Обновление сетки календаря для выбранного месяца
+    def update_calendar(self, year, month):
+        self.days_grid.controls.clear()
+        # заголовки дней недели
+        for day_name in ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]:
+            self.days_grid.controls.append(
+                flet.Container(
+                    content=flet.Text(day_name, color="black", size=13),
+                    alignment=flet.alignment.center,
+                )
+            )
+
+        month_calendar = calendar.Calendar(firstweekday=0).monthdayscalendar(year, month)
+        for week in month_calendar:
+            for day in week:
+                if day == 0:
+                    # пустые дни
+                    self.days_grid.controls.append(flet.Container())
+                else:
+                    day_date = datetime(year, month, day)
+
+                    # подсветка выбранного дня
+                    # is_today = day_date.date() == today.date()
+                    btn = flet.FilledTonalButton(
+                        content=flet.Text(str(day), color=orange if day_date.date() == self.today.date()
+                                                                 else "black",
+                                                    size=19 if day_date.date() == self.today.date()
+                                                                 else 17,
+                                                    weight=flet.FontWeight.W_600 if day_date.date() == self.today.date()
+                                                                 else flet.FontWeight.NORMAL),
+                        width=44, height=44,
+                        bgcolor="#DFCEBE" if self.selected_date.current.date() == day_date.date() else "#D9D9D9",
+                        on_click=lambda e, d=day_date: self.select_day(d)
+                    )
+                    self.days_grid.controls.append(btn)
+        self.page.update()
+
+
+    # def calendar(self, page: flet.Page):
+    #     today = datetime.today()
+    #     selected_date = flet.Ref[datetime]()
+    #     selected_date.current = today  # выбранная дата
+    #
+    #     # Label для отображения выбранной даты
+    #     selected_label = flet.Text(f"Выбрана дата: {today.strftime('%Y-%m-%d')}", size=18)
+    #
+    #     # Обновление сетки календаря для выбранного месяца
+    #     def update_calendar(year, month):
+    #         self.days_grid.controls.clear()
+    #         # заголовки дней недели
+    #         for day_name in ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]:
+    #             self.days_grid.controls.append(flet.Container(
+    #                 content=flet.Text(day_name, weight=flet.FontWeight.BOLD),
+    #                 alignment=flet.alignment.center,
+    #
+    #             ))
+    #
+    #         month_calendar = calendar.Calendar(firstweekday=0).monthdayscalendar(year, month)
+    #         for week in month_calendar:
+    #             for day in week:
+    #                 if day == 0:
+    #                     # пустые дни
+    #                     self.days_grid.controls.append(flet.Container())
+    #                 else:
+    #                     day_date = datetime(year, month, day)
+    #                     # подсветка выбранного дня
+    #                     # is_today = day_date.date() == today.date()
+    #                     btn = flet.ElevatedButton(
+    #                         text=str(day),
+    #                         # bgcolor={ft.ControlState.DEFAULT:None,
+    #                         #          ft.ControlState.PRESSED:"green"},
+    #                         bgcolor="green" if selected_date.current.strftime('%d') == day_date.strftime(
+    #                             '%d') else None,
+    #                         on_click=lambda e, d=day_date: select_day(d)
+    #                     )
+    #                     self.days_grid.controls.append(btn)
+    #         self.page.update()
+    #
+    #     # Функция выбора дня
+    #     def select_day(day_date):
+    #         selected_date.current = day_date
+    #         selected_label.value = f"Выбрана дата: {day_date.strftime('%d.%m.%Y')}"
+    #         # btn.bgcolor = "green" if  day_date.date() == today.date() else None
+    #
+    #         update_calendar(int(day_date.strftime('%Y')), int(day_date.strftime('%m')))
+    #
+    #         page.update()
+    #
+    #     # Навигация по месяцам
+    #     current_month = flet.Ref()
+    #     current_month.current = today.month
+    #     current_year = flet.Ref()
+    #     current_year.current = today.year
+    #
+    #     def prev_month(e):
+    #         if current_month.current == 1:
+    #             current_month.current = 12
+    #             current_year.current -= 1
+    #         else:
+    #             current_month.current -= 1
+    #         update_calendar(current_year.current, current_month.current)
+    #         month_label.value = f"{current_year.current}-{current_month.current:02d}"
+    #         self.page.update()
+    #
+    #     def next_month(e):
+    #         if current_month.current == 12:
+    #             current_month.current = 1
+    #             current_year.current += 1
+    #         else:
+    #             current_month.current += 1
+    #         update_calendar(current_year.current, current_month.current)
+    #         month_label.value = f"{current_year.current}-{current_month.current:02d}"
+    #         self.page.update()
+    #
+    #     # Метка текущего месяца
+    #     month_label = flet.Text(f"{today.year}-{today.month:02d}", size=18)
+    #
+    #     # Кнопки навигации
+    #     self.nav_row = flet.Row([
+    #         flet.IconButton(flet.Icons.ARROW_BACK, on_click=prev_month),
+    #         month_label,
+    #         flet.IconButton(flet.Icons.ARROW_FORWARD, on_click=next_month)
+    #     ], alignment=flet.MainAxisAlignment.CENTER, spacing=20)
+    #
+    #     page.add(
+    #         selected_label,
+    #         self.nav_row,
+    #         self.days_grid
+    #     )
+    #
+    #     # Инициализация календаря
+    #     update_calendar(today.year, today.month)
